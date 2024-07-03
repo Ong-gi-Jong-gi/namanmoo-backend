@@ -19,7 +19,7 @@ public class FamilyRepositoryTest {
 
     @Test
     @Transactional
-    @Rollback(false)
+//    @Rollback(false)
     public void testfamily() throws Exception{
         Family family = new Family();
         family.setFamilyName("family a");

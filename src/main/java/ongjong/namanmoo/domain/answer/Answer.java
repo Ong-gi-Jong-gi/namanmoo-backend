@@ -26,6 +26,9 @@ public abstract class Answer {
     @JoinColumn(name = "member_id")
     private Member member;
 
+    //    @Column(nullable = false)
+    private boolean checkChallenge = false;
+
     @Column(nullable = false)
     private Timestamp createDate;
 

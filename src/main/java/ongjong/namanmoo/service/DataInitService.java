@@ -3,10 +3,12 @@ package ongjong.namanmoo.service;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import ongjong.namanmoo.domain.Family;
+import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.challenge.NormalC;
 import ongjong.namanmoo.repository.ChallengeRepository;
 import ongjong.namanmoo.repository.FamilyRepository;
+import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,7 @@ public class DataInitService {
     private final FamilyRepository familyRepository;
     private final ChallengeRepository challengeRepository;
     private final MemberRepository memberRepository;
+    private final LuckyRepository luckyRepository;
 
     @PostConstruct
     public void init(){
@@ -47,6 +50,8 @@ public class DataInitService {
 
         // Family 1에 속하는 5명의 멤버 생성 및 저장
         createMembers(family1);
+
+        createLuckyForFamily(family1);
     }
 
     private void createChallenges() {
@@ -76,9 +81,16 @@ public class DataInitService {
             member.setRole("USER");
             member.setNickname("Nickname " + i);
             member.setChallengeMemberCount(0L);
-            member.setCheckChallenge(false);
             member.setMemberImage("image" + i + ".png");
             memberRepository.save(member);
         }
+    }
+    private void createLuckyForFamily(Family family) {
+        Lucky lucky = new Lucky();
+        lucky.setFamily(family);
+        lucky.setStatus(1L);
+        lucky.setChallengeStartDate(new Timestamp(System.currentTimeMillis()));
+        lucky.setCurrentChallengeNumber(31L);
+        luckyRepository.save(lucky);
     }
 }

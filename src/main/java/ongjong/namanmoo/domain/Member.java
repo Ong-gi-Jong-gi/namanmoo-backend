@@ -41,11 +41,6 @@ public class Member {
 //    @Column(nullable = false, columnDefinition = "bigint default 0")
     private Long challengeMemberCount;
 
-
-//    @Column(nullable = false)
-    private boolean checkChallenge = false;
-
-
     private String memberImage;
 
     // Getters and Setters

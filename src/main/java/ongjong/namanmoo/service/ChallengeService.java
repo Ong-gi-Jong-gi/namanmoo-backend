@@ -34,18 +34,13 @@ public class ChallengeService {
     // 행운이들 중 오늘의 챌린지 값이 30이 아닌 행운이의 오늘의 챌린지 값을 가져와야한다.
 
     public Challenge findCurrentChallenge(Long familyId) {
-        // 해당 가족 ID를 가지고 있는 모든 Object 조회
-        List<Lucky> luckies = luckyRepository.findByFamilyId(familyId);
-
-        // currentChallengeNumber가 30이 아닌 Object 찾기
-        for (Lucky lucky : luckies) {
-            if (lucky.getCurrentChallengeNumber() != 30) {
-                return challengeRepository.findByChallengeNum(lucky.getCurrentChallengeNumber()); // 현재 진행되어야할 challenge를 반환
-            }
+        Long number = findCurrentChallengeNum(familyId);
+        if (number == null) {
+            return null;
         }
-        // 조건에 맞는 Object가 없는 경우
-        return null;
+        return challengeRepository.findByChallengeNum(number);
     }
+
 
     public boolean join(Long familyId){     // 캐릭터 생성
         Optional<Family> familyOptional = familyRepository.findById(familyId);
@@ -55,7 +50,7 @@ public class ChallengeService {
             lucky1.setFamily(family);
             lucky1.setStatus(1L);
             lucky1.setChallengeStartDate(new Timestamp(System.currentTimeMillis()));
-            lucky1.setCurrentChallengeNumber(2L);       // 현재 진행하고있는 challenge에 따라 current challenge가 바뀌어야함
+            lucky1.setCurrentChallengeNumber(1L);       // 현재 진행하고있는 challenge에 따라 current challenge가 바뀌어야함
             luckyRepository.save(lucky1);
             return true;
         } else {
@@ -64,23 +59,22 @@ public class ChallengeService {
     }
 
     public boolean createAnswer(Long familyId){
-        System.out.println("bbbbb");
+
         List<Member> members = memberRepository.findByFamilyId(familyId);
         if (members.isEmpty()) {
-            System.out.println("vcccccccccc");
             return false; // 가족에 해당하는 회원이 없으면 false 반환
         }
         for (Member member : members){
-            System.out.println("aaaaaaaa");
 //            Long id = member.getMemberId(); // 해당 가족에 해당하는 인원의 id를 가지는 answer 생성
-            for (long i =1 ; i <= 5; i++){
+            for (long i =1 ; i <= 4; i++){      // challenge의 개수만큼 i 값 조정해야함, normal 수정
                 NormalA normal = new NormalA();
                 normal.setMember(member);
                 normal.setCreateDate(new Timestamp(System.currentTimeMillis()));
+                normal.setCheckChallenge(false);
 
                 Challenge challenge = challengeRepository.findByChallengeNum(i);
                 if (challenge == null){
-                    System.out.println("Fwfwwfw");
+                   return false;
                 }
                 normal.setChallenge(challenge);
 
@@ -90,9 +84,27 @@ public class ChallengeService {
         return true;
     }
 
-//
-//    public List<Challenge> findChallenges(Long familyId) {       // challenge 리스트 조회
-//
-//        return challengeRepository.findAll();
-//    }
+    public Long findCurrentChallengeNum(Long familyId) {       // 현재 진행중인 challenge 번호 조회
+        List<Lucky> luckies = luckyRepository.findByFamilyId(familyId);
+        for (Lucky lucky : luckies) {
+            if (lucky.getCurrentChallengeNumber() != 31) {
+                 return lucky.getCurrentChallengeNumber(); // 현재 진행되어야할 challenge를 반환
+            }
+        }
+        return null;
+    }
+
+    public List<Challenge> findChallenges(Long familyId) {      // 현재 진행한 챌린지 리스트 가져오기
+        Long number = findCurrentChallengeNum(familyId);
+        if (number == null) {
+            return null;
+        }
+        return challengeRepository.findByChallengeNumLessThanEqual(number);
+    }
+
+    public boolean findIsCompleteAnswer(Challenge challenge,Member member){
+        return answerRepository.findByChallengeAndMember(challenge, member)
+                .map(Answer::isCheckChallenge)      // answer가 존재할 경우 ischeckChallenge 값을 반환
+                .orElse(false);
+    }
 }
