@@ -1,4 +1,4 @@
-package ongjong.namanmoo.repository;
+package ongjong.namanmoo.dto;
 
 import lombok.Data;
 import ongjong.namanmoo.domain.challenge.Challenge;

@@ -31,8 +31,8 @@ public class Lucky {
 
     private Long currentChallengeNumber;
 
-    @OneToMany(mappedBy = "lucky")
-    private List<Challenge> challenges;
+//    @OneToMany(mappedBy = "lucky")
+//    private List<Challenge> challenges;
 
     // Getters and Setters
 }

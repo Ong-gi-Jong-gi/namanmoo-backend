@@ -29,7 +29,7 @@ public abstract class Answer {
     @Column(nullable = false)
     private Timestamp createDate;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private Timestamp modifiedDate;
 
     // Getters and Setters
