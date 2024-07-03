@@ -2,13 +2,15 @@ package ongjong.namanmoo.domain.challenge;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-
-import java.sql.Time;
+import lombok.Getter;
+import lombok.Setter;
 
 
 @Entity
 @DiscriminatorValue("F")
-public class FaceTime extends Challenge {
+@Getter
+@Setter
+public class FaceTimeC extends Challenge {
     private String faceTimeChallenge;
 }
 

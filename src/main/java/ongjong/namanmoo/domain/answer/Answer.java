@@ -1,13 +1,17 @@
 package ongjong.namanmoo.domain.answer;
 
 import jakarta.persistence.*;
-import ongjong.namanmoo.domain.User;
+import lombok.Getter;
+import lombok.Setter;
+import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.challenge.Challenge;
 
 import java.sql.Timestamp;
 
 @Entity
 @DiscriminatorColumn(name = "atype")
+@Getter
+@Setter
 public abstract class Answer {
 
     @Id
@@ -19,8 +23,8 @@ public abstract class Answer {
     private Challenge challenge;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     @Column(nullable = false)
     private Timestamp createDate;

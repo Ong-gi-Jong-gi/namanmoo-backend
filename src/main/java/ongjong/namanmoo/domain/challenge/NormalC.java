@@ -3,9 +3,13 @@ package ongjong.namanmoo.domain.challenge;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @DiscriminatorValue("N")
-public class Normal extends Challenge {
+@Getter
+@Setter
+public class NormalC extends Challenge {
     private String normalChallenge;
 }
