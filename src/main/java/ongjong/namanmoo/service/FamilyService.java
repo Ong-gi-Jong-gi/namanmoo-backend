@@ -7,6 +7,8 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.dto.family.FamilyMemberDto;
 import ongjong.namanmoo.repository.FamilyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,15 +26,12 @@ public class FamilyService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public Family createFamily(String familyName, int maxFamilySize, String ownerRole, Long memberId) {
-        // 현재 로그인한 유저 정보를 가져옴
-        // TODO: 로그인 구현 후 수정
-//        String loginId = getCurrentMemberLogin();
-//        Member familyOwner = memberRepository.findByLoginId(loginId)
-//                .orElseThrow(() -> new IllegalArgumentException("User not found: " + loginId));
+    public Family createFamily(String familyName, int maxFamilySize, String ownerRole) {
 
-        // TODO: memberId 삭제 조치 필요
-        Member familyOwner = memberRepository.findById(memberId).orElseThrow(() -> new IllegalArgumentException("Member not found: " + memberId));
+        // 현재 로그인한 유저 정보를 가져옴
+        String loginId = getCurrentMemberLogin();
+        Member familyOwner = memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + loginId));
 
         Family family = new Family();
         family.setFamilyName(familyName);
@@ -50,15 +49,14 @@ public class FamilyService {
         return familyRepository.save(family);
     }
 
-//    // TODO: 로그인 구현 후 수정 필요
-//    private String getCurrentMemberLogin() {
-//        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//        if (principal instanceof UserDetails) {
-//            return ((UserDetails) principal).getUsername();
-//        } else {
-//            return principal.toString();
-//        }
-//    }
+    private String getCurrentMemberLogin() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
+        } else {
+            return principal.toString();
+        }
+    }
 
     private void generateUniqueInviteCode(Family family) {
         boolean isUnique = false;
@@ -79,13 +77,11 @@ public class FamilyService {
     }
 
     @Transactional
-    public void addMemberToFamily(Long memberId, Long familyId, String role) {
-        // TODO: 로그인 구현 후 수정
-//        String loginId = getCurrentMemberLogin();
-//        Member member = memberRepository.findByLoginId(loginId)
-//                .orElseThrow(() -> new IllegalArgumentException("Member not found with loginId: " + loginId));
+    public void addMemberToFamily(Long familyId, String role) {
 
-        Member member = memberRepository.findById(memberId).orElseThrow(() -> new IllegalArgumentException("Member not found: " + memberId));
+        String loginId = getCurrentMemberLogin();
+        Member member = memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found with loginId: " + loginId));
 
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Family not found with id: " + familyId));

@@ -82,7 +82,7 @@ class JwtAuthenticationProcessingFilterTest {
                 .loginId(USERNAME)
                 .password(delegatingPasswordEncoder.encode(PASSWORD))
                 .name("Member1")
-                .nickName("NickName1")
+                .nickname("Nickname1")
                 .logInRole(LogInRole.USER)
                 .role("아들")
                 .build());

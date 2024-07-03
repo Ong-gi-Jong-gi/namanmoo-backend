@@ -1,12 +1,12 @@
-package ongjong.namanmoo.Controller;
+package ongjong.namanmoo.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import ongjong.namanmoo.dto.*;
 import ongjong.namanmoo.dto.member.MemberInfoDto;
 import ongjong.namanmoo.dto.member.MemberSignUpDto;
 import ongjong.namanmoo.dto.member.MemberUpdateDto;
 import ongjong.namanmoo.dto.member.UpdatePasswordDto;
+import ongjong.namanmoo.response.ApiResponse;
 import ongjong.namanmoo.service.MemberService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +21,9 @@ public class MemberController {
     // 회원 가입
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<ApiResponse> signup(@Valid @RequestBody MemberSignUpDto memberSignUpDto) throws Exception {
+    public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody MemberSignUpDto memberSignUpDto) throws Exception {
         memberService.signUp(memberSignUpDto);
-        ApiResponse response = new ApiResponse(200, "Sign up Success");
+        ApiResponse<Void> response = new ApiResponse<>("200", "Sign up Success", null);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -38,14 +38,14 @@ public class MemberController {
     @PostMapping("/user/password")
     @ResponseStatus(HttpStatus.OK)
     public void updatePassword(@Valid @RequestBody UpdatePasswordDto updatePasswordDto) throws Exception {
-        memberService.updatePassword(updatePasswordDto.checkPassword(),updatePasswordDto.toBePassword());
+        memberService.updatePassword(updatePasswordDto.checkPassword(), updatePasswordDto.toBePassword());
     }
 
     // 내 정보 조회
     @GetMapping("/user")
-    public ResponseEntity<MemberInfoDto> getMyInfo() throws Exception {
-
+    public ResponseEntity<ApiResponse<MemberInfoDto>> getMyInfo() throws Exception {
         MemberInfoDto info = memberService.getMyInfo();
-        return new ResponseEntity<>(info, HttpStatus.OK);
+        ApiResponse<MemberInfoDto> response = new ApiResponse<>("200", "Get User Info Success", info);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

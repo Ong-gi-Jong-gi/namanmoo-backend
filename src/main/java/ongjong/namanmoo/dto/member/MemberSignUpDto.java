@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import ongjong.namanmoo.domain.Member;
 
 public record MemberSignUpDto(
+
         @NotBlank(message = "아이디를 입력해주세요")
         String loginId,
         @NotBlank(message = "비밀번호를 입력해주세요")
@@ -14,9 +15,9 @@ public record MemberSignUpDto(
         @NotBlank(message = "이름을 입력해주세요")
         String name,
         @NotBlank(message = "닉네임을 입력해주세요.")
-        String nickName) {
+        String nickname) {
 
     public Member toEntity() {
-        return Member.builder().loginId(loginId).password(password).name(name).nickName(nickName).build();
+        return Member.builder().loginId(loginId).password(password).name(name).nickname(nickname).build();
     }
 }

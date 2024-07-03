@@ -44,7 +44,7 @@ public class LoginSuccessJWTProvideHandler extends SimpleUrlAuthenticationSucces
 
                 String jsonResponse = String.format(
                         "{\"status\": \"200\", \"message\": \"Login Success.\", \"data\": {\"name\": \"%s\", \"nickname\": \"%s\", \"role\": \"%s\", \"userImg\": \"%s\"}}",
-                        member.getName(), member.getNickName(), member.getRole(), member.getMemberImage()
+                        member.getName(), member.getNickname(), member.getRole(), member.getMemberImage()
                 );
 
                 response.getWriter().write(jsonResponse);

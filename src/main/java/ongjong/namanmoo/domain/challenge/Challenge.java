@@ -2,7 +2,6 @@ package ongjong.namanmoo.domain.challenge;
 
 import jakarta.persistence.*;
 import ongjong.namanmoo.domain.answer.Answer;
-import ongjong.namanmoo.domain.Lucky;
 
 import java.util.List;
 

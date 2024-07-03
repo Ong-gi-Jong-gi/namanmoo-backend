@@ -63,7 +63,7 @@ class LoginServiceTest {
                 .loginId(USERNAME)
                 .password(delegatingPasswordEncoder.encode(PASSWORD))
                 .name("Member1")
-                .nickname("NickName1")
+                .nickname("Nickname1")
                 .logInRole(LogInRole.USER)
                 .role("아들")
                 .build());
@@ -71,6 +71,7 @@ class LoginServiceTest {
     }
 
     private Map getUsernamePasswordMap(String username, String password){
+
         Map<String, String> map = new HashMap<>();
         map.put(KEY_USERNAME, username);
         map.put(KEY_PASSWORD, password);
@@ -88,6 +89,7 @@ class LoginServiceTest {
 
     @Test
     public void 로그인_성공() throws Exception {
+
         //given
         Map<String, String> map = getUsernamePasswordMap(USERNAME, PASSWORD);
         //when

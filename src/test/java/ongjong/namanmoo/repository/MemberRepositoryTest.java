@@ -38,7 +38,7 @@ class MemberRepositoryTest {
                 .loginId("loginId")
                 .password("1234567890")
                 .name("Member1")
-                .nickName("NickName1")
+                .nickname("Nickname1")
                 .role("아들")
 //                .challengeMemberCount(1L)
                 .checkChallenge(false)
@@ -69,7 +69,7 @@ class MemberRepositoryTest {
         Member member = Member.builder()
                 .password("1234567890")
                 .name("Member1")
-                .nickName("NickName1")
+                .nickname("Nickname1")
                 .role("아들")
 //                .challengeMemberCount(1L)
                 .checkChallenge(false)
@@ -88,7 +88,7 @@ class MemberRepositoryTest {
                 .loginId("loginId")
                 .password("1234567890")
                 .name("Member1")
-                .nickName("NickName1")
+                .nickname("Nickname1")
                 .role("아들")
 //                .challengeMemberCount(1L)
                 .checkChallenge(false)
@@ -99,7 +99,7 @@ class MemberRepositoryTest {
                 .loginId("loginId")
                 .password("0987654321")
                 .name("Member2")
-                .nickName("NickName2")
+                .nickname("Nickname2")
                 .role("아빠")
 //                .challengeMemberCount(1L)
                 .checkChallenge(false)
@@ -120,7 +120,7 @@ class MemberRepositoryTest {
                 .loginId("loginId")
                 .password("1234567890")
                 .name("Member1")
-                .nickName("NickName1")
+                .nickname("NickName1")
                 .role("아들")
 //                .challengeMemberCount(1L)
                 .checkChallenge(false)
@@ -131,14 +131,14 @@ class MemberRepositoryTest {
 
         String updatePassword = "updatePassword";
         String updateName = "updateName";
-        String updateNickName = "updateNickName";
+        String updateNickname = "updateNickname";
 
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         //when
         Member findMember = memberRepository.findById(member1.getMemberId()).orElseThrow(() -> new RuntimeException("저장된 회원이 없습니다"));
         findMember.updateName(updateName);
-        findMember.updateNickName(updateNickName);
+        findMember.updateNickname(updateNickname);
         findMember.updatePassword(passwordEncoder,updatePassword);
         em.flush();
 

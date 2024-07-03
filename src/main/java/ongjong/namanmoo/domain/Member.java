@@ -6,38 +6,43 @@ import lombok.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-@Getter
-@Entity
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+import static lombok.AccessLevel.PROTECTED;
+
+@Getter @Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Entity
 public class Member {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long memberId;
 
-//    @ManyToOne
-//    @JoinColumn(name = "family_id")
-//    private Family family;
+    @ManyToOne
+    @JoinColumn(name = "family_id")
+    private Family family;
 
     @Column(nullable = false, unique = true)
     private String loginId; // 아이디
+
     @Column(nullable = false)
     private String password; // 비밀번호
 
     @Column(nullable = false)
     private String name; // 이름
 
-    @Builder.Default
+//    @Builder.Default
     private String role = "미정"; // 가족에서의 역할
 
-    private String nickName; // 별명
+    private String nickname; // 별명
 
     @Builder.Default
     private boolean checkChallenge = false;
 
-    @Builder.Default
+    private Long challengeMemberCount;
+
+//    @Builder.Default
     private String memberImage = "https://~"; // 프로필 사진
 
     @Enumerated(EnumType.STRING)
@@ -53,8 +58,8 @@ public class Member {
         this.name = name;
     }
 
-    public void updateNickName(String nickName) {
-        this.nickName = nickName;
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
     }
 
     public void updateRole(String role) {

@@ -54,7 +54,7 @@ class JwtServiceImplTest {
                 .loginId(username)
                 .password("1234567890")
                 .name("Member1")
-                .nickName("NickName1")
+                .nickname("Nickname1")
                 .logInRole(LogInRole.USER)
                 .role("아들")
                 .build());

@@ -25,5 +25,4 @@ public interface MemberService {
 
     MemberInfoDto getMyInfo() throws Exception;
 
-
 }

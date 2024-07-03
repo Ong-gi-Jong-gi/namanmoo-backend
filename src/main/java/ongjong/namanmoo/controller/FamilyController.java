@@ -27,8 +27,7 @@ public class FamilyController {
     // TODO: 현재 Member role에 입력받은 role을 넣어줘야 한다.
     @PostMapping("/create")
     public ApiResponse<String> createFamily(@RequestBody CreateFamilyRequest request) {
-        // TODO: memberId 삭제 조치 필요
-        Family family = familyService.createFamily(request.getFamilyName(), request.getFamilySize(), request.getOwnerRole(), request.getMemberId());
+        Family family = familyService.createFamily(request.getFamilyName(), request.getFamilySize(), request.getOwnerRole());
         return new ApiResponse<>("200", "Family created successfully", family.getInviteCode());
     }
 
@@ -37,7 +36,7 @@ public class FamilyController {
      */
     @PostMapping("/join")
     public ApiResponse<String> joinFamily(@RequestBody JoinFamilyRequest request) {
-        familyService.addMemberToFamily(request.getMemberId(), request.getFamilyId(), request.getRole()); // TODO: memberId 삭제 조치 필요
+        familyService.addMemberToFamily(request.getFamilyId(), request.getRole());
         return new ApiResponse<>("200", "Join Family Success", request.getFamilyId().toString());
     }
 
@@ -69,12 +68,10 @@ public class FamilyController {
         private int familySize;
         private String familyName;
         private String ownerRole;
-        private Long memberId; // TODO: memberId 삭제 조치 필요
     }
 
     @Getter
     public static class JoinFamilyRequest {
-        private Long memberId; // TODO: memberId 삭제 조치 필요
         private Long familyId;
         private String role;
     }
