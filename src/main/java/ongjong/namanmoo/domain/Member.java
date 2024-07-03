@@ -9,31 +9,32 @@ import lombok.Setter;
 @Entity
 public class Member {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long memberId;
 
     @ManyToOne
     @JoinColumn(name = "family_id")
     private Family family;
 
-    @Column(nullable = false, unique = true)
+//    @Column(nullable = false, unique = true)
     private String loginId;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private String role;
 
     private String nickname;
 
-    @Column(nullable = false, columnDefinition = "bigint default 0")
+//    @Column(nullable = false, columnDefinition = "bigint default 0")
     private Long challengeMemberCount;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private boolean checkChallenge = false;
 
     private String memberImage;

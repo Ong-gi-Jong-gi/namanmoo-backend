@@ -15,7 +15,7 @@ public class VoiceMessage {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private String voiceFile;
 
     private String voiceTitle;

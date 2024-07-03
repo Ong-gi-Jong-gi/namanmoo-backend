@@ -11,7 +11,7 @@ public class Lucky {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long objectId;
+    private Long luckyId;
 
     @ManyToOne
     @JoinColumn(name = "family_id")
@@ -19,9 +19,6 @@ public class Lucky {
 
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private Long status;
-
-    @OneToMany(mappedBy = "object")
-    private List<Challenge> challenges;
 
     // Getters and Setters
 }

@@ -13,10 +13,6 @@ public abstract class Challenge {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long challengeId;
 
-    @ManyToOne
-    @JoinColumn(name = "object_id")
-    private Lucky lucky;
-
     @Column(nullable = false)
     private Long challengeNum;
 

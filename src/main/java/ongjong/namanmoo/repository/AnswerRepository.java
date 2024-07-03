@@ -9,22 +9,24 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
-@RequiredArgsConstructor
-public class AnswerRepository {
+public interface AnswerRepository extends JpaRepository<Answer, Long> { }
 
-    @PersistenceContext
-    private EntityManager em;
-
-    public void save(final Answer answer) {
-        em.persist(answer);
-    }
-
-    public Answer findById(final Long id) {
-        return em.find(Answer.class, id);
-    }
-
-    public List<Answer> findAll() {
-        return em.createQuery("from Answer", Answer.class).getResultList();
-    }
-}
+//@Repository
+//@RequiredArgsConstructor
+//public class AnswerRepository {
+//
+//    @PersistenceContext
+//    private EntityManager em;
+//
+//    public void save(final Answer answer) {
+//        em.persist(answer);
+//    }
+//
+//    public Answer findById(final Long id) {
+//        return em.find(Answer.class, id);
+//    }
+//
+//    public List<Answer> findAll() {
+//        return em.createQuery("from Answer", Answer.class).getResultList();
+//    }
+//}

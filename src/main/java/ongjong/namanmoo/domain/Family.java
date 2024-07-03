@@ -30,7 +30,6 @@ public class Family {
     private int currentFamilySize;
 
     @Setter
-    @Column(unique = true)
     private String inviteCode;
 
     @Setter
