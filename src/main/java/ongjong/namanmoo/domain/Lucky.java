@@ -7,7 +7,7 @@ import ongjong.namanmoo.domain.challenge.Challenge;
 import java.util.List;
 
 @Entity
-public class Object {
+public class Lucky {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,8 +20,7 @@ public class Object {
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private Long status;
 
-    @OneToMany(mappedBy = "object")
+    @OneToMany(mappedBy = "lucky")
     private List<Challenge> challenges;
 
-    // Getters and Setters
 }

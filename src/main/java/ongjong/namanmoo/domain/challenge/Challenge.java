@@ -2,7 +2,7 @@ package ongjong.namanmoo.domain.challenge;
 
 import jakarta.persistence.*;
 import ongjong.namanmoo.domain.answer.Answer;
-import ongjong.namanmoo.domain.Object;
+import ongjong.namanmoo.domain.Lucky;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ public abstract class Challenge {
 
     @ManyToOne
     @JoinColumn(name = "object_id")
-    private Object object;
+    private Lucky lucky;
 
     @Column(nullable = false)
     private Long challengeNum;

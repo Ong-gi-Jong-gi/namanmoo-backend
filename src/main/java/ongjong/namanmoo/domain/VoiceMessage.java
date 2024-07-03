@@ -12,8 +12,8 @@ public class VoiceMessage {
     private Long voiceId;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     @Column(nullable = false)
     private String voiceFile;
@@ -30,6 +30,5 @@ public class VoiceMessage {
 
     private boolean checkRead = false;
 
-    // Getters and Setters
 }
 
