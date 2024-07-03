@@ -1,10 +1,25 @@
 package ongjong.namanmoo.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import ongjong.namanmoo.repository.FamilyRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
 
+import static ongjong.namanmoo.repository.FamilyRepository.findByInviteCode;
+
+@Slf4j
+@RequiredArgsConstructor
+@Getter
 @Entity
 public class Family {
 
@@ -12,29 +27,46 @@ public class Family {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long familyId;
 
+    @Setter
     private String familyName;
 
-    @Column(nullable = false)
-    private Long maxFamilySize;
+    @Setter
+    private int maxFamilySize = 4; // 가족 최대 인원 수, 기본값 4
 
-    @Column(nullable = false, columnDefinition = "bigint default 1")
-    private Long currentFamilySize;
+    @Setter
+    private int currentFamilySize;
 
-    @Column(nullable = false, unique = true)
+    @Setter
+    @Column(unique = true)
     private String inviteCode;
 
+    @Setter
     @Column(columnDefinition = "bigint default 0")
     private Long challengeFamilyCount;
 
-    private Timestamp challengeStartDate;
-
+    @Setter
     private Long familyOwnerId;
 
     @OneToMany(mappedBy = "family")
-    private List<User> users;
+    private List<Member> members;
 
     @OneToMany(mappedBy = "family")
     private List<Object> objects;
 
-    // Getters and Setters
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final int CODE_LENGTH = 8;
+    private static final Random RANDOM = new SecureRandom();
+
+    // 초대 코드 생성 메서드 (SecureRandom 사용)
+    public void generateInviteCode() {
+        StringBuilder code = new StringBuilder(CODE_LENGTH);
+        for (int i = 0; i < CODE_LENGTH; i++) {
+            code.append(CHARACTERS.charAt(RANDOM.nextInt(CHARACTERS.length())));
+        }
+        this.inviteCode = code.toString();
+    }
+//    // 초대 코드 생성 메서드 (UUID 사용)
+//    public void generateInviteCode() {
+//        this.inviteCode = UUID.randomUUID().toString().substring(0, CODE_LENGTH);
+//    }
 }

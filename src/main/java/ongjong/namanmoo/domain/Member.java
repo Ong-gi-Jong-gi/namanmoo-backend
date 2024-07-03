@@ -2,13 +2,15 @@ package ongjong.namanmoo.domain;
 
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter @Setter
 @Entity
-public class User {
+public class Member {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long memberId;
 
     @ManyToOne
     @JoinColumn(name = "family_id")
@@ -29,12 +31,12 @@ public class User {
     private String nickname;
 
     @Column(nullable = false, columnDefinition = "bigint default 0")
-    private Long challengeUserCount;
+    private Long challengeMemberCount;
 
     @Column(nullable = false)
     private boolean checkChallenge = false;
 
-    private String userImage;
+    private String memberImage;
 
     // Getters and Setters
 }
