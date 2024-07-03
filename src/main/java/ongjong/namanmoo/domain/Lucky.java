@@ -7,7 +7,7 @@ import ongjong.namanmoo.domain.challenge.Challenge;
 import java.util.List;
 
 @Entity
-public class Object {
+public class Lucky {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

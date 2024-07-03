@@ -5,17 +5,10 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import ongjong.namanmoo.repository.FamilyRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.security.SecureRandom;
-import java.sql.Timestamp;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
-import java.util.UUID;
-
-import static ongjong.namanmoo.repository.FamilyRepository.findByInviteCode;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -51,7 +44,7 @@ public class Family {
     private List<Member> members;
 
     @OneToMany(mappedBy = "family")
-    private List<Object> objects;
+    private List<Lucky> luckies;
 
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final int CODE_LENGTH = 8;
