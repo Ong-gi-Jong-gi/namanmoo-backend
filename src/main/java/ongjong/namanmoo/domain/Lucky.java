@@ -20,5 +20,4 @@ public class Lucky {
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private Long status;
 
-    // Getters and Setters
 }

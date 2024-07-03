@@ -30,6 +30,5 @@ public class VoiceMessage {
 
     private boolean checkRead = false;
 
-    // Getters and Setters
 }
 
