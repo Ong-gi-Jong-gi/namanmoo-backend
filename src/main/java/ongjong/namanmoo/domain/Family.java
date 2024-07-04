@@ -18,7 +18,7 @@ public class Family {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long familyId;
+    private Long Id;        // familyId를 Id로 변경
 
     private String familyName;
 

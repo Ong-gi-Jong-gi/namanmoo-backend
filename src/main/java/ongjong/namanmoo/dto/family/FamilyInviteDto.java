@@ -15,7 +15,7 @@ public class FamilyInviteDto {
 
     public FamilyInviteDto(Family family) {
         this.familyName = family.getFamilyName();
-        this.familyId = family.getFamilyId().toString();
+        this.familyId = family.getId().toString();
         this.members = family.getMembers().stream().map(member -> {
             FamilyMemberDto memberDto = new FamilyMemberDto();
             memberDto.setName(member.getName());

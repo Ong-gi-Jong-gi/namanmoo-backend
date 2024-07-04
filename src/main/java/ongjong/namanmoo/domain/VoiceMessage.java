@@ -1,10 +1,14 @@
 package ongjong.namanmoo.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.sql.Timestamp;
 
 @Entity
+@Getter
+@Setter
 public class VoiceMessage {
 
     @Id
@@ -30,5 +34,6 @@ public class VoiceMessage {
 
     private boolean checkRead = false;
 
+    // Getters and Setters
 }
 

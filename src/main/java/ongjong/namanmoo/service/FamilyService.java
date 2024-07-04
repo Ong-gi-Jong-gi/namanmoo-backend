@@ -31,6 +31,7 @@ public class FamilyService {
 
         // 현재 로그인한 유저 정보를 가져옴
         String loginId = SecurityUtil.getLoginLoginId();
+
         Member familyOwner = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + loginId));
 

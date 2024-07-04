@@ -21,23 +21,18 @@ public class Member {
     private Family family;
 
     @Column(nullable = false, unique = true)
-    private String loginId; // 아이디
+    private String loginId;
 
     @Column(nullable = false)
-    private String password; // 비밀번호
+    private String password;
 
     @Column(nullable = false)
-    private String name; // 이름
+    private String name;
 
     @Builder.Default
     private String role = "미정"; // 가족에서의 역할
 
     private String nickname; // 별명
-
-    @Builder.Default
-    private boolean checkChallenge = false;
-
-    private Long challengeMemberCount;
 
     @Builder.Default
     private String memberImage = "https://~"; // 프로필 사진

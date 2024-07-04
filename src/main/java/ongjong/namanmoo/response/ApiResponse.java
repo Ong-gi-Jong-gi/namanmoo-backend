@@ -1,8 +1,8 @@
 package ongjong.namanmoo.response;
 
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 public class ApiResponse<T> {
     private final String code;
     private final String message;
