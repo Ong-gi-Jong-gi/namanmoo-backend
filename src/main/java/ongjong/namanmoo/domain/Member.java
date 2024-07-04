@@ -3,10 +3,7 @@ package ongjong.namanmoo.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import static lombok.AccessLevel.PROTECTED;
 
 @Getter @Setter
 @NoArgsConstructor
