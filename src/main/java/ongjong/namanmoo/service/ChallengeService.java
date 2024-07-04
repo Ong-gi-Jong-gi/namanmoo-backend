@@ -6,9 +6,8 @@ import lombok.RequiredArgsConstructor;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
-import ongjong.namanmoo.domain.answer.Answer;
-import ongjong.namanmoo.domain.answer.NormalA;
-import ongjong.namanmoo.domain.challenge.Challenge;
+import ongjong.namanmoo.domain.answer.*;
+import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,24 +60,53 @@ public class ChallengeService {
     public boolean createAnswer(Long familyId){
 
         List<Member> members = memberRepository.findByFamilyId(familyId);
+        List<Challenge> challenges = challengeRepository.findAll();
         if (members.isEmpty()) {
             return false; // 가족에 해당하는 회원이 없으면 false 반환
         }
         for (Member member : members){
-//            Long id = member.getMemberId(); // 해당 가족에 해당하는 인원의 id를 가지는 answer 생성
-            for (long i =1 ; i <= 4; i++){      // challenge의 개수만큼 i 값 조정해야함, normal 수정
-                NormalA normal = new NormalA();
-                normal.setMember(member);
-                normal.setCreateDate(new Timestamp(System.currentTimeMillis()));
-                normal.setCheckChallenge(false);
-
-                Challenge challenge = challengeRepository.findByChallengeNum(i);
-                if (challenge == null){
-                   return false;
+        // 해당 가족에 해당하는 인원의 id를 가지는 answer 생성
+            for (Challenge challenge : challenges){      // 일단 normal만타입 받음 나머지도 추가해야함
+                if (challenge instanceof NormalC){
+                    NormalA normal = new NormalA();
+                    normal.setMember(member);
+                    normal.setCreateDate(new Timestamp(System.currentTimeMillis()));
+                    normal.setCheckChallenge(false);
+                    normal.setChallenge(challenge);
+                    answerRepository.save(normal);
                 }
-                normal.setChallenge(challenge);
-
-                answerRepository.save(normal);
+                else if (challenge instanceof GroupC){
+                    GroupA group = new GroupA();
+                    group.setMember(member);
+                    group.setCreateDate(new Timestamp(System.currentTimeMillis()));
+                    group.setCheckChallenge(false);
+                    group.setChallenge(challenge);
+                    answerRepository.save(group);
+                }
+                else if (challenge instanceof FaceTimeC){
+                    FaceTimeA facetime = new FaceTimeA();
+                    facetime.setMember(member);
+                    facetime.setCreateDate(new Timestamp(System.currentTimeMillis()));
+                    facetime.setCheckChallenge(false);
+                    facetime.setChallenge(challenge);
+                    answerRepository.save(facetime);
+                }
+                else if (challenge instanceof PhotoC){
+                    PhotoA Photo = new PhotoA();
+                    Photo.setMember(member);
+                    Photo.setCreateDate(new Timestamp(System.currentTimeMillis()));
+                    Photo.setCheckChallenge(false);
+                    Photo.setChallenge(challenge);
+                    answerRepository.save(Photo);
+                }
+                else if (challenge instanceof VoiceC){
+                    VoiceA voice = new VoiceA();
+                    voice.setMember(member);
+                    voice.setCreateDate(new Timestamp(System.currentTimeMillis()));
+                    voice.setCheckChallenge(false);
+                    voice.setChallenge(challenge);
+                    answerRepository.save(voice);
+                }
             }
         }
         return true;

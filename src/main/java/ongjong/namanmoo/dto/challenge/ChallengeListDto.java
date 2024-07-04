@@ -17,7 +17,7 @@ public class ChallengeListDto {
         this.challengeId = challenge.getChallengeId();
         this.challengeNumber = challenge.getChallengeNum();
         this.challengeTitle = ((NormalC) challenge).getNormalChallenge();
-        this.challengeType = challenge.getClass().getSimpleName();
+        this.challengeType = challenge.getClass().getSimpleName(); // TODO: 타입이 제대로 나오니
         this.isComplete = isComplete;
     }
 }
