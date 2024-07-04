@@ -1,7 +1,7 @@
 package ongjong.namanmoo.domain.answer;
 
 import jakarta.persistence.*;
-import ongjong.namanmoo.domain.User;
+import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.challenge.Challenge;
 
 import java.sql.Timestamp;
@@ -19,8 +19,8 @@ public abstract class Answer {
     private Challenge challenge;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     @Column(nullable = false)
     private Timestamp createDate;
@@ -28,6 +28,5 @@ public abstract class Answer {
     @Column(nullable = false)
     private Timestamp modifiedDate;
 
-    // Getters and Setters
 }
 
