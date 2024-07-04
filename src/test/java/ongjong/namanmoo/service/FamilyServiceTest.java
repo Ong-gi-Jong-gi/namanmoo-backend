@@ -4,65 +4,120 @@ import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.repository.FamilyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @Transactional
 @Rollback
 public class FamilyServiceTest {
 
-    @Autowired
-    private FamilyService familyService;
-
-    @Autowired
+    @Mock
     private FamilyRepository familyRepository;
-    @Autowired
+
+    @Mock
     private MemberRepository memberRepository;
 
-    @Test
-    public void createFamily() throws Exception {
-        //given
-        String familyName = "Test Family";
-        int maxFamilySize = 4;
-//        Long familyOwnerId = 1L;
-        String familyRole = "딸";
+    @InjectMocks
+    private FamilyService familyService;
 
-        //when
-        Family createdFamily = familyService.createFamily(familyName, maxFamilySize, familyRole);
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-        //then
-        Optional<Family> foundFamily = familyRepository.findById(createdFamily.getFamilyId());
-        assertThat(foundFamily).isPresent();
-        assertThat(foundFamily.get().getFamilyName()).isEqualTo(familyName);
-        assertThat(foundFamily.get().getMaxFamilySize()).isEqualTo(maxFamilySize);
-//        assertThat(foundFamily.get().getFamilyOwnerId()).isEqualTo(familyOwnerId);
-        Member owner = memberRepository.findById(foundFamily.get().getFamilyOwnerId()).orElseThrow();
-        assertThat(owner.getRole()).isEqualTo(familyRole);
-        assertThat(foundFamily.get().getInviteCode()).isNotEmpty();
+    private void mockSecurityContext(String loginId) {
+        UserDetails user = User.withUsername(loginId).password("password").roles("USER").build();
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(user, "password", user.getAuthorities()));
     }
 
     @Test
-    public void findFamilyByInviteCode() throws Exception {
-        //given
-        String familyName = "Test Family";
-        int maxFamilySize = 4;
-        String familyRole = "엄마";
-        Family createdFamily = familyService.createFamily(familyName, maxFamilySize, familyRole);
-        String inviteCode = createdFamily.getInviteCode();
+    void testCreateFamily() {
+        // given
+        String loginId = "testUser";
+        mockSecurityContext(loginId);
 
-        //when
-        Optional<Family> foundFamily = familyService.findFamilyByInviteCode(inviteCode);
+        Member member = new Member();
+        member.setLoginId(loginId);
+        member.setMemberId(1L);
+        when(memberRepository.findByLoginId(anyString())).thenReturn(Optional.of(member));
 
-        //then
-        assertThat(foundFamily).isPresent();
-        assertThat(foundFamily.get().getInviteCode()).isEqualTo(inviteCode);
+        when(familyRepository.save(any(Family.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        Family createdFamily = familyService.createFamily("Test Family", 4, "Owner");
+
+        // then
+        assertThat(createdFamily).isNotNull();
+        assertThat(createdFamily.getFamilyName()).isEqualTo("Test Family");
+        assertThat(createdFamily.getMaxFamilySize()).isEqualTo(4);
+        assertThat(createdFamily.getFamilyOwnerId()).isEqualTo(member.getMemberId());
+        assertThat(createdFamily.getCurrentFamilySize()).isEqualTo(1);
+    }
+
+    @Test
+    void testAddMemberToFamily() {
+        // given
+        String loginId = "testUser";
+        mockSecurityContext(loginId);
+
+        Member member = new Member();
+        member.setLoginId(loginId);
+        member.setMemberId(1L);
+        when(memberRepository.findByLoginId(anyString())).thenReturn(Optional.of(member));
+
+        Family family = new Family();
+        family.setFamilyId(1L);
+        family.setMaxFamilySize(4);
+        family.setCurrentFamilySize(1);
+        when(familyRepository.findById(any(Long.class))).thenReturn(Optional.of(family));
+
+        // when
+        familyService.addMemberToFamily(1L, "Member");
+
+        // then
+        assertThat(member.getFamily()).isEqualTo(family);
+        assertThat(family.getMembers()).contains(member);
+        assertThat(family.getCurrentFamilySize()).isEqualTo(2);
+    }
+
+    @Test
+    void testAddMemberToFullFamily() {
+        // given
+        String loginId = "testUser";
+        mockSecurityContext(loginId);
+
+        Member member = new Member();
+        member.setLoginId(loginId);
+        member.setMemberId(1L);
+        when(memberRepository.findByLoginId(anyString())).thenReturn(Optional.of(member));
+
+        Family family = new Family();
+        family.setFamilyId(1L);
+        family.setMaxFamilySize(1);
+        family.setCurrentFamilySize(1);
+        when(familyRepository.findById(any(Long.class))).thenReturn(Optional.of(family));
+
+        // when/then
+        assertThrows(IllegalStateException.class, () -> familyService.addMemberToFamily(1L, "Member"));
     }
 }

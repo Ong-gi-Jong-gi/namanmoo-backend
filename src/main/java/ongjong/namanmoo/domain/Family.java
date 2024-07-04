@@ -12,7 +12,7 @@ import java.util.Random;
 
 @Slf4j
 @RequiredArgsConstructor
-@Getter
+@Getter @Setter
 @Entity
 public class Family {
 
@@ -20,23 +20,17 @@ public class Family {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long familyId;
 
-    @Setter
     private String familyName;
 
-    @Setter
     private int maxFamilySize = 4; // 가족 최대 인원 수, 기본값 4
 
-    @Setter
     private int currentFamilySize;
 
-    @Setter
     private String inviteCode;
 
-    @Setter
     @Column(columnDefinition = "bigint default 0")
     private Long challengeFamilyCount;
 
-    @Setter
     private Long familyOwnerId;
 
     @OneToMany(mappedBy = "family")
