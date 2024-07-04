@@ -51,6 +51,8 @@ public class Family {
         }
         this.inviteCode = code.toString();
     }
+
+
 //    // 초대 코드 생성 메서드 (UUID 사용)
 //    public void generateInviteCode() {
 //        this.inviteCode = UUID.randomUUID().toString().substring(0, CODE_LENGTH);

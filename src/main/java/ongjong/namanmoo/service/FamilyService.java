@@ -40,16 +40,15 @@ public class FamilyService {
         family.setFamilyOwnerId(familyOwner.getMemberId());
         family.setCurrentFamilySize(1);
 
+        familyRepository.save(family);
+
         // 가족 소유자의 역할 설정
-        familyOwner.setFamily(family);
         familyOwner.setRole(ownerRole);
-        family.getMembers().add(familyOwner);
+        familyOwner.setFamily(family);
+        memberRepository.save(familyOwner);
 
         // 초대 코드 생성 및 중복 체크
         generateUniqueInviteCode(family);
-
-        familyRepository.save(family);
-        memberRepository.save(familyOwner);
 
         return family;
     }
@@ -96,11 +95,11 @@ public class FamilyService {
 
         member.setFamily(family);
         member.setRole(role);
-        family.getMembers().add(member);
+
         family.setCurrentFamilySize(family.getCurrentFamilySize() + 1);
 
-        familyRepository.save(family);
         memberRepository.save(member);
+        familyRepository.save(family);
     }
 
     public List<FamilyMemberDto> getFamilyMembersInfo(String familyId) {
