@@ -24,7 +24,6 @@ public class FamilyController {
     /**
      * 가족 생성
      */
-    // TODO: 현재 Member role에 입력받은 role을 넣어줘야 한다.
     @PostMapping("/create")
     public ApiResponse<String> createFamily(@RequestBody CreateFamilyRequest request) {
         Family family = familyService.createFamily(request.getFamilyName(), request.getFamilySize(), request.getOwnerRole());
