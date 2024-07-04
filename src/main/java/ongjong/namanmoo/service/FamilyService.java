@@ -103,10 +103,11 @@ public class FamilyService {
     }
 
     public List<FamilyMemberDto> getFamilyMembersInfo(String familyId) {
-        Family family = familyRepository.findById(Long.valueOf(familyId))
+        Long familyIdLong = Long.valueOf(familyId);
+        Family family = familyRepository.findById(familyIdLong)
                 .orElseThrow(() -> new IllegalArgumentException("Family not found with id: " + familyId));
 
-        List<Member> members = family.getMembers();
+        List<Member> members = memberRepository.findByFamilyFamilyId(familyIdLong);
         List<FamilyMemberDto> memberListDto = new ArrayList<>();
         for (Member member : members) {
             FamilyMemberDto memberDto = new FamilyMemberDto();

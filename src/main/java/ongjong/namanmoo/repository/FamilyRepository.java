@@ -15,8 +15,6 @@ public interface FamilyRepository extends JpaRepository<Family, Long> {
     static Optional<Family> findByInviteCode(String inviteCode) {
         return Optional.empty();
     }
-
-    Optional<Family> findByFamilyId(Long familyId);
 }
 
 //@Repository

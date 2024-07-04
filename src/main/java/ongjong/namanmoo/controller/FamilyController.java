@@ -57,8 +57,8 @@ public class FamilyController {
      * 내 가족 조회
      */
     @GetMapping("/my") // TODO: 이부분 url /info 라고 하는게 더 좋아보임
-    public ApiResponse<List<FamilyMemberDto>> getFamilyInfo(@RequestParam("familyId") String familyId) {
-        List<FamilyMemberDto> members = familyService.getFamilyMembersInfo(familyId);
+    public ApiResponse<List<FamilyMemberDto>> getFamilyInfo(@RequestBody FamilyIdRequest familyId) {
+        List<FamilyMemberDto> members = familyService.getFamilyMembersInfo(familyId.getFamilyId());
         return new ApiResponse<>("200", "Get Family Info Success.", members);
     }
 
@@ -73,5 +73,10 @@ public class FamilyController {
     public static class JoinFamilyRequest {
         private Long familyId;
         private String role;
+    }
+
+    @Getter
+    public static class FamilyIdRequest {
+        private String familyId;
     }
 }
