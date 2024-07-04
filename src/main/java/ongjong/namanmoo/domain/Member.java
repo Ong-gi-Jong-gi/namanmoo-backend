@@ -32,7 +32,7 @@ public class Member {
     @Column(nullable = false)
     private String name; // 이름
 
-//    @Builder.Default
+    @Builder.Default
     private String role = "미정"; // 가족에서의 역할
 
     private String nickname; // 별명
@@ -42,7 +42,7 @@ public class Member {
 
     private Long challengeMemberCount;
 
-//    @Builder.Default
+    @Builder.Default
     private String memberImage = "https://~"; // 프로필 사진
 
     @Enumerated(EnumType.STRING)
