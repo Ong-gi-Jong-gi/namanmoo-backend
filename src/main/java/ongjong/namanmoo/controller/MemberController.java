@@ -30,8 +30,10 @@ public class MemberController {
     // 회원 정보 수정
     @PostMapping("/user")
     @ResponseStatus(HttpStatus.OK)
-    public void updateBasicInfo(@Valid @RequestBody MemberUpdateDto memberUpdateDto) throws Exception {
+    public ApiResponse<MemberInfoDto> updateBasicInfo(@Valid @RequestBody MemberUpdateDto memberUpdateDto) throws Exception {
         memberService.update(memberUpdateDto);
+        MemberInfoDto info = memberService.getMyInfo();
+        return new ApiResponse<>("200", "Update User Info Success", info);
     }
 
     // 비밀 번호 수정

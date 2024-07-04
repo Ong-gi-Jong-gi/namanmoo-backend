@@ -44,6 +44,7 @@ public class MemberServiceImpl implements MemberService {
         // 필드가 존재하는 경우에만 업데이트 진행
         memberUpdateDto.name().ifPresent(member::updateName);
         memberUpdateDto.nickname().ifPresent(member::updateNickname);
+        memberUpdateDto.role().ifPresent(member::updateRole);
     }
 
     // 비밀번호 변경 -> 비밀번호를 입력 받는다

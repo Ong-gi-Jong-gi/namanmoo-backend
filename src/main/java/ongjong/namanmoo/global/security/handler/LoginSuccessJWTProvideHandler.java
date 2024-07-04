@@ -29,7 +29,10 @@ public class LoginSuccessJWTProvideHandler extends SimpleUrlAuthenticationSucces
 
         jwtService.sendAccessAndRefreshToken(response, accessToken, refreshToken);
         memberRepository.findByLoginId(loginId).ifPresent(
-                users -> users.updateRefreshToken(refreshToken)
+                member -> {
+                    member.updateRefreshToken(refreshToken);
+                    memberRepository.save(member);
+                }
         );
 
         log.info( "로그인에 성공합니다. loginId: {}" , loginId);

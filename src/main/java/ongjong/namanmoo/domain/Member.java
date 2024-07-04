@@ -35,11 +35,6 @@ public class Member {
     private String nickname; // 별명
 
     @Builder.Default
-    private boolean checkChallenge = false;
-
-    private Long challengeMemberCount;
-
-    @Builder.Default
     private String memberImage = "https://~"; // 프로필 사진
 
     @Enumerated(EnumType.STRING)
