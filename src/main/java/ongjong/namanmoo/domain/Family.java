@@ -2,38 +2,35 @@ package ongjong.namanmoo.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+import java.security.SecureRandom;
 import java.util.List;
+import java.util.Random;
 
+@Slf4j
+@RequiredArgsConstructor
+@Getter @Setter
 @Entity
-@Getter
 public class Family {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long Id;        // familyId를 Id로 변경
 
-    @Setter
     private String familyName;
 
-    @Column(nullable = false)
-    @Setter
-    private Long maxFamilySize;
+    private int maxFamilySize = 4; // 가족 최대 인원 수, 기본값 4
 
-    @Column(nullable = false, columnDefinition = "bigint default 1")
-    @Setter
-    private Long currentFamilySize;
+    private int currentFamilySize;
 
-    @Column(nullable = false, unique = true)
-    @Setter
     private String inviteCode;
 
     @Column(columnDefinition = "bigint default 0")
-    @Setter
     private Long challengeFamilyCount;
 
-    @Setter
     private Long familyOwnerId;
 
     @OneToMany(mappedBy = "family")
@@ -42,5 +39,20 @@ public class Family {
     @OneToMany(mappedBy = "family")
     private List<Lucky> luckies;
 
-    // Getters and Setters
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final int CODE_LENGTH = 8;
+    private static final Random RANDOM = new SecureRandom();
+
+    // 초대 코드 생성 메서드 (SecureRandom 사용)
+    public void generateInviteCode() {
+        StringBuilder code = new StringBuilder(CODE_LENGTH);
+        for (int i = 0; i < CODE_LENGTH; i++) {
+            code.append(CHARACTERS.charAt(RANDOM.nextInt(CHARACTERS.length())));
+        }
+        this.inviteCode = code.toString();
+    }
+//    // 초대 코드 생성 메서드 (UUID 사용)
+//    public void generateInviteCode() {
+//        this.inviteCode = UUID.randomUUID().toString().substring(0, CODE_LENGTH);
+//    }
 }

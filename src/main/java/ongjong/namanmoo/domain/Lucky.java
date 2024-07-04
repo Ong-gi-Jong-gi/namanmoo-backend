@@ -1,5 +1,6 @@
 package ongjong.namanmoo.domain;
 
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,13 +22,10 @@ public class Lucky {
     @JoinColumn(name = "family_id")
     private Family family;
 
-
     @Column(nullable = false, columnDefinition = "bigint default 0")
-
     private Long status;
 
     private Timestamp challengeStartDate;
-
 
     private Long currentChallengeNumber;
 

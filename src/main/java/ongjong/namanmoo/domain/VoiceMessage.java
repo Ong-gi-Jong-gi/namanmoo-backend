@@ -8,6 +8,7 @@ import java.sql.Timestamp;
 
 @Entity
 @Getter
+@Setter
 public class VoiceMessage {
 
     @Id
@@ -15,25 +16,22 @@ public class VoiceMessage {
     private Long voiceId;
 
     @ManyToOne
-    @JoinColumn(name = "memeber_id")
+    @JoinColumn(name = "member_id")
     private Member member;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private String voiceFile;
 
-    @Setter
     private String voiceTitle;
 
     private Long sender;
 
     private Long receiver;
 
-    @Setter
     private Timestamp date;
 
     private Long voiceLength;
 
-    @Setter
     private boolean checkRead = false;
 
     // Getters and Setters

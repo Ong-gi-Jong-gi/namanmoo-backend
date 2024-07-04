@@ -2,12 +2,14 @@ package ongjong.namanmoo.domain;
 
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+@Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
-@Getter
-@Setter
 public class Member {
 
     @Id
@@ -18,32 +20,73 @@ public class Member {
     @JoinColumn(name = "family_id")
     private Family family;
 
-//    @Column(nullable = false, unique = true)
-
+    @Column(nullable = false, unique = true)
     private String loginId;
 
-
-//    @Column(nullable = false)
+    @Column(nullable = false)
     private String password;
 
-
-//    @Column(nullable = false)
+    @Column(nullable = false)
     private String name;
 
+    @Builder.Default
+    private String role = "미정"; // 가족에서의 역할
 
-//    @Column(nullable = false)
-    private String role;
+    private String nickname; // 별명
+
+    @Builder.Default
+    private String memberImage = "https://~"; // 프로필 사진
+
+    @Enumerated(EnumType.STRING)
+    private LogInRole logInRole; // 권한 -> USER, ADMIN
 
 
-    private String nickname;
+    //== 정보 수정 ==//
+    public void updatePassword(PasswordEncoder passwordEncoder, String password) {
+        this.password = passwordEncoder.encode(password);
+    }
 
+    public void updateName(String name) {
+        this.name = name;
+    }
 
-//    @Column(nullable = false, columnDefinition = "bigint default 0")
-    private Long challengeMemberCount;
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
 
-    private String memberImage;
+    public void updateRole(String role) {
+        this.role = role;
+    }
 
-    // Getters and Setters
+    //== jwt 토큰 추가 ==//
+    @Column(length = 1000)
+    private String refreshToken;
+
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public void destroyRefreshToken() {
+        this.refreshToken = null;
+    }
+
+//    // 아직 정확히 모름
+//    public void updateMemberImage(String memberImage) {
+//        this.memberImage = memberImage;
+//    }
+
+    //== 패스워드 암호화 ==//
+    public void encodePassword(PasswordEncoder passwordEncoder) {
+        this.password = passwordEncoder.encode(password);
+    }
+
+    //비밀번호 변경, 회원 탈퇴 시, 비밀번호를 확인하며, 이때 비밀번호의 일치여부를 판단하는 메서드입니다.
+    public boolean matchPassword(PasswordEncoder passwordEncoder, String checkPassword){
+        return passwordEncoder.matches(checkPassword, getPassword());
+    }
+
+    //회원가입시, USER의 권한을 부여하는 메서드입니다.
+    public void addUserAuthority() {
+        this.logInRole = LogInRole.USER;
+    }
 }
-
-
