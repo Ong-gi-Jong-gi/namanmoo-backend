@@ -8,15 +8,12 @@ import ongjong.namanmoo.dto.family.FamilyMemberDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.FamilyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import ongjong.namanmoo.response.FamilyInviteResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -41,6 +38,11 @@ public class FamilyService {
         String loginId = SecurityUtil.getLoginLoginId();
         Member familyOwner = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + loginId));
+
+        // 이미 가족에 속해 있는지 확인
+        if (familyOwner.getFamily() != null) {
+            throw new IllegalStateException("User already belongs to a family");
+        }
 
         Family family = new Family();
         family.setFamilyName(familyName);
@@ -78,12 +80,32 @@ public class FamilyService {
 //        return "https://localhost/family?code=" + inviteCode;
 //    }
 
+    // 초대 코드로 가족 정보 확인
+    @Transactional(readOnly = true)
+    public FamilyInviteResponse getFamilyInfoByInviteCode(String inviteCode) {
+        Family family = familyRepository.findByInviteCode(inviteCode)
+                .orElseThrow(() -> new IllegalArgumentException("Family not found with invite code: " + inviteCode));
+
+        List<Member> members = memberRepository.findByFamilyFamilyId(family.getFamilyId());
+        List<FamilyMemberDto> memberDtos = convertMembersToDto(members);
+
+        return new FamilyInviteResponse(family.getFamilyName(), family.getFamilyId().toString(), memberDtos);
+    }
+
+
+
     // 가족에 멤버 추가
     @Transactional
     public void addMemberToFamily(Long familyId, String role) {
         String loginId = SecurityUtil.getLoginLoginId();
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found with loginId: " + loginId));
+
+        // 이미 가족에 속해 있는지 확인
+        if (member.getFamily() != null) {
+            throw new IllegalStateException("User already belongs to a family");
+        }
+
 
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Family not found with id: " + familyId));
@@ -94,7 +116,6 @@ public class FamilyService {
         if (currentFamilySize >= family.getMaxFamilySize()) {
             throw new IllegalStateException("Family is already full");
         }
-
 
         member.setFamily(family);
         member.setRole(role);

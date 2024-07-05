@@ -4,18 +4,14 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
-import ongjong.namanmoo.dto.family.FamilyInviteDto;
 import ongjong.namanmoo.dto.family.FamilyMemberDto;
-import ongjong.namanmoo.response.ApiResponse;
-import ongjong.namanmoo.response.CreateFamilyResponse;
-import ongjong.namanmoo.response.FamilyInfoResponse;
-import ongjong.namanmoo.response.JoinFamilyResponse;
+import ongjong.namanmoo.response.*;
 import ongjong.namanmoo.service.FamilyService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,7 +24,7 @@ public class FamilyController {
     /**
      * 가족 생성
      */
-    @PostMapping("/create")
+    @PostMapping
     public ApiResponse<CreateFamilyResponse> createFamily(@RequestBody CreateFamilyRequest request) {
         Family family = familyService.createFamily(request.getFamilyName(), request.getFamilySize(), request.getOwnerRole());
         CreateFamilyResponse response = new CreateFamilyResponse(family.getInviteCode());
@@ -48,21 +44,21 @@ public class FamilyController {
     /**
      * 초대 코드 처리
      */
-//    @GetMapping
-//    public ApiResponse<FamilyInviteDto> getFamilyInfoByInviteCode(@RequestParam(name = "code") String inviteCode) {
-//        Optional<Family> family = familyService.findFamilyByInviteCode(inviteCode);
-//        if (family.isPresent()) {
-//            FamilyInviteDto familyInviteDto = new FamilyInviteDto(family.get());
-//            return new ApiResponse<>("200", "Get Family Info Success.", familyInviteDto);
-//        } else {
-//            return new ApiResponse<>("404", "Invite code not found", null);
-//        }
-//    }
+    @GetMapping
+    public ResponseEntity<ApiResponse<FamilyInviteResponse>> getFamilyInfo(@RequestParam("code") String inviteCode) {
+        FamilyInviteResponse familyInfo = familyService.getFamilyInfoByInviteCode(inviteCode);
+        ApiResponse<FamilyInviteResponse> response = new ApiResponse<>(
+                "200",
+                "Get Family Info Success.",
+                familyInfo
+        );
+        return ResponseEntity.ok(response);
+    }
 
     /**
      * 내 가족 조회
      */
-    @GetMapping("/info") // TODO: 이부분 url /info 라고 하는게 더 좋아보임
+    @GetMapping("/info")
     public ResponseEntity<ApiResponse<FamilyInfoResponse>> getFamilyInfo() {
         List<FamilyMemberDto> members = familyService.getFamilyMembersInfo();
         FamilyInfoResponse familyInfoResponse = new FamilyInfoResponse(members);

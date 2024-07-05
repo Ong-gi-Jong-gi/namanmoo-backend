@@ -48,10 +48,11 @@ public class MemberServiceImpl implements MemberService {
                 .findByLoginId(SecurityUtil.getLoginLoginId())
                 .orElseThrow(() -> new Exception("회원이 존재하지 않습니다"));
 
-        // 필드가 존재하는 경우에만 업데이트 진행
-        memberUpdateDto.name().ifPresent(member::updateName);
-        memberUpdateDto.nickname().ifPresent(member::updateNickname);
-        memberUpdateDto.role().ifPresent(member::updateRole);
+        // 요청에서 필드가 존재하는 경우에만 업데이트 진행
+        memberUpdateDto.name().ifPresent(member::setName);
+        memberUpdateDto.nickname().ifPresent(member::setNickname);
+        memberUpdateDto.role().ifPresent(member::setRole);
+        memberUpdateDto.userImg().ifPresent(member::setMemberImage);
     }
 
     // 비밀번호 변경 -> 비밀번호를 입력 받는다

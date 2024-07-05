@@ -30,7 +30,7 @@ public class LoginSuccessJWTProvideHandler extends SimpleUrlAuthenticationSucces
         jwtService.sendAccessAndRefreshToken(response, accessToken, refreshToken);
         memberRepository.findByLoginId(loginId).ifPresent(
                 member -> {
-                    member.updateRefreshToken(refreshToken);
+                    member.setRefreshToken(refreshToken);
                     memberRepository.save(member);
                 }
         );

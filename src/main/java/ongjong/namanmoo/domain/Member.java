@@ -37,45 +37,23 @@ public class Member {
     private String nickname; // 별명
 
     @Builder.Default
-    private String memberImage = "https://~"; // 프로필 사진
+    private String memberImage = "https://~"; // 프로필 사진(아직 정확히 모름)
 
     @Enumerated(EnumType.STRING)
     private LogInRole logInRole; // 권한 -> USER, ADMIN
 
+    //== jwt 토큰 추가 ==//
+    @Column(length = 1000)
+    private String refreshToken;
 
     //== 정보 수정 ==//
     public void updatePassword(PasswordEncoder passwordEncoder, String password) {
         this.password = passwordEncoder.encode(password);
     }
 
-    public void updateName(String name) {
-        this.name = name;
-    }
-
-    public void updateNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    public void updateRole(String role) {
-        this.role = role;
-    }
-
-    //== jwt 토큰 추가 ==//
-    @Column(length = 1000)
-    private String refreshToken;
-
-    public void updateRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
     public void destroyRefreshToken() {
         this.refreshToken = null;
     }
-
-//    // 아직 정확히 모름
-//    public void updateMemberImage(String memberImage) {
-//        this.memberImage = memberImage;
-//    }
 
     //== 패스워드 암호화 ==//
     public void encodePassword(PasswordEncoder passwordEncoder) {
