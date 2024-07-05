@@ -7,7 +7,9 @@ import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.dto.family.FamilyInviteDto;
 import ongjong.namanmoo.dto.family.FamilyMemberDto;
 import ongjong.namanmoo.response.ApiResponse;
+import ongjong.namanmoo.response.CreateFamilyResponse;
 import ongjong.namanmoo.response.FamilyInfoResponse;
+import ongjong.namanmoo.response.JoinFamilyResponse;
 import ongjong.namanmoo.service.FamilyService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,18 +29,20 @@ public class FamilyController {
      * 가족 생성
      */
     @PostMapping("/create")
-    public ApiResponse<String> createFamily(@RequestBody CreateFamilyRequest request) {
+    public ApiResponse<CreateFamilyResponse> createFamily(@RequestBody CreateFamilyRequest request) {
         Family family = familyService.createFamily(request.getFamilyName(), request.getFamilySize(), request.getOwnerRole());
-        return new ApiResponse<>("200", "Family created successfully", family.getInviteCode());
+        CreateFamilyResponse response = new CreateFamilyResponse(family.getInviteCode());
+        return new ApiResponse<>("200", "Family created successfully", response);
     }
 
     /**
      * 가족 참여
      */
     @PostMapping("/join")
-    public ApiResponse<String> joinFamily(@RequestBody JoinFamilyRequest request) {
+    public ApiResponse<JoinFamilyResponse> joinFamily(@RequestBody JoinFamilyRequest request) {
         familyService.addMemberToFamily(request.getFamilyId(), request.getRole());
-        return new ApiResponse<>("200", "Join Family Success", request.getFamilyId().toString());
+        JoinFamilyResponse response = new JoinFamilyResponse(request.getFamilyId().toString());
+        return new ApiResponse<>("200", "Join Family Success", response);
     }
 
     /**

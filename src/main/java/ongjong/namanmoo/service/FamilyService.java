@@ -46,7 +46,6 @@ public class FamilyService {
         family.setFamilyName(familyName);
         family.setMaxFamilySize(maxFamilySize);
         family.setFamilyOwnerId(familyOwner.getMemberId());
-        family.setCurrentFamilySize(1);
 
         // 초대 코드 생성 및 중복 체크
         generateUniqueInviteCode(family);
@@ -79,7 +78,7 @@ public class FamilyService {
 //        return "https://localhost/family?code=" + inviteCode;
 //    }
 
-    // 가족 멤버 추가
+    // 가족에 멤버 추가
     @Transactional
     public void addMemberToFamily(Long familyId, String role) {
         String loginId = SecurityUtil.getLoginLoginId();
@@ -89,14 +88,16 @@ public class FamilyService {
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Family not found with id: " + familyId));
 
-        if (family.getCurrentFamilySize() >= family.getMaxFamilySize()) {
+        long currentFamilySize = memberRepository.countByFamilyId(familyId);
+//        log.info("currentFamilySize : {}", currentFamilySize);
+
+        if (currentFamilySize >= family.getMaxFamilySize()) {
             throw new IllegalStateException("Family is already full");
         }
 
+
         member.setFamily(family);
         member.setRole(role);
-
-        family.setCurrentFamilySize(family.getCurrentFamilySize() + 1);
 
         memberRepository.save(member);
         familyRepository.save(family);
