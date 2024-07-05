@@ -1,6 +1,7 @@
 package ongjong.namanmoo.domain;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,8 +17,9 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long memberId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "family_id")
+    @JsonBackReference // 순환 참조 방지, 자식 엔티티
     private Family family;
 
     @Column(nullable = false, unique = true)

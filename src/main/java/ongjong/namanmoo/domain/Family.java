@@ -1,5 +1,7 @@
 package ongjong.namanmoo.domain;
 
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -34,27 +36,9 @@ public class Family {
     private Long familyOwnerId;
 
     @OneToMany(mappedBy = "family")
+    @JsonManagedReference // 순환 참조 방지, 부모 엔티티
     private List<Member> members;
 
     @OneToMany(mappedBy = "family")
     private List<Lucky> luckies;
-
-    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    private static final int CODE_LENGTH = 8;
-    private static final Random RANDOM = new SecureRandom();
-
-    // 초대 코드 생성 메서드 (SecureRandom 사용)
-    public void generateInviteCode() {
-        StringBuilder code = new StringBuilder(CODE_LENGTH);
-        for (int i = 0; i < CODE_LENGTH; i++) {
-            code.append(CHARACTERS.charAt(RANDOM.nextInt(CHARACTERS.length())));
-        }
-        this.inviteCode = code.toString();
-    }
-
-
-//    // 초대 코드 생성 메서드 (UUID 사용)
-//    public void generateInviteCode() {
-//        this.inviteCode = UUID.randomUUID().toString().substring(0, CODE_LENGTH);
-//    }
 }

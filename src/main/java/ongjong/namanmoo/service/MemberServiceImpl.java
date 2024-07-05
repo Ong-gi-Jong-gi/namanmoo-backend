@@ -2,6 +2,7 @@ package ongjong.namanmoo.service;
 
 import lombok.RequiredArgsConstructor;
 import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.dto.member.LoginRequestDto;
 import ongjong.namanmoo.dto.member.MemberInfoDto;
 import ongjong.namanmoo.dto.member.MemberSignUpDto;
 import ongjong.namanmoo.dto.member.MemberUpdateDto;
@@ -32,6 +33,12 @@ public class MemberServiceImpl implements MemberService {
         }
 
         memberRepository.save(member);
+    }
+
+    // 아이디 중복 체크
+    @Override
+    public boolean isDuplicateId(LoginRequestDto loginRequestDto) {
+        return memberRepository.existsByLoginId(loginRequestDto.getLoginId());
     }
 
     // 회원 정보 수정

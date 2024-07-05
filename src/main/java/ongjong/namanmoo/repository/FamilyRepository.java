@@ -12,9 +12,13 @@ import java.util.Optional;
 
 
 public interface FamilyRepository extends JpaRepository<Family, Long> {
-    static Optional<Family> findByInviteCode(String inviteCode) {
-        return Optional.empty();
-    }
+    Optional<Family> findByInviteCode(String inviteCode);
+
+//    static boolean isInviteCodeUnique(FamilyRepository repository, String inviteCode) {
+//        return repository.findByInviteCode(inviteCode).isEmpty();
+//    }
+
+    boolean existsByInviteCode(String inviteCode);
 }
 
 //@Repository
