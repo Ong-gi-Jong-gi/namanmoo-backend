@@ -16,7 +16,7 @@ public class ChallengeListDto {
     public ChallengeListDto(Challenge challenge, boolean isComplete) {
         this.challengeId = challenge.getChallengeId();
         this.challengeNumber = challenge.getChallengeNum();
-        if (challenge instanceof NormalC) {
+        if (challenge.getChallengeType() == "NORMAL") {
             this.challengeTitle1 = ((NormalC) challenge).getNormalChallenge();
         }
         else if (challenge instanceof GroupC) {

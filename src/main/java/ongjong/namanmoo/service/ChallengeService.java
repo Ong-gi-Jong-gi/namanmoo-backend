@@ -14,8 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional
@@ -27,6 +26,7 @@ public class ChallengeService {
     private final LuckyRepository luckyRepository;
     private final MemberRepository memberRepository;
     private final AnswerRepository answerRepository;
+
 
     // familyId를 통해 해당 날짜에 해당하는 오늘의 challenge 조회
     // 해당 가족 id를 가지고 있는 행운이 모두 조회

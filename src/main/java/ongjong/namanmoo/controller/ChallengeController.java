@@ -61,7 +61,7 @@ public class ChallengeController {
 
     // 내일 여기서부터  param으로 수정  /////
 
-    @GetMapping("/list")        // 챌린지 리스트 조회
+    @GetMapping("/list")        // 챌린지 리스트 조회 todo: 그룹  챌린지일 경우 두개의 챌린지가 dto에 들어가야한다.
     public ResponseEntity<ApiResponse<List<ChallengeListDto>>> getChallengeList() throws Exception {
         List<Challenge> challenges = challengeService.findChallenges();
 
