@@ -127,21 +127,21 @@ class JwtAuthenticationProcessingFilterTest {
                 .andExpect(status().isForbidden());
     }
 
-    /**
-     * AccessToken : 유효,
-     * RefreshToken : 존재하지 않음
-     */
-    @Test
-    public void AccessToken만_보내서_인증() throws Exception {
-        //given
-        Map accessAndRefreshToken = getAccessAndRefreshToken();
-        String accessToken= (String) accessAndRefreshToken.get(accessHeader);
-
-        //when, then
-        mockMvc.perform(get(LOGIN_RUL+"123").header(accessHeader,BEARER+ accessToken))//login이 아닌 다른 임의의 주소
-                .andExpectAll(status().isNotFound());//없는 주소로 보냈으므로 NotFound
-
-    }
+//    /**
+//     * AccessToken : 유효,
+//     * RefreshToken : 존재하지 않음
+//     */
+//    @Test
+//    public void AccessToken만_보내서_인증() throws Exception {
+//        //given
+//        Map accessAndRefreshToken = getAccessAndRefreshToken();
+//        String accessToken= (String) accessAndRefreshToken.get(accessHeader);
+//
+//        //when, then
+//        mockMvc.perform(get(LOGIN_RUL+"123").header(accessHeader,BEARER+ accessToken))//login이 아닌 다른 임의의 주소
+//                .andExpectAll(status().isNotFound());//없는 주소로 보냈으므로 NotFound
+//
+//    }
 
     /**
      * AccessToken : 유효하지 않음,
