@@ -1,8 +1,11 @@
 package ongjong.namanmoo.service;
 
+import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.dto.member.MemberInfoDto;
 import ongjong.namanmoo.dto.member.MemberSignUpDto;
 import ongjong.namanmoo.dto.member.MemberUpdateDto;
+
+import java.util.Optional;
 
 public interface MemberService {
 
@@ -24,5 +27,6 @@ public interface MemberService {
 //    MemberInfoDto getInfo(Long memberId) throws Exception;
 
     MemberInfoDto getMyInfo() throws Exception;
+
 
 }

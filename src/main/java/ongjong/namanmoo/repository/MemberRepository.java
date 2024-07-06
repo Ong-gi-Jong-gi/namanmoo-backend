@@ -15,4 +15,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByRefreshToken(String refreshToken);
 
     List<Member> findByFamilyId(Long familyId);
+
+    int countByFamilyId(Long familyId);
 }

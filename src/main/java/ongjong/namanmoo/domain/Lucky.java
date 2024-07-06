@@ -4,6 +4,7 @@ package ongjong.namanmoo.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import ongjong.namanmoo.domain.answer.FaceTimeAnswer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 
 import java.sql.Timestamp;
@@ -27,7 +28,10 @@ public class Lucky {
 
     private Timestamp challengeStartDate;
 
-    private Long currentChallengeNumber;
+    private Long currentChallengeNum;
+
+    @OneToMany(mappedBy = "lucky")
+    private List<FaceTimeAnswer> faceTimeAnswers;
 
 //    @OneToMany(mappedBy = "lucky")
 //    private List<Challenge> challenges;

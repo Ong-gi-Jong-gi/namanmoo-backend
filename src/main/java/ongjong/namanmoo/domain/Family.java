@@ -24,8 +24,6 @@ public class Family {
 
     private int maxFamilySize = 4; // 가족 최대 인원 수, 기본값 4
 
-    private int currentFamilySize;
-
     private String inviteCode;
 
     @Column(columnDefinition = "bigint default 0")

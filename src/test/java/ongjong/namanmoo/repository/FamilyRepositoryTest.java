@@ -27,7 +27,6 @@ public class FamilyRepositoryTest {
         family.setChallengeFamilyCount(0L);
         family.setMaxFamilySize(4);
         family.setInviteCode("0000");
-        family.setCurrentFamilySize(4);
         Long savedId = familyRepository.save(family).getId();
         Family findFamily = familyRepository.findById(savedId).get();
         Assertions.assertThat(findFamily.getId()).isEqualTo(family.getId());

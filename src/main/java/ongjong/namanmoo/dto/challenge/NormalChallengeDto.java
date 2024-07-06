@@ -2,7 +2,6 @@ package ongjong.namanmoo.dto.challenge;
 
 import lombok.Data;
 import ongjong.namanmoo.domain.answer.Answer;
-import ongjong.namanmoo.domain.answer.NormalA;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.domain.challenge.NormalC;
 
@@ -44,7 +43,7 @@ public class NormalChallengeDto {
         public AnswerDto(Answer answer) {
             this.userId = answer.getMember().getLoginId();
             this.userImg = answer.getMember().getMemberImage();
-            this.answer = ((NormalA) answer).getNormalAnswer();
+            this.answer = answer.getAnswerContent();
             this.nickname = answer.getMember().getNickname();
             this.role = answer.getMember().getRole();
         }

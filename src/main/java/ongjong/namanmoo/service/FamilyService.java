@@ -39,7 +39,6 @@ public class FamilyService {
         family.setFamilyName(familyName);
         family.setMaxFamilySize(maxFamilySize);
         family.setFamilyOwnerId(familyOwner.getMemberId());
-        family.setCurrentFamilySize(1);
 
         // 가족 소유자의 역할 설정
         familyOwner.setFamily(family);

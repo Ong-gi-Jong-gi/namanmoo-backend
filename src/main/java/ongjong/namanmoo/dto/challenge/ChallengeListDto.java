@@ -8,7 +8,7 @@ import ongjong.namanmoo.domain.challenge.*;
 public class ChallengeListDto {
     private Long challengeId;
     private Long challengeNumber;
-    private String challengeTitle1;
+    private String challengeTitle1;     // group
     private String challengeTitle2 = null;
     private String challengeType;
     private boolean isComplete;
