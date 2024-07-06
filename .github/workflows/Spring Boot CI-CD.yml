@@ -102,10 +102,14 @@ jobs:
         script: |
           sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
           sudo docker pull ${{ env.IMAGE_NAME }}
-          sudo docker stop $(sudo docker ps -q) || true
-          sudo docker rm $(sudo docker ps -a -q) || true
-          sudo docker run -d --name ${PROJECT_NAME} -p 8080:8080 \
+          CONTAINER_ID=$(sudo docker ps -q)
+          if [ -n "$CONTAINER_ID" ]; then
+            sudo docker stop $CONTAINER_ID
+            sudo docker rm $CONTAINER_ID
+          fi
+          sudo docker run -d --name ${{ env.PROJECT_NAME }} -p 8080:8080 \
             -e SPRING_DATASOURCE_URL="${{ secrets.DB_URL }}" \
             -e SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}" \
             -e SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}" \
             ${{ env.IMAGE_NAME }}
+          sudo docker system prune -f
