@@ -8,15 +8,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class DatabaseConfig {
 
-    @Value("${application.spring.datasource.url}")
+    @Value("${SPRING_DATASOURCE_URL}")
     private String url;
 
-    @Value("${application.spring.datasource.username}")
+    @Value("${SPRING_DATASOURCE_USERNAME}")
     private String username;
 
-    @Value("${application.spring.datasource.password}")
+    @Value("${SPRING_DATASOURCE_PASSWORD}")
     private String password;
 
-    @Value("${security.jwt.token.secret-key}")
+    @Value("${SECURITY_JWT_TOKEN_SECRET_KEY}")
     private String secretKey;
 }
