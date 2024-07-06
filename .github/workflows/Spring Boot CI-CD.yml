@@ -102,10 +102,11 @@ jobs:
         script: |
           sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
           sudo docker pull ${{ env.IMAGE_NAME }}
-          sudo docker stop springboot-app || true
-          sudo docker rm springboot-app || true
-          sudo docker run -d --name springboot-app -p 8080:8080 \
-            -e SPRING_DATASOURCE_URL=${{ secrets.DB_URL }} \
-            -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }} \
-            -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
+          sudo docker stop $(sudo docker ps -q) || true
+          sudo docker rm $(sudo docker ps -a -q) || true
+          sudo docker run -d --name ${PROJECT_NAME} -p 8080:8080 \
+            -e SPRING_DATASOURCE_URL="${{ secrets.DB_URL }}" \
+            -e SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}" \
+            -e SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}" \
             ${{ env.IMAGE_NAME }}
+          sudo docker system prune -f
