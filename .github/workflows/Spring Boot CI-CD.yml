@@ -28,18 +28,17 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # Gradle 캐시 설정
-    - name: Cache Gradle packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
+    # Gradle Build를 위한 권한 부여
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
     # Gradle로 빌드 실행
     - name: Build with Gradle
       run: ./gradlew clean build
+
+    # # Gradle Build (test 제외)
+    # - name: Build with Gradle
+    #   run: ./gradlew clean build --exclude-task test
 
     # Docker Buildx 설정
     - name: Docker Setup Buildx
