@@ -1,6 +1,5 @@
 package ongjong.namanmoo.response;
 
-
 import lombok.Getter;
 
 @Getter

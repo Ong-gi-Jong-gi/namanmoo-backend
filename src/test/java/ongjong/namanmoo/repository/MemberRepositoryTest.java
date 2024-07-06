@@ -3,12 +3,14 @@ package ongjong.namanmoo.repository;
 import jakarta.persistence.EntityManager;
 import ongjong.namanmoo.domain.LogInRole;
 import ongjong.namanmoo.domain.Member;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +66,19 @@ class MemberRepositoryTest {
     }
 
     @Test
+    @Transactional
+//    @Rollback(false)
+    public void testmember() throws Exception {
+        Member member = new Member();
+        member.setName("member a");
+        Member member1 = memberRepository.save(member);
+        Long saveId = member1.getMemberId();
+        Member findMember = memberRepository.findById(saveId).get();
+        Assertions.assertThat(findMember.getMemberId()).isEqualTo(member.getMemberId());
+        Assertions.assertThat(findMember.getName()).isEqualTo(member.getName());
+        Assertions.assertThat(findMember).isEqualTo(member);
+    }
+
     public void 오류_회원가입시_아이디가_없음() throws Exception {
         //given
         Member member = Member.builder()
