@@ -34,7 +34,7 @@ jobs:
 
     # Gradle로 빌드 실행
     - name: Build with Gradle
-      run: ./gradlew clean build
+      run: ./gradlew clean build --spring.profiles.active=test
 
     # # Gradle Build (test 제외)
     # - name: Build with Gradle
