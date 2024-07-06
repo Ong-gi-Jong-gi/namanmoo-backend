@@ -1,4 +1,4 @@
-*/.env
-*/env.properties
-*/PropertyConfig.java
-*/DatabaseConfig.java
+src/main/java/ongjong/namanmoo/config/PropertyConfig.java
+src/main/java/ongjong/namanmoo/config/DatabaseConfig.java
+src/main/resources/env.properties
+.env
