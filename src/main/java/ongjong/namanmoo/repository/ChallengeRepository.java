@@ -1,32 +1,11 @@
 package ongjong.namanmoo.repository;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import lombok.RequiredArgsConstructor;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-public interface ChallengeRepository extends JpaRepository<Challenge, Long> {}
-
-//@Repository
-//@RequiredArgsConstructor
-//public class ChallengeRepository {
-//
-//    @PersistenceContext
-//    private EntityManager em;
-//
-//    public void save(Challenge challenge) {
-//        em.persist(challenge);
-//    }
-//
-//    public Challenge findById(String id) {
-//        return em.find(Challenge.class, id);
-//    }
-//
-//    public List<Challenge> findAll() {
-//        return em.createQuery("from Challenge", Challenge.class).getResultList();
-//    }
-//}
+public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
+     Challenge findByChallengeNum(Long challengeNum);
+     List<Challenge> findByChallengeNumLessThanEqual(Long challengeNum);        // challengeNum 이하의 challenge 모두 반환
+}

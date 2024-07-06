@@ -86,7 +86,7 @@ public class FamilyServiceTest {
         when(memberRepository.findByLoginId(anyString())).thenReturn(Optional.of(member));
 
         Family family = new Family();
-        family.setFamilyId(1L);
+        family.setId(1L);
         family.setMaxFamilySize(4);
         family.setCurrentFamilySize(1);
         when(familyRepository.findById(any(Long.class))).thenReturn(Optional.of(family));
@@ -112,7 +112,7 @@ public class FamilyServiceTest {
         when(memberRepository.findByLoginId(anyString())).thenReturn(Optional.of(member));
 
         Family family = new Family();
-        family.setFamilyId(1L);
+        family.setId(1L);
         family.setMaxFamilySize(1);
         family.setCurrentFamilySize(1);
         when(familyRepository.findById(any(Long.class))).thenReturn(Optional.of(family));

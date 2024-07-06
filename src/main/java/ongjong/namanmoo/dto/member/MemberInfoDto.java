@@ -1,5 +1,6 @@
 package ongjong.namanmoo.dto.member;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import ongjong.namanmoo.domain.Member;

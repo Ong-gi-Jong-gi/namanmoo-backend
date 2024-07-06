@@ -1,5 +1,6 @@
 package ongjong.namanmoo.service;
 
+import ongjong.namanmoo.dto.member.LoginRequestDto;
 import ongjong.namanmoo.dto.member.MemberInfoDto;
 import ongjong.namanmoo.dto.member.MemberSignUpDto;
 import ongjong.namanmoo.dto.member.MemberUpdateDto;
@@ -14,6 +15,9 @@ public interface MemberService {
      */
 
     void signUp(MemberSignUpDto memberSignUpDto) throws Exception;
+
+    // 아이디 중복 체크
+    boolean isDuplicateId(LoginRequestDto loginRequestDto);
 
     void update(MemberUpdateDto memberUpdateDto) throws Exception;
 

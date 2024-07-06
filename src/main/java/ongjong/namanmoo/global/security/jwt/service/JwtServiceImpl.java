@@ -82,7 +82,7 @@ public class JwtServiceImpl implements JwtService{
     public void updateRefreshToken(String loginId, String refreshToken) {
         memberRepository.findByLoginId(loginId)
                 .ifPresentOrElse(
-                        member -> member.updateRefreshToken(refreshToken),
+                        member -> member.setRefreshToken(refreshToken),
                         () -> new Exception("회원 조회 실패")
                 );
     }
