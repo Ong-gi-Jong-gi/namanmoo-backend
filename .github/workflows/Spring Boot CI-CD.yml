@@ -109,4 +109,3 @@ jobs:
             -e SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}" \
             -e SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}" \
             ${{ env.IMAGE_NAME }}
-          sudo docker system prune -f
