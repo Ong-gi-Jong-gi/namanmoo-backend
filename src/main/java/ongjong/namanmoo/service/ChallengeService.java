@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,7 +58,7 @@ public class ChallengeService {
 
     public boolean createAnswer(Long familyId){
 
-        List<Member> members = memberRepository.findByFamilyId(familyId);
+        List<Member> members = memberRepository.findByFamilyFamilyId(familyId);
         List<Challenge> challenges = challengeRepository.findAll();
         if (members.isEmpty()) {
             return false; // 가족에 해당하는 회원이 없으면 false 반환
@@ -113,7 +112,7 @@ public class ChallengeService {
     }
 
     public Long findCurrentChallengeNum(Long familyId) {       // 현재 진행중인 challenge 번호 조회
-        List<Lucky> luckies = luckyRepository.findByFamilyId(familyId);
+        List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
         for (Lucky lucky : luckies) {
             if (lucky.getCurrentChallengeNumber() != 31) {
                  return lucky.getCurrentChallengeNumber(); // 현재 진행되어야할 challenge를 반환

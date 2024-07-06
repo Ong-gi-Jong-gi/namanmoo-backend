@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class MemberRepositoryTest {
 
+    @Autowired MemberRepository memberRepository;
     @Autowired
-    MemberRepository memberRepository;
     EntityManager em;
 
     @AfterEach
@@ -43,6 +43,7 @@ class MemberRepositoryTest {
                 .nickname("Nickname1")
                 .role("아들")
 //                .challengeMemberCount(1L)
+//                .checkChallenge(false)
                 .logInRole(LogInRole.USER)
                 .build();
 
@@ -86,6 +87,7 @@ class MemberRepositoryTest {
                 .nickname("Nickname1")
                 .role("아들")
 //                .challengeMemberCount(1L)
+//                .checkChallenge(false)
                 .logInRole(LogInRole.USER)
                 .build();
         //when
@@ -104,7 +106,7 @@ class MemberRepositoryTest {
                 .nickname("Nickname1")
                 .role("아들")
 //                .challengeMemberCount(1L)
-
+//                .checkChallenge(false)
                 .logInRole(LogInRole.USER)
                 .build();
 
@@ -115,6 +117,7 @@ class MemberRepositoryTest {
                 .nickname("Nickname2")
                 .role("아빠")
 //                .challengeMemberCount(1L)
+//                .checkChallenge(false)
                 .logInRole(LogInRole.USER)
                 .build();
         memberRepository.save(member1);
@@ -135,6 +138,7 @@ class MemberRepositoryTest {
                 .nickname("NickName1")
                 .role("아들")
 //                .challengeMemberCount(1L)
+//                .checkChallenge(false)
                 .logInRole(LogInRole.USER)
                 .build();
         memberRepository.save(member1);

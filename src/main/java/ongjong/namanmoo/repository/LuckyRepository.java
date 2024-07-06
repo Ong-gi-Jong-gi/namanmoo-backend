@@ -5,5 +5,5 @@ import ongjong.namanmoo.domain.Lucky;
 import java.util.List;
 
 public interface LuckyRepository extends JpaRepository<Lucky,Long> {
-    List<Lucky> findByFamilyId(Long familyId);
+    List<Lucky> findByFamilyFamilyId(Long familyId);
 }

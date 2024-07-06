@@ -61,7 +61,7 @@ public class ChallengeController {
                     .body(new ApiResponse<>("failure", "No challenges found for the family", null));
         }
 
-        List<Member> members = memberRepository.findByFamilyId(familyId);
+        List<Member> members = memberRepository.findByFamilyFamilyId(familyId);
         Member member = members.get(0);     // 일단 첫번째 맴버로 TODO : 로그인 한 사람으로 바꿔야함
         List<ChallengeListDto> challengeList = challenges.stream()
                 .map(challenge -> {
