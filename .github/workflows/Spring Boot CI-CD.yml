@@ -96,8 +96,8 @@ jobs:
     - name: Set project name
       run: echo "PROJECT_NAME=${{ secrets.PROJECT_NAME }}" >> $GITHUB_ENV
 
-      # EC2에 SSH로 접속하여 Docker Compose를 통해 배포
-    - name: SSH into EC2 and deploy with Docker Compose
+    # EC2에 SSH로 접속하여 배포
+    - name: SSH into EC2 and deploy
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -106,5 +106,18 @@ jobs:
         script: |
           set -x
           sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
-          sudo docker-compose -f /path/to/docker-compose.yml up -d
+          sudo docker pull ${{ env.IMAGE_NAME }}
+          CONTAINER_ID=$(sudo docker ps -q)
+          if [ -n "$CONTAINER_ID" ]; then
+            sudo docker stop $CONTAINER_ID
+            sudo docker rm $CONTAINER_ID
+          fi
+          sudo docker run -d --name ${{ env.PROJECT_NAME }} -p 8080:8080 \
+            -e SPRING_DATASOURCE_URL="${{ secrets.DB_URL }}" \
+            -e SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}" \
+            -e SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            -e SECURITY_JWT_TOKEN_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" \
+            ${{ env.IMAGE_NAME }}
+          sudo docker ps -a
+          sudo docker system prune -f
           set +x
