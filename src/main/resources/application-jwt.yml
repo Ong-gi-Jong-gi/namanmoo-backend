@@ -1,5 +1,5 @@
 jwt:
-  secret: ${security.jwt.token.secret-key}
+  secret: ${SECURITY_JWT_TOKEN_SECRET_KEY}
 
   access:
     expiration: 300 # 유효시간 300초

@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${application.spring.datasource.url}
-    username: ${application.spring.datasource.username}
-    password: ${application.spring.datasource.password}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   profiles:
