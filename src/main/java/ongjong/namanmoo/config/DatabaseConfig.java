@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DatabaseConfig {
+class DatabaseConfig {
 
     @Value("${SPRING_DATASOURCE_URL}")
     private String url;

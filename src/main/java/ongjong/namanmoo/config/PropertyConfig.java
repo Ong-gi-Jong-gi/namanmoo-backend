@@ -8,8 +8,7 @@ import org.springframework.context.annotation.PropertySource;
 import java.io.InputStream;
 import java.util.Properties;
 
-@Profile("!docker")
 @Configuration
 @PropertySource("classpath:env.properties")
-public class PropertyConfig {
+class PropertyConfig {
 }

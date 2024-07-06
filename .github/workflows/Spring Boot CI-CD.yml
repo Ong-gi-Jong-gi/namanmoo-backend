@@ -34,11 +34,11 @@ jobs:
 
 #      # Gradle로 빌드 실행
 #      - name: Build with Gradle
-#        run: ./gradlew -Pdocker clean build
+#        run: ./gradlew clean build
 
       # Gradle Build (test 제외)
       - name: Build with Gradle without test
-        run: ./gradlew -Pdocker clean build --exclude-task test
+        run: ./gradlew clean build --exclude-task test
 
       # Docker Buildx 설정
       - name: Docker Setup Buildx
