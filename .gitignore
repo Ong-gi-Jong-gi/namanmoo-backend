@@ -37,3 +37,6 @@ out/
 .vscode/
 
 .github/
+
+### env.properties ###
+src/main/resources/env.properties
