@@ -1,11 +1,9 @@
 package ongjong.namanmoo.service;
 
-import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.dto.member.LoginRequestDto;
 import ongjong.namanmoo.dto.member.MemberInfoDto;
 import ongjong.namanmoo.dto.member.MemberSignUpDto;
 import ongjong.namanmoo.dto.member.MemberUpdateDto;
-
-import java.util.Optional;
 
 public interface MemberService {
 
@@ -18,6 +16,9 @@ public interface MemberService {
 
     void signUp(MemberSignUpDto memberSignUpDto) throws Exception;
 
+    // 아이디 중복 체크
+    boolean isDuplicateId(LoginRequestDto loginRequestDto);
+
     void update(MemberUpdateDto memberUpdateDto) throws Exception;
 
     void updatePassword(String checkPassword, String toBePassword) throws Exception;
@@ -27,6 +28,5 @@ public interface MemberService {
 //    MemberInfoDto getInfo(Long memberId) throws Exception;
 
     MemberInfoDto getMyInfo() throws Exception;
-
 
 }

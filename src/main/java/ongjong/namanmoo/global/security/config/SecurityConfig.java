@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)  // HTTP Basic 비활성화
                 .formLogin(AbstractHttpConfigurer::disable)  // 폼 로그인 비활성화
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/signup", "/", "/login").permitAll()
+                        .requestMatchers("/signup", "/","/signup/duplicate", "/login").permitAll()
                         .anyRequest().authenticated())
 //				.formLogin(formLogin -> formLogin
 //						.loginPage("/login")

@@ -30,7 +30,7 @@ public class AnswerService {
     public boolean createAnswer(Long familyId) {
 
         // 가족 ID로 해당 가족의 회원들을 조회
-        List<Member> members = memberRepository.findByFamilyId(familyId);
+        List<Member> members = memberRepository.findByFamilyFamilyId(familyId);
 
         // 모든 챌린지를 조회
         List<Challenge> challenges = challengeRepository.findAll();
@@ -72,7 +72,7 @@ public class AnswerService {
 
                     // FaceTimeC일 경우 FaceTimeAnswer 생성 및 저장
                     FaceTimeAnswer faceTimeAnswer = new FaceTimeAnswer();
-                    faceTimeAnswer.setLucky(findCurrentLucky(member.getFamily().getId()));
+                    faceTimeAnswer.setLucky(findCurrentLucky(member.getFamily().getFamilyId()));
                     faceTimeAnswerRepository.save(faceTimeAnswer);
 
                     // FaceTimeAnswer의 ID를 Answer의 answerContent에 저장
@@ -129,7 +129,7 @@ public class AnswerService {
 
     @Transactional(readOnly = true)
     public Lucky findCurrentLucky(Long familyId) {       // 현재 진행중인 lucky id 조회
-        List<Lucky> luckies = luckyRepository.findByFamilyId(familyId);
+        List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
         for (Lucky lucky : luckies) {
             if (lucky.isRunning()) {
                 return lucky; // 현재 진행되고있는 luckyid 반환

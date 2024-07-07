@@ -8,14 +8,14 @@ import ongjong.namanmoo.dto.family.FamilyMemberDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.FamilyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import ongjong.namanmoo.response.FamilyInviteResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.security.SecureRandom;
 import java.util.List;
-import java.util.Optional;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,6 +26,11 @@ public class FamilyService {
     private final FamilyRepository familyRepository;
     private final MemberRepository memberRepository;
 
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final int CODE_LENGTH = 8;
+    private static final Random RANDOM = new SecureRandom();
+
+
     @Transactional
     public Family createFamily(String familyName, int maxFamilySize, String ownerRole) {
 
@@ -35,44 +40,38 @@ public class FamilyService {
         Member familyOwner = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + loginId));
 
+        // 이미 가족에 속해 있는지 확인
+        if (familyOwner.getFamily() != null) {
+            throw new IllegalStateException("User already belongs to a family");
+        }
+
         Family family = new Family();
         family.setFamilyName(familyName);
         family.setMaxFamilySize(maxFamilySize);
         family.setFamilyOwnerId(familyOwner.getMemberId());
 
-        // 가족 소유자의 역할 설정
-        familyOwner.setFamily(family);
-        familyOwner.setRole(ownerRole);
-        family.getMembers().add(familyOwner);
-
         // 초대 코드 생성 및 중복 체크
         generateUniqueInviteCode(family);
-
         familyRepository.save(family);
-        memberRepository.save(familyOwner);
 
+        // 가족 소유자의 역할 설정
+        familyOwner.setRole(ownerRole);
+        familyOwner.setFamily(family);
+        memberRepository.save(familyOwner);
+        
         return family;
     }
 
-//    private String getCurrentMemberLogin() {
-//        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//        if (principal instanceof UserDetails) {
-//            return ((UserDetails) principal).getUsername();
-//        } else {
-//            return principal.toString();
-//        }
-//    }
 
-    private void generateUniqueInviteCode(Family family) {
-        boolean isUnique = false;
-        while (!isUnique) {
-            family.generateInviteCode();
-            isUnique = FamilyRepository.findByInviteCode(family.getInviteCode()).isEmpty();
-        }
-    }
+    // 내 가족 정보 확인
+    public List<FamilyMemberDto> getFamilyMembersInfo() {
+        String currentLoginId = SecurityUtil.getLoginLoginId();
+        Member currentUser = memberRepository.findByLoginId(currentLoginId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found for loginId: " + currentLoginId));
 
-    public Optional<Family> findFamilyByInviteCode(String inviteCode) {
-        return FamilyRepository.findByInviteCode(inviteCode);
+        Long familyId = currentUser.getFamily().getFamilyId();
+        List<Member> members = memberRepository.findByFamilyFamilyId(familyId);
+        return convertMembersToDto(members);
     }
 
 //    // 초대 URL 생성
@@ -81,49 +80,95 @@ public class FamilyService {
 //        return "https://localhost/family?code=" + inviteCode;
 //    }
 
+    // 초대 코드로 가족 정보 확인
+    @Transactional(readOnly = true)
+    public FamilyInviteResponse getFamilyInfoByInviteCode(String inviteCode) {
+        Family family = familyRepository.findByInviteCode(inviteCode)
+                .orElseThrow(() -> new IllegalArgumentException("Family not found with invite code: " + inviteCode));
+
+        List<Member> members = memberRepository.findByFamilyFamilyId(family.getFamilyId());
+        List<FamilyMemberDto> memberDtos = convertMembersToDto(members);
+
+        return new FamilyInviteResponse(family.getFamilyName(), family.getFamilyId().toString(), memberDtos);
+    }
+
+
+
+    // 가족에 멤버 추가
     @Transactional
     public void addMemberToFamily(Long familyId, String role) {
         String loginId = SecurityUtil.getLoginLoginId();
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found with loginId: " + loginId));
 
+        // 이미 가족에 속해 있는지 확인
+        if (member.getFamily() != null) {
+            throw new IllegalStateException("User already belongs to a family");
+        }
+
+
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Family not found with id: " + familyId));
 
-        if (family.getCurrentFamilySize() >= family.getMaxFamilySize()) {
+        long currentFamilySize = memberRepository.countByFamilyId(familyId);
+//        log.info("currentFamilySize : {}", currentFamilySize);
+
+        if (currentFamilySize >= family.getMaxFamilySize()) {
             throw new IllegalStateException("Family is already full");
         }
 
         member.setFamily(family);
         member.setRole(role);
-        family.getMembers().add(member);
-        family.setCurrentFamilySize(family.getCurrentFamilySize() + 1);
 
-        familyRepository.save(family);
         memberRepository.save(member);
+        familyRepository.save(family);
     }
 
-    public List<FamilyMemberDto> getFamilyMembersInfo(String familyId) {
-        Family family = familyRepository.findById(Long.valueOf(familyId))
-                .orElseThrow(() -> new IllegalArgumentException("Family not found with id: " + familyId));
 
-        List<Member> members = family.getMembers();
-        List<FamilyMemberDto> memberListDto = new ArrayList<>();
-        for (Member member : members) {
-            FamilyMemberDto memberDto = new FamilyMemberDto();
-            memberDto.setName(member.getName());
-            memberDto.setNickname(member.getNickname());
-            memberDto.setRole(member.getRole());
-            memberDto.setUserImg(member.getMemberImage());
-            memberListDto.add(memberDto);
+    // 엔티티를 DTO로 변환하는 메서드
+    private FamilyMemberDto convertToDto(Member member) {
+        FamilyMemberDto dto = new FamilyMemberDto();
+        dto.setUserId(member.getLoginId());
+        dto.setName(member.getName());
+        dto.setNickname(member.getNickname());
+        dto.setRole(member.getRole());
+        dto.setUserImg(member.getMemberImage());
+        return dto;
+    }
+
+    // 엔티티 리스트를 DTO리스트로 변환
+    private List<FamilyMemberDto> convertMembersToDto(List<Member> members) {
+        return members.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    // 초대 코드 생성 및 중복 체크
+    public void generateUniqueInviteCode(Family family) {
+        boolean isUnique = false;
+        String inviteCode = null;
+
+        while (!isUnique) {
+            inviteCode = generateInviteCode();
+            isUnique = !familyRepository.existsByInviteCode(inviteCode);
         }
-        return memberListDto;
+
+        //가족에 초대코드 저장
+        family.setInviteCode(inviteCode);
     }
 
-    @Transactional(readOnly = true)
-    public Long findFamilyId() throws Exception{      // 회원 아이디로 familyId 조회
-        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
-        Family family = member.getFamily();
-        return family.getId();
+    // 초대 코드 생성
+    private String generateInviteCode() {
+        StringBuilder code = new StringBuilder(CODE_LENGTH);
+        for (int i = 0; i < CODE_LENGTH; i++) {
+            code.append(CHARACTERS.charAt(RANDOM.nextInt(CHARACTERS.length())));
+        }
+        return code.toString();
+    }
+
+    public Long findFamilyId() {
+        String currentLoginId = SecurityUtil.getLoginLoginId();
+        Member currentUser = memberRepository.findByLoginId(currentLoginId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found for loginId: " + currentLoginId));
+
+        return currentUser.getFamily().getFamilyId();
     }
 }

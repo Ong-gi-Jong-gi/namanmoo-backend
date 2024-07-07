@@ -2,6 +2,7 @@ package ongjong.namanmoo.service;
 
 import lombok.RequiredArgsConstructor;
 import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.dto.member.LoginRequestDto;
 import ongjong.namanmoo.dto.member.MemberInfoDto;
 import ongjong.namanmoo.dto.member.MemberSignUpDto;
 import ongjong.namanmoo.dto.member.MemberUpdateDto;
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +39,12 @@ public class MemberServiceImpl implements MemberService {
         memberRepository.save(member);
     }
 
+    // 아이디 중복 체크
+    @Override
+    public boolean isDuplicateId(LoginRequestDto loginRequestDto) {
+        return memberRepository.existsByLoginId(loginRequestDto.getLoginId());
+    }
+
     // 회원 정보 수정
     @Override
     public void update (MemberUpdateDto memberUpdateDto) throws Exception {
@@ -43,9 +52,19 @@ public class MemberServiceImpl implements MemberService {
                 .findByLoginId(SecurityUtil.getLoginLoginId())
                 .orElseThrow(() -> new Exception("회원이 존재하지 않습니다"));
 
-        // 필드가 존재하는 경우에만 업데이트 진행
-        memberUpdateDto.name().ifPresent(member::updateName);
-        memberUpdateDto.nickname().ifPresent(member::updateNickname);
+        // 요청에서 필드가 존재하는 경우에만 업데이트 진행
+        memberUpdateDto.name().ifPresent(member::setName);
+        memberUpdateDto.nickname().ifPresent(member::setNickname);
+        memberUpdateDto.role().ifPresent(member::setRole);
+        // 파일을 전송했을 경우에만 S3 파일 업로드 수행
+        memberUpdateDto.userImg().ifPresent(image -> {
+            try {
+                String imagePath = AwsS3Service.upload(image);
+                member.setMemberImage(imagePath);
+            } catch (IOException e) {
+                throw new RuntimeException("S3 업로드 중 에러가 발생했습니다.", e);
+            }
+        });
     }
 
     // 비밀번호 변경 -> 비밀번호를 입력 받는다
