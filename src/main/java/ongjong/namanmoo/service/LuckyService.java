@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,8 +29,9 @@ public class LuckyService {
             Lucky lucky1 = new Lucky();
             lucky1.setFamily(family);
             lucky1.setStatus(1L);
-            lucky1.setChallengeStartDate(new Timestamp(System.currentTimeMillis()));
-            lucky1.setCurrentChallengeNum(1L);       // 현재 진행하고있는 challenge에 따라 current challenge가 바뀌어야함
+            String currentDateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+            lucky1.setChallengeStartDate(currentDateStr); // 문자열 형식으로 날짜 저장
+            lucky1.setRunning(true);       // 현재 진행하고있는 challenge에 따라 current challenge가 바뀌어야함 // 챌린지를 다시 시작할 경우 1이아닌 31이 될 수도 있어야함
             luckyRepository.save(lucky1);
             return true;
         } else {
@@ -36,14 +39,5 @@ public class LuckyService {
         }
     }
 
-    @Transactional(readOnly = true)
-    public Lucky findCurrentLucky(Long familyId) {       // 현재 진행중인 lucky id 조회
-        List<Lucky> luckies = luckyRepository.findByFamilyId(familyId);
-        for (Lucky lucky : luckies) {
-            if (lucky.getCurrentChallengeNum() != -1) {
-                return lucky; // 현재 진행되고있는 luckyid 반환
-            }
-        }
-        return null;
-    }
+
 }

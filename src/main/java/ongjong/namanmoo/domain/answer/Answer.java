@@ -31,11 +31,11 @@ public class Answer {
 
     private boolean checkChallenge = false;
 
-    @Column(nullable = false)
-    private Timestamp createDate;
+//    @Column(nullable = false)
+    private String createDate;
 
     //    @Column(nullable = false)
-    private Timestamp modifiedDate;
+    private String modifiedDate;
 
     private String answerContent;
 

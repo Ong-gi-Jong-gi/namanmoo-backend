@@ -26,9 +26,11 @@ public class Lucky {
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private Long status;
 
-    private Timestamp challengeStartDate;
+    private String challengeStartDate;
 
-    private Long currentChallengeNum;
+//    private Long currentChallengeNum;
+
+    private boolean running;
 
     @OneToMany(mappedBy = "lucky")
     private List<FaceTimeAnswer> faceTimeAnswers;

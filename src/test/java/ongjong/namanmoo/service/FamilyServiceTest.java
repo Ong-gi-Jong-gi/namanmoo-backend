@@ -71,7 +71,6 @@ public class FamilyServiceTest {
         assertThat(createdFamily.getFamilyName()).isEqualTo("Test Family");
         assertThat(createdFamily.getMaxFamilySize()).isEqualTo(4);
         assertThat(createdFamily.getFamilyOwnerId()).isEqualTo(member.getMemberId());
-        assertThat(createdFamily.getCurrentFamilySize()).isEqualTo(1);
     }
 
     @Test
@@ -88,7 +87,6 @@ public class FamilyServiceTest {
         Family family = new Family();
         family.setId(1L);
         family.setMaxFamilySize(4);
-        family.setCurrentFamilySize(1);
         when(familyRepository.findById(any(Long.class))).thenReturn(Optional.of(family));
 
         // when
@@ -97,7 +95,6 @@ public class FamilyServiceTest {
         // then
         assertThat(member.getFamily()).isEqualTo(family);
         assertThat(family.getMembers()).contains(member);
-        assertThat(family.getCurrentFamilySize()).isEqualTo(2);
     }
 
     @Test
@@ -114,7 +111,6 @@ public class FamilyServiceTest {
         Family family = new Family();
         family.setId(1L);
         family.setMaxFamilySize(1);
-        family.setCurrentFamilySize(1);
         when(familyRepository.findById(any(Long.class))).thenReturn(Optional.of(family));
 
         // when/then

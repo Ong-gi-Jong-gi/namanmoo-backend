@@ -119,4 +119,11 @@ public class FamilyService {
         }
         return memberListDto;
     }
+
+    @Transactional(readOnly = true)
+    public Long findFamilyId() throws Exception{      // 회원 아이디로 familyId 조회
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
+        Family family = member.getFamily();
+        return family.getId();
+    }
 }
