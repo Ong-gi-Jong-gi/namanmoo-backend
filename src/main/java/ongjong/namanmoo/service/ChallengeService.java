@@ -68,7 +68,7 @@ public class ChallengeService {
             return null;
         }
 
-        List<Challenge> challengeList  = challengeRepository.findByChallengeNumBetween(findStartChallengeNum(family.getId()), number);
+        List<Challenge> challengeList  = challengeRepository.findByChallengeNumBetween(findStartChallengeNum(family.getFamilyId()), number);
 
         // 멤버 역할에 맞지 않는 challenge는 리스트에서 제외
         Iterator<Challenge> iterator = challengeList.iterator();        // iterator를 사용 -> challengelist를 순회하면서 조건에 맞지 않는 챌린지 제거
@@ -187,7 +187,7 @@ public class ChallengeService {
         // lukies를 순회화면서 lucky의 boolean 타입인 running이 false인 lucky의 개수를 찾고
         // 찾은 개수 * 30 + 1부터 number까지의 challengenum 으로 challengeList를 구하는 걸로 변경
 
-        List <Lucky> luckies = luckyRepository.findByFamilyId(familyId);
+        List <Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
         long nonRunningCount = luckies.stream()
                 .filter(lucky -> !lucky.isRunning())
                 .count();

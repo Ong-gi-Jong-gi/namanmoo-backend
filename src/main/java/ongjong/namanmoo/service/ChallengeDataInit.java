@@ -64,8 +64,9 @@ public class ChallengeDataInit {
 
         // Normal 챌린지 생성
         for (String normalChallengeDescription : normalChallengeDescriptions) {
+            nextChallengeNum++;
             Challenge challenge = new Challenge();
-            challenge.setChallengeNum((long) (nextChallengeNum + 1));
+            challenge.setChallengeNum(nextChallengeNum);
             challenge.setChallengeTitle(normalChallengeDescription);
             challenge.setChallengeType(ChallengeType.NORMAL);
             challenges.add(challenge);
@@ -77,14 +78,14 @@ public class ChallengeDataInit {
             nextChallengeNum++;
             // Group Parent 챌린지 생성
             Challenge parentChallenge = new Challenge();
-            parentChallenge.setChallengeNum((long) nextChallengeNum);
+            parentChallenge.setChallengeNum(nextChallengeNum);
             parentChallenge.setChallengeTitle(groupParentChallengeDescriptions[i]);
             parentChallenge.setChallengeType(ChallengeType.GROUP_PARENT);
             challenges.add(parentChallenge);
 
             // Group Child 챌린지 생성
             Challenge childeChallenge = new Challenge();
-            childeChallenge.setChallengeNum((long) nextChallengeNum);
+            childeChallenge.setChallengeNum(nextChallengeNum);
             childeChallenge.setChallengeTitle(groupChildChallengeDescriptions[i]);
             childeChallenge.setChallengeType(ChallengeType.GROUP_CHILD);
             challenges.add(childeChallenge);
@@ -92,8 +93,9 @@ public class ChallengeDataInit {
 
         // FaceTime 챌린지 생성
         for (String facetimeChallengeDescription : facetimeChallengeDescriptions) {
+            nextChallengeNum++;
             Challenge challenge = new Challenge();
-            challenge.setChallengeNum((long) (nextChallengeNum + 1));
+            challenge.setChallengeNum(nextChallengeNum);
             challenge.setChallengeTitle(facetimeChallengeDescription);
             challenge.setChallengeType(ChallengeType.FACETIME);
             challenges.add(challenge);
@@ -101,8 +103,9 @@ public class ChallengeDataInit {
 
         // Photo 챌린지 생성
         for (String photoChallengeDescription : photoChallengeDescriptions) {
+            nextChallengeNum++;
             Challenge challenge = new Challenge();
-            challenge.setChallengeNum((long) (nextChallengeNum + 1));
+            challenge.setChallengeNum(nextChallengeNum);
             challenge.setChallengeTitle(photoChallengeDescription);
             challenge.setChallengeType(ChallengeType.PHOTO);
             challenges.add(challenge);
@@ -110,8 +113,9 @@ public class ChallengeDataInit {
 
         // Voice 챌린지 생성
         for (String voiceChallengeDescription : voiceChallengeDescriptions) {
+            nextChallengeNum++;
             Challenge challenge = new Challenge();
-            challenge.setChallengeNum((long) (nextChallengeNum + 1));
+            challenge.setChallengeNum(nextChallengeNum);
             challenge.setChallengeTitle(voiceChallengeDescription);
             challenge.setChallengeType(ChallengeType.VOICE);
             challenges.add(challenge);
