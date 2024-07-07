@@ -10,4 +10,5 @@ import java.util.Optional;
 
 public interface AnswerRepository extends JpaRepository<Answer, Long> {
     Optional<Answer> findByChallengeAndMember(Challenge challenge, Member member);
+    List<Answer> findByChallenge(Challenge challenge);
 }

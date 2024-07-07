@@ -58,8 +58,7 @@ public class FamilyService {
         familyOwner.setRole(ownerRole);
         familyOwner.setFamily(family);
         memberRepository.save(familyOwner);
-
-
+        
         return family;
     }
 

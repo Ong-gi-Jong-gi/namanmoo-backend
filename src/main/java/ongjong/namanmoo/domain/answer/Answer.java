@@ -9,10 +9,9 @@ import ongjong.namanmoo.domain.challenge.Challenge;
 import java.sql.Timestamp;
 
 @Entity
-@DiscriminatorColumn(name = "atype")
 @Getter
 @Setter
-public abstract class Answer {
+public class Answer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,13 +26,18 @@ public abstract class Answer {
     private Member member;
 
     //    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private AnswerType answerType;      // enum 타입
+
     private boolean checkChallenge = false;
 
-    @Column(nullable = false)
-    private Timestamp createDate;
-
 //    @Column(nullable = false)
-    private Timestamp modifiedDate;
+    private String createDate;
+
+    //    @Column(nullable = false)
+    private String modifiedDate;
+
+    private String answerContent;
 
     // Getters and Setters
 }

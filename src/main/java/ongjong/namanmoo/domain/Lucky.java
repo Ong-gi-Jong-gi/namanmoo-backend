@@ -4,6 +4,7 @@ package ongjong.namanmoo.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import ongjong.namanmoo.domain.answer.FaceTimeAnswer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 
 import java.sql.Timestamp;
@@ -25,9 +26,14 @@ public class Lucky {
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private Long status;
 
-    private Timestamp challengeStartDate;
+    private String challengeStartDate;
 
-    private Long currentChallengeNumber;
+//    private Long currentChallengeNum;
+
+    private boolean running;
+
+    @OneToMany(mappedBy = "lucky")
+    private List<FaceTimeAnswer> faceTimeAnswers;
 
 //    @OneToMany(mappedBy = "lucky")
 //    private List<Challenge> challenges;
