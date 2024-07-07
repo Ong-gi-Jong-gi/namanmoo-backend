@@ -50,7 +50,7 @@ public class ChallengeService {
 
     @Transactional(readOnly = true)
     public Long findCurrentChallengeNum(Long familyId, Long challengeDate) {       // 현재 진행중인 challenge 번호 조회
-        List<Lucky> luckies = luckyRepository.findByFamilyId(familyId);
+        List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
         for (Lucky lucky : luckies) {
             if (lucky.isRunning()) {
                 return getDateDifference(lucky.getChallengeStartDate(), getDateStirng(challengeDate))+1; // 현재 진행되어야할 challenge를 반환
@@ -64,11 +64,11 @@ public class ChallengeService {
         Member member = findMemberByLoginId();  // 로그인한 member
         Family family = member.getFamily();
 
-        Long number = findCurrentChallengeNum(family.getId(),challengeDate);      // 진행하는 challenge 번호
+        Long number = findCurrentChallengeNum(family.getFamilyId(),challengeDate);      // 진행하는 challenge 번호
         if (number == null) {
             return null;
         }
-        List <Lucky> luckies = luckyRepository.findByFamilyId(family.getId());
+        List <Lucky> luckies = luckyRepository.findByFamilyFamilyId(family.getFamilyId());
         // lukies를 순회화면서 lucky의 boolean 타입인 running이 false인 lucky의 개수를 찾아야해
         // 찾은 개수 * 30 + 1부터 number까지의 challengenum 으로 challengeList를 구하는 걸로 변경해야돼
         List<Challenge> challengeList  = challengeRepository.findByChallengeNumLessThanEqual(number);
@@ -107,12 +107,12 @@ public class ChallengeService {
         Member member = findMemberByLoginId();  // 로그인한 member
         Family family = member.getFamily();
 
-        int currentFamilySize = memberRepository.countByFamilyId(family.getId());
+        int currentFamilySize = memberRepository.countByFamilyId(family.getFamilyId());
         if (currentFamilySize != family.getMaxFamilySize()) {
             return null;        // 현재 가족의수 가 max가족의 수와 같지 않을 겨우 오늘의 챌린지 조회 실패 -> null반환
         }
 
-        List<Lucky> luckies = luckyRepository.findByFamilyId(family.getId());
+        List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(family.getFamilyId());
         if (luckies.isEmpty()) {
             return null; // luckies 리스트가 비어있을 경우 null 반환
         }
@@ -123,7 +123,7 @@ public class ChallengeService {
             return null;        // 진행중인 챌린지 , lucky가 없을 경우
         }
 
-        List <Challenge> challenges = findCurrentChallenges(member.getFamily().getId(), challengeDate);     //familyId를 통해 오늘의 챌린지 조회
+        List <Challenge> challenges = findCurrentChallenges(member.getFamily().getFamilyId(), challengeDate);     //familyId를 통해 오늘의 챌린지 조회
         return challenges;
     }
 
@@ -164,7 +164,7 @@ public class ChallengeService {
         //현재 맴버 찾고 가족찾고 ,lucky찾아서 lucky의 challenge start date구해서 challengedate 빼기
         Member member = findMemberByLoginId();  // 로그인한 member
         Family family = member.getFamily();
-        return findCurrentChallengeNum(family.getId(),challengeDate);
+        return findCurrentChallengeNum(family.getFamilyId(),challengeDate);
     }
 
     @Transactional(readOnly = true)

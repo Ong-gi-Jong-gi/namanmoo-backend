@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+import java.io.IOException;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -54,7 +56,15 @@ public class MemberServiceImpl implements MemberService {
         memberUpdateDto.name().ifPresent(member::setName);
         memberUpdateDto.nickname().ifPresent(member::setNickname);
         memberUpdateDto.role().ifPresent(member::setRole);
-        memberUpdateDto.userImg().ifPresent(member::setMemberImage);
+        // 파일을 전송했을 경우에만 S3 파일 업로드 수행
+        memberUpdateDto.userImg().ifPresent(image -> {
+            try {
+                String imagePath = AwsS3Service.upload(image);
+                member.setMemberImage(imagePath);
+            } catch (IOException e) {
+                throw new RuntimeException("S3 업로드 중 에러가 발생했습니다.", e);
+            }
+        });
     }
 
     // 비밀번호 변경 -> 비밀번호를 입력 받는다

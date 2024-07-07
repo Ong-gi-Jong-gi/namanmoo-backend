@@ -163,4 +163,12 @@ public class FamilyService {
         }
         return code.toString();
     }
+
+    public Long findFamilyId() {
+        String currentLoginId = SecurityUtil.getLoginLoginId();
+        Member currentUser = memberRepository.findByLoginId(currentLoginId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found for loginId: " + currentLoginId));
+
+        return currentUser.getFamily().getFamilyId();
+    }
 }
