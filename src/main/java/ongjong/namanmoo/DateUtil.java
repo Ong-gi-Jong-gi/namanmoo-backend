@@ -29,26 +29,12 @@ public class DateUtil {
     public static String FORMAT_4 = "yyyy.MM.dd";
 
 
-    /**
-     * 년,월,일,시간,분,초
-     */
-    public static String FORMAT_6 = "yyyyMMddHHmmss";
-    public static String FORMAT_7 = "yyyy-MM-dd HH:mm:ss";
-    public static String FORMAT_8 = "yyyy/MM/dd HH:mm:ss";
-
-
-    // (1) 날짜시간 데이터를 지정한 포맷의 문자열로 리턴
-
-    /**
-     * 현재 시간을 지정한 날짜시간 포맷의 문자열로 리턴하기
-     */
-    public String getNowStr(String format) {
-        if (format==null || format.equals("")) return null;
-        Date date = new Date();
-        SimpleDateFormat formatter = new SimpleDateFormat(format);
-        return formatter.format(date);
-    }
-
+//    /**
+//     * 년,월,일,시간,분,초
+//     */
+//    public static String FORMAT_6 = "yyyyMMddHHmmss";
+//    public static String FORMAT_7 = "yyyy-MM-dd HH:mm:ss";
+//    public static String FORMAT_8 = "yyyy/MM/dd HH:mm:ss";
 
 
     /**
@@ -61,29 +47,43 @@ public class DateUtil {
         return formatter.format(date);
     }
 
+//    // (1) 날짜시간 데이터를 지정한 포맷의 문자열로 리턴
+//    /**
+//     * 현재 시간을 지정한 날짜시간 포맷의 문자열로 리턴하기
+//     */
+////    public String getNowStr(String format) {
+////        if (format==null || format.equals("")) return null;
+////        Date date = new Date();
+////        SimpleDateFormat formatter = new SimpleDateFormat(format);
+////        return formatter.format(date);
+//
+////    }
+
+
+
 
     // (2) 날짜시간 포맷의 문자열을 날짜시간 데이터 타입으로 리턴
 
-    /**
-     * 날짜시간 포맷의 문자열을 Date로 리턴
-     * @throws ParseException
-     */
-    public Date getDate(String dateStr, String format) throws ParseException {
-        if ((dateStr==null || dateStr.equals(""))
-                || (format==null || format.equals(""))) return null;
-        SimpleDateFormat formatter = new SimpleDateFormat(format);
-        return formatter.parse(dateStr);
-    }
+//    /**
+//     * 날짜시간 포맷의 문자열을 Date로 리턴
+//     * @throws ParseException
+//     */
+//    public Date getDate(String dateStr, String format) throws ParseException {
+//        if ((dateStr==null || dateStr.equals(""))
+//                || (format==null || format.equals(""))) return null;
+//        SimpleDateFormat formatter = new SimpleDateFormat(format);
+//        return formatter.parse(dateStr);
+//    }
 
 
-    /**
-     * 날짜시간 포맷의 문자열을 타임스탬프로 리턴
-     */
-    public Long getTimeStamp(String dateStr, String format) {
-        if ((dateStr==null || dateStr.equals(""))
-                || (format==null || format.equals(""))) return null;
-        return Timestamp.valueOf(dateStr).getTime();
-    }
+//    /**
+//     * 날짜시간 포맷의 문자열을 타임스탬프로 리턴
+//     */
+//    public Long getTimeStamp(String dateStr, String format) {
+//        if ((dateStr==null || dateStr.equals(""))
+//                || (format==null || format.equals(""))) return null;
+//        return Timestamp.valueOf(dateStr).getTime();
+//    }
 
 
 

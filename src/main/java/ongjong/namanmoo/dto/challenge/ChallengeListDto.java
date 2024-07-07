@@ -1,7 +1,6 @@
 package ongjong.namanmoo.dto.challenge;
 
 import lombok.Data;
-import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.challenge.*;
 
 @Data

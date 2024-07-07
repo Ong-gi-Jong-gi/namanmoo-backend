@@ -50,12 +50,12 @@ public class ChallengeController {
     public ResponseEntity<ApiResponse> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         List<Challenge> challenges = challengeService.findChallengeByMemberId(challengeDate);
         Challenge challenge = challengeService.findCurrentChallenge(challenges);
-        answerService.saveCreateDate(challenge);    // answer에 createdate 저장
         if (challenge == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse("404", "Challenge not found", null));
 
         }
+        answerService.saveCreateDate(challenge);    // answer에 createdate 저장
         Long currentNum  = challengeService.findCurrentNum(challengeDate);
         ChallengeDto challengeDto = new ChallengeDto(challenge,currentNum);
         return ResponseEntity.status(HttpStatus.OK)

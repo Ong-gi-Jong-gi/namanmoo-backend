@@ -3,7 +3,6 @@ package ongjong.namanmoo.dto.challenge;
 import lombok.Data;
 import ongjong.namanmoo.domain.challenge.Challenge;
 
-import java.util.List;
 
 
 @Data
