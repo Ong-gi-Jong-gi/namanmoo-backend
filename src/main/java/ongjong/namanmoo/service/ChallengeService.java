@@ -54,7 +54,7 @@ public class ChallengeService {
         for (Lucky lucky : luckies) {
             if (lucky.isRunning()) {
                 DateUtil dateUtil = DateUtil.getInstance();
-                return dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.getDateStirng(challengeDate)); // 현재 진행되어야할 challenge를 반환
+                return dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.timestampToString(challengeDate)); // 현재 진행되어야할 challenge를 반환
             }
         }
         return null;
@@ -175,7 +175,7 @@ public class ChallengeService {
 
     @Transactional(readOnly = true)
     public List<Challenge> findRunningChallenges(Long challengeDate) throws Exception {      // 현재 진행하고있는 행운이의 챌린지 리스트 30개 가져오기
-        Member member = findMemberByLoginId();  // 로그인한 member
+        Member member = memberService.findMemberByLoginId();  // 로그인한 member
         Family family = member.getFamily();
 
         return challengeRepository.findByChallengeNumBetween(findStartChallengeNum(family.getFamilyId()), findStartChallengeNum(family.getFamilyId()) + 30);

@@ -23,6 +23,7 @@ public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AwsS3Service awsS3Service;
 
     // 회원 가입 진행
     @Override
@@ -59,7 +60,7 @@ public class MemberServiceImpl implements MemberService {
         // 파일을 전송했을 경우에만 S3 파일 업로드 수행
         memberUpdateDto.userImg().ifPresent(image -> {
             try {
-                String imagePath = AwsS3Service.uploadFile(image);
+                String imagePath = awsS3Service.uploadFile(image);
                 member.setMemberImage(imagePath);
             } catch (IOException e) {
                 throw new RuntimeException("S3 업로드 중 에러가 발생했습니다.", e);
