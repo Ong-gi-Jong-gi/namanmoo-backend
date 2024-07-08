@@ -8,7 +8,7 @@ import ongjong.namanmoo.dto.family.FamilyMemberDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.FamilyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
-import ongjong.namanmoo.response.FamilyInviteResponse;
+import ongjong.namanmoo.response.family.FamilyInviteResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

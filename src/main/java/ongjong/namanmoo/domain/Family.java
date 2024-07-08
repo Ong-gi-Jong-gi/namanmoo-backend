@@ -28,7 +28,7 @@ public class Family {
     private String inviteCode;
 
     @Column(columnDefinition = "bigint default 0")
-    private Long challengeFamilyCount;
+    private Integer challengeFamilyCount;
 
     private Long familyOwnerId;
 

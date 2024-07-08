@@ -35,6 +35,8 @@ public abstract class Answer {
 //    @Column(nullable = false)
     private Timestamp modifiedDate;
 
+    private String answer;
+
     // Getters and Setters
 }
 

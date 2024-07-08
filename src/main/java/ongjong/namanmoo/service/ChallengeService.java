@@ -46,9 +46,9 @@ public class ChallengeService {
             Family family = familyOptional.get();
             Lucky lucky1 = new Lucky();
             lucky1.setFamily(family);
-            lucky1.setStatus(1L);
+            lucky1.setStatus(1);
             lucky1.setChallengeStartDate(new Timestamp(System.currentTimeMillis()));
-            lucky1.setCurrentChallengeNumber(1L);       // 현재 진행하고있는 challenge에 따라 current challenge가 바뀌어야함
+//            lucky1.setCurrentChallengeNumber(1L);       // 현재 진행하고있는 challenge에 따라 current challenge가 바뀌어야함
             luckyRepository.save(lucky1);
             return true;
         } else {
@@ -113,11 +113,11 @@ public class ChallengeService {
 
     public Long findCurrentChallengeNum(Long familyId) {       // 현재 진행중인 challenge 번호 조회
         List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
-        for (Lucky lucky : luckies) {
-            if (lucky.getCurrentChallengeNumber() != 31) {
-                 return lucky.getCurrentChallengeNumber(); // 현재 진행되어야할 challenge를 반환
-            }
-        }
+//        for (Lucky lucky : luckies) {
+//            if (lucky.getCurrentChallengeNumber() != 31) {
+//                 return lucky.getCurrentChallengeNumber(); // 현재 진행되어야할 challenge를 반환
+//            }
+//        }
         return null;
     }
 

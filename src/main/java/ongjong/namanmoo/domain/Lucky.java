@@ -18,19 +18,13 @@ public class Lucky {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long luckyId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "family_id")
     private Family family;
 
-    @Column(nullable = false, columnDefinition = "bigint default 0")
-    private Long status;
+    private Integer status; // 성장 상태
 
-    private Timestamp challengeStartDate;
+    private Timestamp challengeStartDate; // 시작 날짜
 
-    private Long currentChallengeNumber;
-
-//    @OneToMany(mappedBy = "lucky")
-//    private List<Challenge> challenges;
-
-    // Getters and Setters
+    private boolean running; // 생존 여부
 }
