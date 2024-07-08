@@ -3,9 +3,11 @@ package ongjong.namanmoo.controller;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import ongjong.namanmoo.DateUtil;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
+import ongjong.namanmoo.dto.answer.ModifyAnswerDto;
 import ongjong.namanmoo.dto.challenge.ChallengeDto;
 import ongjong.namanmoo.dto.challenge.ChallengeListDto;
 import ongjong.namanmoo.dto.challenge.NormalChallengeDto;
@@ -19,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,10 +38,11 @@ public class ChallengeController {
     private final FamilyService familyService;
     private final AnswerRepository answerRepository;
 
-    @PostMapping("/")       // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
-    public ResponseEntity<ApiResponse> saveChallenge() throws Exception {
+    @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
+    public ResponseEntity<ApiResponse> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
+        Long challengeDate = request.getChallengeDate();
         Long familyId = familyService.findFamilyId();
-        if (!luckyService.join(familyId) || !answerService.createAnswer(familyId)) {
+        if (!luckyService.join(familyId) || !answerService.createAnswer(familyId, challengeDate)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse("404", "Challenge not found", null));
         }
@@ -49,14 +54,14 @@ public class ChallengeController {
     public ResponseEntity<ApiResponse> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         List<Challenge> challenges = challengeService.findChallengeByMemberId(challengeDate);
         Challenge challenge = challengeService.findCurrentChallenge(challenges);
-        answerService.saveCreateDate(challenge);    // answer에 createdate 저장
         if (challenge == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse("404", "Challenge not found", null));
 
         }
         Long currentNum  = challengeService.findCurrentNum(challengeDate);
-        ChallengeDto challengeDto = new ChallengeDto(challenge,currentNum);
+        DateUtil dateUtil = DateUtil.getInstance();
+        ChallengeDto challengeDto = new ChallengeDto(challenge,currentNum,dateUtil.timestampToString(challengeDate));
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse("200", "Success", challengeDto));
     }
@@ -81,8 +86,7 @@ public class ChallengeController {
         return ResponseEntity.ok(new ApiResponse<>("success", "Challenge list retrieved successfully", challengeList));
     }
 
-    // 일반 챌린지 조회
-    @GetMapping("/normal")
+    @GetMapping("/normal")      // 일반 챌린지 조회
     public ResponseEntity<ApiResponse<List<NormalChallengeDto>>> getNormalChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
@@ -94,7 +98,8 @@ public class ChallengeController {
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
 
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
-        Long challengeDate = answerService.findAnswerByChallengeMember(challenge,member);
+        Long challengeDate = answerService.findDateByChallengeMember(challenge);
+//        Long challenegeDate = answerService.findAnswerByChallengeMember(challenge,member);
         List<Answer> answers = answerService.findAnswerByChallenge(challenge);
 
         NormalChallengeDto normalChallengeDto = new NormalChallengeDto(challenge, isComplete, challengeDate, answers);
@@ -102,12 +107,15 @@ public class ChallengeController {
         return ResponseEntity.ok(new ApiResponse<>("success", "Challenge retrieved successfully", Collections.singletonList(normalChallengeDto)));      // 객체를 리스트 형태로 감싸서 반환
     }
 
-//    @PostMapping("/normal")     // 일반 챌린지 내용 수정
-//    public  ResponseEntity<ApiResponse> saveAnswer(@RequestBody AnswerRequest request){
-//        Long challengeId = request.getChallengeId();
-//        String answer = request.getAnswer();
-//
-//    }
+    @PostMapping("/normal")     // 일반 챌린지 내용 수정 -> 새 내용, 수정날짜 저장
+    public  ResponseEntity<ApiResponse> saveAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
+        Long challengeId = request.getChallengeId();
+        String answerContent = request.getAnswerContent();
+        Answer answer = answerService.modifyAnswer(challengeId, answerContent);
+        ModifyAnswerDto modifyAnswerDto = new ModifyAnswerDto(answer);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse("200", "Success", modifyAnswerDto));
+    }
 
     // 사진 챌린지 조회
     @GetMapping("/photo")
@@ -122,7 +130,7 @@ public class ChallengeController {
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
 
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
-        Long challengeDate = answerService.findAnswerByChallengeMember(challenge,member);
+        Long challengeDate = answerService.findDateByChallengeMember(challenge);
         List<Answer> answers = answerService.findAnswerByChallenge(challenge);
 
         PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, isComplete, challengeDate, answers);
@@ -161,7 +169,7 @@ public class ChallengeController {
         if (optionalAnswer.isPresent()) {
             Answer answer = optionalAnswer.get();
             answer.setAnswerContent(uploadImageUrl);
-            answer.setModifiedDate(LocalDate.now().toString());
+            answer.setModifiedDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")));
             answerService.saveAnswer(answer);
 
             // Map 형태로 답변 URL 반환
@@ -176,10 +184,38 @@ public class ChallengeController {
         }
     }
 
+    // 화상 통화 챌린지 조회
+    @GetMapping("/face")
+    public ResponseEntity<ApiResponse<ChallengeDto>> getFaceChallenge(
+            @RequestParam("challengeId") Long challengeId) throws Exception {
+
+        Challenge challenge = challengeService.findChallengeById(challengeId);
+        if (challenge == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>("404", "Challenge not found for the provided challengeId", null));
+        }
+
+        // 챌린지 번호를 가져옴 (예를 들어, 해당 챌린지의 현재 진행 번호)
+        Long currentNum = challengeService.findCurrentNum(challengeId);
+
+        // 챌린지와 멤버를 통해 timestamp를 가져옴
+        Long timestamp = answerService.findDateByChallengeMember(challenge);
+
+        // 화상 통화 챌린지 정보 가져오기
+        ChallengeDto challengeDto = new ChallengeDto(challenge, currentNum, timestamp.toString());
+
+        return ResponseEntity.ok(new ApiResponse<>("200", "Success", challengeDto));
+    }
+
     @Data
-    static class AnswerRequest {
+    static class SaveChallengeRequest {
+        private Long challengeDate;
+    }
+
+    @Data
+    static class SaveAnswerRequest{
         private Long challengeId;
-        private String answer;
+        private String answerContent;
     }
 
     @Data
