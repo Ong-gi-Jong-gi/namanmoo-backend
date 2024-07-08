@@ -35,10 +35,10 @@ public class ChallengeController {
     private final FamilyService familyService;
     private final AnswerRepository answerRepository;
 
-    @PostMapping("/")       // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
-    public ResponseEntity<ApiResponse> saveChallenge() throws Exception {
+    @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
+    public ResponseEntity<ApiResponse> saveChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         Long familyId = familyService.findFamilyId();
-        if (!luckyService.join(familyId) || !answerService.createAnswer(familyId)) {
+        if (!luckyService.join(familyId) || !answerService.createAnswer(familyId, challengeDate)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse("404", "Challenge not found", null));
         }
@@ -55,7 +55,8 @@ public class ChallengeController {
                     .body(new ApiResponse("404", "Challenge not found", null));
 
         }
-        answerService.saveCreateDate(challenge);    // answer에 createdate 저장
+
+//        answerService.saveCreateDate(challenge);    // answer에 createdate 저장
         Long currentNum  = challengeService.findCurrentNum(challengeDate);
         ChallengeDto challengeDto = new ChallengeDto(challenge,currentNum);
         return ResponseEntity.status(HttpStatus.OK)
@@ -94,10 +95,10 @@ public class ChallengeController {
         Member member = challengeService.findMemberByLoginId(); // 로그인한 멤버 찾기
 
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
-        Long timeStamp= answerService.findAnswerByChallengeMember(challenge,member);
+        Long challenegeDate = answerService.findAnswerByChallengeMember(challenge,member);
         List<Answer> answers = answerService.findAnswerByChallenge(challenge);
 
-        NormalChallengeDto NormalChallengeDto = new NormalChallengeDto(challenge, isComplete, timeStamp,answers);
+        NormalChallengeDto NormalChallengeDto = new NormalChallengeDto(challenge, isComplete, challenegeDate,answers);
 
         return ResponseEntity.ok(new ApiResponse<>("success", "Challenge retrieved successfully", Collections.singletonList(NormalChallengeDto)));      // 객체를 리스트 형태로 감싸서 반환
     }

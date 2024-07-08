@@ -63,68 +63,70 @@ public class ChallengeDataInit {
         long nextChallengeNum = 0;      // 챌린지 번호
 
         // Normal 챌린지 생성
-        for (String normalChallengeDescription : normalChallengeDescriptions) {
-            nextChallengeNum++;
-            Challenge challenge = new Challenge();
-            challenge.setChallengeNum(nextChallengeNum);
-            challenge.setChallengeTitle(normalChallengeDescription);
-            challenge.setChallengeType(ChallengeType.NORMAL);
-            challenges.add(challenge);
-        }
-
-        // Group Child 챌린지 생성
-        for (int i = 0; i < groupChildChallengeDescriptions.length; i++) {
-
-            nextChallengeNum++;
-            // Group Parent 챌린지 생성
-            Challenge parentChallenge = new Challenge();
-            parentChallenge.setChallengeNum(nextChallengeNum);
-            parentChallenge.setChallengeTitle(groupParentChallengeDescriptions[i]);
-            parentChallenge.setChallengeType(ChallengeType.GROUP_PARENT);
-            challenges.add(parentChallenge);
+        if (challengeRepository.count() == 0) {
+            for (String normalChallengeDescription : normalChallengeDescriptions) {
+                nextChallengeNum++;
+                Challenge challenge = new Challenge();
+                challenge.setChallengeNum(nextChallengeNum);
+                challenge.setChallengeTitle(normalChallengeDescription);
+                challenge.setChallengeType(ChallengeType.NORMAL);
+                challenges.add(challenge);
+            }
 
             // Group Child 챌린지 생성
-            Challenge childeChallenge = new Challenge();
-            childeChallenge.setChallengeNum(nextChallengeNum);
-            childeChallenge.setChallengeTitle(groupChildChallengeDescriptions[i]);
-            childeChallenge.setChallengeType(ChallengeType.GROUP_CHILD);
-            challenges.add(childeChallenge);
-        }
+            for (int i = 0; i < groupChildChallengeDescriptions.length; i++) {
 
-        // FaceTime 챌린지 생성
-        for (String facetimeChallengeDescription : facetimeChallengeDescriptions) {
-            nextChallengeNum++;
-            Challenge challenge = new Challenge();
-            challenge.setChallengeNum(nextChallengeNum);
-            challenge.setChallengeTitle(facetimeChallengeDescription);
-            challenge.setChallengeType(ChallengeType.FACETIME);
-            challenges.add(challenge);
-        }
+                nextChallengeNum++;
+                // Group Parent 챌린지 생성
+                Challenge parentChallenge = new Challenge();
+                parentChallenge.setChallengeNum(nextChallengeNum);
+                parentChallenge.setChallengeTitle(groupParentChallengeDescriptions[i]);
+                parentChallenge.setChallengeType(ChallengeType.GROUP_PARENT);
+                challenges.add(parentChallenge);
 
-        // Photo 챌린지 생성
-        for (String photoChallengeDescription : photoChallengeDescriptions) {
-            nextChallengeNum++;
-            Challenge challenge = new Challenge();
-            challenge.setChallengeNum(nextChallengeNum);
-            challenge.setChallengeTitle(photoChallengeDescription);
-            challenge.setChallengeType(ChallengeType.PHOTO);
-            challenges.add(challenge);
-        }
+                // Group Child 챌린지 생성
+                Challenge childeChallenge = new Challenge();
+                childeChallenge.setChallengeNum(nextChallengeNum);
+                childeChallenge.setChallengeTitle(groupChildChallengeDescriptions[i]);
+                childeChallenge.setChallengeType(ChallengeType.GROUP_CHILD);
+                challenges.add(childeChallenge);
+            }
 
-        // Voice 챌린지 생성
-        for (String voiceChallengeDescription : voiceChallengeDescriptions) {
-            nextChallengeNum++;
-            Challenge challenge = new Challenge();
-            challenge.setChallengeNum(nextChallengeNum);
-            challenge.setChallengeTitle(voiceChallengeDescription);
-            challenge.setChallengeType(ChallengeType.VOICE);
-            challenges.add(challenge);
-        }
+            // FaceTime 챌린지 생성
+            for (String facetimeChallengeDescription : facetimeChallengeDescriptions) {
+                nextChallengeNum++;
+                Challenge challenge = new Challenge();
+                challenge.setChallengeNum(nextChallengeNum);
+                challenge.setChallengeTitle(facetimeChallengeDescription);
+                challenge.setChallengeType(ChallengeType.FACETIME);
+                challenges.add(challenge);
+            }
 
-        // 챌린지 리스트를 섞음
+            // Photo 챌린지 생성
+            for (String photoChallengeDescription : photoChallengeDescriptions) {
+                nextChallengeNum++;
+                Challenge challenge = new Challenge();
+                challenge.setChallengeNum(nextChallengeNum);
+                challenge.setChallengeTitle(photoChallengeDescription);
+                challenge.setChallengeType(ChallengeType.PHOTO);
+                challenges.add(challenge);
+            }
+
+            // Voice 챌린지 생성
+            for (String voiceChallengeDescription : voiceChallengeDescriptions) {
+                nextChallengeNum++;
+                Challenge challenge = new Challenge();
+                challenge.setChallengeNum(nextChallengeNum);
+                challenge.setChallengeTitle(voiceChallengeDescription);
+                challenge.setChallengeType(ChallengeType.VOICE);
+                challenges.add(challenge);
+            }
+
+            // 챌린지 리스트를 섞음
 //        Collections.shuffle(challenges);
 
-        // 챌린지를 저장
-        challengeRepository.saveAll(challenges);
+            // 챌린지를 저장
+            challengeRepository.saveAll(challenges);
+        }
     }
 }

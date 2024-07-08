@@ -1,6 +1,8 @@
 package ongjong.namanmoo.service;
 
 import lombok.RequiredArgsConstructor;
+import ongjong.namanmoo.DateUtil;
+import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.*;
@@ -26,23 +28,26 @@ public class AnswerService {
     private final MemberRepository memberRepository;
     private final FaceTimeAnswerRepository faceTimeAnswerRepository;
     private final LuckyRepository luckyRepository;
+    private final ChallengeService challengeService;
+    private final FamilyRepository familyRepository;
 
-    public boolean createAnswer(Long familyId) {
+    public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
 
         // 가족 ID로 해당 가족의 회원들을 조회
         List<Member> members = memberRepository.findByFamilyFamilyId(familyId);
-
+        Optional<Family> family  = familyRepository.findById(familyId);
         // 모든 챌린지를 조회
-        List<Challenge> challenges = challengeRepository.findAll();
+        List<Challenge> challenges = challengeService.findRunningChallenges(challengeDate); // todo 챌린지가 30개가 넘어갈때를 고려해야함  -> 답변 테이블이 challenge가 시작 될때마다 30개씩 들어가야함
 
         // 가족에 해당하는 회원이 없으면 false를 반환
-        if (members.isEmpty()) {
+        if (members.size() != family.get().getMaxFamilySize()) {
             return false;
         }
-
+        DateUtil dateUtil = DateUtil.getInstance();
         // 각 회원마다 모든 챌린지에 대해 답변 생성
         for (Member member : members) {
-            for (Challenge challenge : challenges) {
+            String strChallengeDate = dateUtil.getDateStirng(challengeDate);        // timestamp인 challengedate를 string "yyyy.MM.dd" 으로 변환
+            for (Challenge challenge : challenges) {                            // 현재 챌린지의 개수 만큼 answer 생성 -> 챌린지의 개수가 30개가 넘었을 경우 stop
                 if (challenge.getChallengeType() == ChallengeType.GROUP_PARENT){            // 만약 member가 아빠 일경우, challenge가 CGROUP이면 ANSWER 생성 X
                     if (member.getRole().equals("아들") || member.getRole().equals("딸")){
                         continue;
@@ -63,12 +68,16 @@ public class AnswerService {
 
                 if (challenge.getChallengeType()== ChallengeType.NORMAL) {
                     answer.setAnswerType(AnswerType.NORMAL);
+                    answer.setCreateDate(strChallengeDate);
                 } else if (challenge.getChallengeType()== ChallengeType.GROUP_CHILD) {
                     answer.setAnswerType(AnswerType.GROUP);
+                    answer.setCreateDate(strChallengeDate);
                 } else if (challenge.getChallengeType()== ChallengeType.GROUP_PARENT) {
                     answer.setAnswerType(AnswerType.GROUP);
+                    answer.setCreateDate(strChallengeDate);
                 } else if (challenge.getChallengeType()== ChallengeType.FACETIME) {
                     answer.setAnswerType(AnswerType.FACETIME);
+                    answer.setCreateDate(strChallengeDate);
 
                     // FaceTimeC일 경우 FaceTimeAnswer 생성 및 저장
                     FaceTimeAnswer faceTimeAnswer = new FaceTimeAnswer();
@@ -79,13 +88,19 @@ public class AnswerService {
                     answer.setAnswerContent(String.valueOf(faceTimeAnswer.getFaceTimeAnswerId()));
                 } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
                     answer.setAnswerType(AnswerType.PHOTO);
+                    answer.setCreateDate(strChallengeDate);
                 } else if (challenge.getChallengeType()== ChallengeType.VOICE) {
                     answer.setAnswerType(AnswerType.VOICE);
+                    answer.setCreateDate(strChallengeDate);
                 }
+                // challengeDate를 1일 증가
+                strChallengeDate = dateUtil.addDaysToStringDate(strChallengeDate,1);
                 // 생성된 Answer 저장
                 answerRepository.save(answer);
             }
         }
+
+
 
         return true;
     }
@@ -138,14 +153,14 @@ public class AnswerService {
         return null;
     }
 
-    public void saveCreateDate(Challenge challenge){                // 오늘의 챌리지를 조회할때 해당 challenge에 해당하는 answer의 createDate에 오늘의 날짜를 저장한다.
-        List <Answer> answerList = answerRepository.findByChallenge(challenge);
-        for(Answer answer : answerList){
-            if (answer.getCreateDate().isEmpty()){      // answer의 createDate가 비어있을 경우에만 오늘의 날짜 set
-                String currentDateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-                answer.setCreateDate(currentDateStr);
-            }
-        }
-    }
+//    public void saveCreateDate(Challenge challenge){                // 오늘의 챌리지를 조회할때 해당 challenge에 해당하는 answer의 createDate에 오늘의 날짜를 저장한다.
+//        List <Answer> answerList = answerRepository.findByChallenge(challenge);
+//        for(Answer answer : answerList){
+//            if (answer.getCreateDate().isEmpty()){      // answer의 createDate가 비어있을 경우에만 오늘의 날짜 set
+//                String currentDateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+//                answer.setCreateDate(currentDateStr);
+//            }
+//        }
+//    }
 
 }
