@@ -12,6 +12,8 @@ import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -130,12 +132,18 @@ public class AnswerService {
     }
 
     // 로그인한 멤버를 찾고 해당 멤버가 작성한 answer중에 request로 받은 challengeId로 answer를 찾는다. 그리고 request로 받은 answer를 answer_content에 넣는다.
-    public boolean modifyAnswer(Long challengeId, String newAnswer) throws Exception{
-        Optional<Member> member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
-        Optional<Challenge> challenge = challengeRepository.findById(challengeId);
-        Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge.get(), member.get()) ;
-        answer.get().setAnswerContent(newAnswer);
-        answerRepository.save(answer.get());
+    public Answer modifyAnswer(Long challengeId, String answerContent) throws Exception{
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId())
+                .orElseThrow(() -> new RuntimeException("로그인한 멤버를 찾을 수 없습니다."));
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new RuntimeException("주어진 challengeId에 해당하는 챌린지를 찾을 수 없습니다."));
+        Answer answer = answerRepository.findByChallengeAndMember(challenge, member)
+                .orElseThrow(() -> new RuntimeException("해당 멤버가 작성한 답변을 찾을 수 없습니다."));
+        answer.setAnswerContent(answerContent);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
+        answer.setModifiedDate(LocalDateTime.now().format(formatter));
+        answerRepository.save(answer);
+        return answer;
     }
 
 }

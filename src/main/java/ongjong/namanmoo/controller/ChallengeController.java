@@ -3,9 +3,11 @@ package ongjong.namanmoo.controller;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
+import ongjong.namanmoo.dto.answer.ModifyAnswerDto;
 import ongjong.namanmoo.dto.challenge.ChallengeDto;
 import ongjong.namanmoo.dto.challenge.ChallengeListDto;
 import ongjong.namanmoo.dto.challenge.NormalChallengeDto;
@@ -22,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/challenges")
@@ -37,7 +39,7 @@ public class ChallengeController {
 
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     public ResponseEntity<ApiResponse> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
-        Long challengeDate = request.challengeDate;
+        Long challengeDate = request.getChallengeDate();
         Long familyId = familyService.findFamilyId();
         if (!luckyService.join(familyId) || !answerService.createAnswer(familyId, challengeDate)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -104,9 +106,14 @@ public class ChallengeController {
 
     @PostMapping("/normal")     // 일반 챌린지 내용 수정
     public  ResponseEntity<ApiResponse> saveAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
-        Long challengeId = request.challengeId;
-        String answer = request.answer;
-        // 로그인한 멤버를 찾고 해당 멤버가 작성한 answer중에 request로 받은 challengeId로 answer를 찾는다. 그리고 request로 받은 answer를 answer_content에 넣는다.
+        Long challengeId = request.getChallengeId();
+        log.info("challengeId : {}", challengeId);
+        String answerContent = request.getAnswerContent();
+        log.info("answerContent : {}", answerContent);
+        Answer answer = answerService.modifyAnswer(challengeId, answerContent);
+        ModifyAnswerDto modifyAnswerDto = new ModifyAnswerDto(answer);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse("200", "Success", modifyAnswerDto));
     }
 
     @Data
@@ -117,7 +124,7 @@ public class ChallengeController {
     @Data
     static class SaveAnswerRequest{
         private Long challengeId;
-        private String answer;
+        private String answerContent;
     }
 
 
