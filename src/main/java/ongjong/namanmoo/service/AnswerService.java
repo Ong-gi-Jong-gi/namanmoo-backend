@@ -26,6 +26,8 @@ public class AnswerService {
     private final MemberRepository memberRepository;
     private final FaceTimeAnswerRepository faceTimeAnswerRepository;
     private final LuckyRepository luckyRepository;
+    private final MemberServiceImpl memberServiceImpl;
+    private final MemberServiceImpl memberService;
 
     public boolean createAnswer(Long familyId) {
 
@@ -98,9 +100,9 @@ public class AnswerService {
                 .orElse(false);
     }
 
-    // TODO: 함수 이름이랑 반환하는거랑 안맞음 -> 할거면 findAnswerDateByChallengeMember 라고 하던가
     @Transactional(readOnly = true)
-    public Long findAnswerByChallengeMember(Challenge challenge, Member member) throws Exception{
+    public Long findDateByChallengeMember(Challenge challenge) throws Exception{
+        Member member = memberService.findMemberByLoginId();
         Answer answer = answerRepository.findByChallengeAndMember(challenge, member).orElse(null);
         return getTimeStamp(answer.getCreateDate(),"yyyy.MM.dd");
     }

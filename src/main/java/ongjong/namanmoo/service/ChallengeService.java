@@ -8,15 +8,12 @@ import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.challenge.*;
-import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -54,7 +51,7 @@ public class ChallengeService {
         List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
         for (Lucky lucky : luckies) {
             if (lucky.isRunning()) {
-                return getDateDifference(lucky.getChallengeStartDate(), getDateStirng(challengeDate))+1; // 현재 진행되어야할 challenge를 반환
+                return getDateDifference(lucky.getChallengeStartDate(), timestampToString(challengeDate))+1; // 현재 진행되어야할 challenge를 반환
             }
         }
         return null;
@@ -163,7 +160,7 @@ public class ChallengeService {
     }
 
     @Transactional(readOnly = true)
-    public String getDateStirng(Long challengeDate) {       // timstamp형식을   "yyyy.MM.dd"형식의 문자열로 바꾸기
+    public String timestampToString(Long challengeDate) {       // timstamp형식을   "yyyy.MM.dd"형식의 문자열로 바꾸기
         DateUtil dateUtil = DateUtil.getInstance();
         return dateUtil.getDateStr(challengeDate, DateUtil.FORMAT_4);
     }

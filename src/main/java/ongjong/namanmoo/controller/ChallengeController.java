@@ -56,7 +56,7 @@ public class ChallengeController {
 
         }
         Long currentNum  = challengeService.findCurrentNum(challengeDate);
-        ChallengeDto challengeDto = new ChallengeDto(challenge,currentNum);
+        ChallengeDto challengeDto = new ChallengeDto(challenge, currentNum ,challengeDate);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse("200", "Success", challengeDto));
     }
@@ -94,7 +94,7 @@ public class ChallengeController {
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
 
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
-        Long challengeDate = answerService.findAnswerByChallengeMember(challenge,member);
+        Long challengeDate = answerService.findDateByChallengeMember(challenge);
         List<Answer> answers = answerService.findAnswerByChallenge(challenge);
 
         NormalChallengeDto normalChallengeDto = new NormalChallengeDto(challenge, isComplete, challengeDate, answers);
@@ -122,7 +122,7 @@ public class ChallengeController {
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
 
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
-        Long challengeDate = answerService.findAnswerByChallengeMember(challenge,member);
+        Long challengeDate = answerService.findDateByChallengeMember(challenge);
         List<Answer> answers = answerService.findAnswerByChallenge(challenge);
 
         PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, isComplete, challengeDate, answers);
@@ -178,7 +178,7 @@ public class ChallengeController {
 
     // 화상 통화 챌린지 조회
     @GetMapping("/face")
-    public ResponseEntity<ApiResponse<FaceChallengeDto>> getFaceChallenge(
+    public ResponseEntity<ApiResponse<ChallengeDto>> getFaceChallenge(
             @RequestParam("challengeId") Long challengeId) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
@@ -189,11 +189,15 @@ public class ChallengeController {
 
         Member member = memberService.findMemberByLoginId(); // 현재 로그인한 멤버
 
-        // 화상 통화 챌린지 정보 가져오기
-        FaceChallengeDto faceChallengeDto = createFaceChallengeDto(challenge, member);
+        // 챌린지 번호를 가져옴 (예를 들어, 해당 챌린지의 현재 진행 번호)
+        Long currentNum = challengeService.findCurrentNum(challengeId);
 
-        return ResponseEntity.ok(new ApiResponse<>("200", "Success", faceChallengeDto));
+        // 화상 통화 챌린지 정보 가져오기
+        ChallengeDto challengeDto = new ChallengeDto(challenge, currentNum, );
+
+        return ResponseEntity.ok(new ApiResponse<>("200", "Success", challengeDto));
     }
+
 
     @Data
     static class AnswerRequest {
