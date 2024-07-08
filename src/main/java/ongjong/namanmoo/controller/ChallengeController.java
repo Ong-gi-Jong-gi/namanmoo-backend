@@ -3,6 +3,7 @@ package ongjong.namanmoo.controller;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import ongjong.namanmoo.DateUtil;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
@@ -59,7 +60,8 @@ public class ChallengeController {
 
         }
         Long currentNum  = challengeService.findCurrentNum(challengeDate);
-        ChallengeDto challengeDto = new ChallengeDto(challenge,currentNum);
+        DateUtil dateUtil = DateUtil.getInstance();
+        ChallengeDto challengeDto = new ChallengeDto(challenge,currentNum,dateUtil.timestampToString(challengeDate));
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse("200", "Success", challengeDto));
     }
@@ -96,7 +98,7 @@ public class ChallengeController {
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
 
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
-        Long challengeDate = answerService.findDateByChallengeMember(challenge,member);
+        Long challengeDate = answerService.findDateByChallengeMember(challenge);
 //        Long challenegeDate = answerService.findAnswerByChallengeMember(challenge,member);
         List<Answer> answers = answerService.findAnswerByChallenge(challenge);
 

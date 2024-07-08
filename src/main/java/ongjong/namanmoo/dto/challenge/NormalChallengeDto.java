@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
+import ongjong.namanmoo.dto.answer.AnswerDto;
 
 import java.util.List;
 import java.util.stream.Collectors;

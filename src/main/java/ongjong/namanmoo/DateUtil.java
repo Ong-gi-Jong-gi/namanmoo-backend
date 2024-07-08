@@ -2,7 +2,6 @@ package ongjong.namanmoo;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -86,7 +85,7 @@ public class DateUtil {
 //    }
 
     @Transactional(readOnly = true)
-    public String getDateStirng(Long challengeDate) {       // timstamp형식을   "yyyy.MM.dd"형식의 문자열로 바꾸기
+    public String timestampToString(Long challengeDate) {       // timstamp형식을   "yyyy.MM.dd"형식의 문자열로 바꾸기
         DateUtil dateUtil = DateUtil.getInstance();
         return dateUtil.getDateStr(challengeDate, DateUtil.FORMAT_4);
     }
@@ -101,12 +100,6 @@ public class DateUtil {
 
         // 두 날짜의 차이 계산
         return ChronoUnit.DAYS.between(date1, date2)+1;
-    }
-
-    @Transactional(readOnly = true)
-    public String timestampToString(Long challengeDate) {       // timstamp형식을   "yyyy.MM.dd"형식의 문자열로 바꾸기
-        DateUtil dateUtil = DateUtil.getInstance();
-        return dateUtil.getDateStr(challengeDate, DateUtil.FORMAT_4);
     }
 
     @Transactional(readOnly = true)

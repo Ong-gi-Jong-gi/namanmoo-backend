@@ -12,8 +12,6 @@ import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -33,8 +31,6 @@ public class AnswerService {
     private final ChallengeRepository challengeRepository;
     private final MemberServiceImpl memberServiceImpl;
     private final MemberService memberService;
-    private final FamilyRepository familyRepository;
-    private final ChallengeService challengeService;
 
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
 
@@ -51,7 +47,7 @@ public class AnswerService {
         DateUtil dateUtil = DateUtil.getInstance();
         // 각 회원마다 모든 챌린지에 대해 답변 생성
         for (Member member : members) {
-            String strChallengeDate = dateUtil.getDateStirng(challengeDate);        // timestamp인 challengedate를 string "yyyy.MM.dd" 으로 변환
+            String strChallengeDate = dateUtil.timestampToString(challengeDate);        // timestamp인 challengedate를 string "yyyy.MM.dd" 으로 변환
             for (Challenge challenge : challenges) {                            // 현재 챌린지의 개수 만큼 answer 생성 -> 챌린지의 개수가 30개가 넘었을 경우 stop
                 if (challenge.getChallengeType() == ChallengeType.GROUP_PARENT){            // 만약 member가 아빠 일경우, challenge가 CGROUP이면 ANSWER 생성 X
                     if (member.getRole().equals("아들") || member.getRole().equals("딸")){
@@ -67,6 +63,7 @@ public class AnswerService {
                 Answer answer = new Answer(); // Answer 객체 생성
                 answer.setMember(member);
                 answer.setChallenge(challenge);
+                answer.setBubbleVisible(false);
 
                 if (challenge.getChallengeType()== ChallengeType.NORMAL) {
                     answer.setAnswerType(AnswerType.NORMAL);
@@ -112,34 +109,17 @@ public class AnswerService {
     }
 
     @Transactional(readOnly = true)
-    public Long findDateByChallengeMember(Challenge challenge, Member member) throws Exception{       // answer의 createDate를 timeStamp로 바꾸기
+    public Long findDateByChallengeMember(Challenge challenge) throws Exception{       // answer의 createDate를 timeStamp로 바꾸기
+        Member member = memberService.findMemberByLoginId();
         Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge, member);
         DateUtil dateUtil = DateUtil.getInstance();
         return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
     }
 
-//    @Transactional(readOnly = true)
-//    public Long getTimeStamp(String answerDate, String format) throws Exception{       //  "yyyy.MM.dd"형식의 문자열을 timeStamp로 바꾸기
-//        if ((answerDate == null || answerDate.equals("")) || (format == null || format.equals(""))) {
-//            return null;
-//        }
-//
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-//        LocalDate date = LocalDate.parse(answerDate, formatter);
-//        LocalDateTime dateTime = date.atStartOfDay(); // LocalDate를 LocalDateTime으로 변환 (00:00:00)
-//        return Timestamp.valueOf(dateTime).getTime();
-//    }
-
-
     @Transactional(readOnly = true)
     public List<Answer> findAnswerByChallenge(Challenge challenge){
         return answerRepository.findByChallenge(challenge);
     }
-
-//    public Answer saveAnswer(Long challengeId, String answer){
-//        Challenge challenge =  challengeService.findChallengeById(challengeId);
-//        Optional<Member> member = memberService.findLoginMember();
-//    }
 
     @Transactional(readOnly = true)
     public Lucky findCurrentLucky(Long familyId) {       // 현재 진행중인 lucky id 조회
@@ -160,6 +140,9 @@ public class AnswerService {
                 .orElseThrow(() -> new RuntimeException("주어진 challengeId에 해당하는 챌린지를 찾을 수 없습니다."));
         Answer answer = answerRepository.findByChallengeAndMember(challenge, member)
                 .orElseThrow(() -> new RuntimeException("해당 멤버가 작성한 답변을 찾을 수 없습니다."));
+        if (answer.getAnswerContent() == null){
+            answer.setBubbleVisible(true);
+        }
         answer.setAnswerContent(answerContent);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
         answer.setModifiedDate(LocalDateTime.now().format(formatter));
