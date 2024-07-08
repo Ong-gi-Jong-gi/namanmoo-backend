@@ -110,8 +110,6 @@ public class ChallengeController {
 //
 //    }
 
-
-
     @Data
     static class AnswerRequest {
         private Long challengeId;
