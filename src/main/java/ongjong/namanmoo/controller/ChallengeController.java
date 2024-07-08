@@ -176,6 +176,25 @@ public class ChallengeController {
         }
     }
 
+    // 화상 통화 챌린지 조회
+    @GetMapping("/face")
+    public ResponseEntity<ApiResponse<FaceChallengeDto>> getFaceChallenge(
+            @RequestParam("challengeId") Long challengeId) throws Exception {
+
+        Challenge challenge = challengeService.findChallengeById(challengeId);
+        if (challenge == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>("404", "Challenge not found for the provided challengeId", null));
+        }
+
+        Member member = memberService.findMemberByLoginId(); // 현재 로그인한 멤버
+
+        // 화상 통화 챌린지 정보 가져오기
+        FaceChallengeDto faceChallengeDto = createFaceChallengeDto(challenge, member);
+
+        return ResponseEntity.ok(new ApiResponse<>("200", "Success", faceChallengeDto));
+    }
+
     @Data
     static class AnswerRequest {
         private Long challengeId;
