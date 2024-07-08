@@ -131,8 +131,8 @@ public class AnswerService {
         return null;
     }
 
-    // 로그인한 멤버를 찾고 해당 멤버가 작성한 answer중에 request로 받은 challengeId로 answer를 찾는다. 그리고 request로 받은 answer를 answer_content에 넣는다.
-    public Answer modifyAnswer(Long challengeId, String answerContent) throws Exception{
+
+    public Answer modifyAnswer(Long challengeId, String answerContent) throws Exception{        // 로그인한 맴버가 수정한 답변을 저장한다.
         Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId())
                 .orElseThrow(() -> new RuntimeException("로그인한 멤버를 찾을 수 없습니다."));
         Challenge challenge = challengeRepository.findById(challengeId)

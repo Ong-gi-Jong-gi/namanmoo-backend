@@ -104,12 +104,10 @@ public class ChallengeController {
         return ResponseEntity.ok(new ApiResponse<>("success", "Challenge retrieved successfully", Collections.singletonList(NormalChallengeDto)));      // 객체를 리스트 형태로 감싸서 반환
     }
 
-    @PostMapping("/normal")     // 일반 챌린지 내용 수정
+    @PostMapping("/normal")     // 일반 챌린지 내용 수정 -> 새 내용, 수정날짜 저장
     public  ResponseEntity<ApiResponse> saveAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
         Long challengeId = request.getChallengeId();
-        log.info("challengeId : {}", challengeId);
         String answerContent = request.getAnswerContent();
-        log.info("answerContent : {}", answerContent);
         Answer answer = answerService.modifyAnswer(challengeId, answerContent);
         ModifyAnswerDto modifyAnswerDto = new ModifyAnswerDto(answer);
         return ResponseEntity.status(HttpStatus.OK)
