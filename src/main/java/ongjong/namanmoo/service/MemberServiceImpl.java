@@ -59,7 +59,7 @@ public class MemberServiceImpl implements MemberService {
         // 파일을 전송했을 경우에만 S3 파일 업로드 수행
         memberUpdateDto.userImg().ifPresent(image -> {
             try {
-                String imagePath = AwsS3Service.upload(image);
+                String imagePath = AwsS3Service.uploadFile(image);
                 member.setMemberImage(imagePath);
             } catch (IOException e) {
                 throw new RuntimeException("S3 업로드 중 에러가 발생했습니다.", e);
@@ -103,4 +103,8 @@ public class MemberServiceImpl implements MemberService {
         return new MemberInfoDto(findMember);
     }
 
+    @Transactional(readOnly = true)
+    public Member findMemberByLoginId() throws Exception{
+        return memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
+    }
 }

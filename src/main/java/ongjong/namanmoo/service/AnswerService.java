@@ -98,6 +98,7 @@ public class AnswerService {
                 .orElse(false);
     }
 
+    // TODO: 함수 이름이랑 반환하는거랑 안맞음 -> 할거면 findAnswerDateByChallengeMember 라고 하던가
     @Transactional(readOnly = true)
     public Long findAnswerByChallengeMember(Challenge challenge, Member member) throws Exception{
         Answer answer = answerRepository.findByChallengeAndMember(challenge, member).orElse(null);
@@ -146,6 +147,14 @@ public class AnswerService {
                 answer.setCreateDate(currentDateStr);
             }
         }
+    }
+
+    public Optional<Answer> findAnswerByChallengeAndMember(Challenge challenge, Member member) {
+        return answerRepository.findByChallengeAndMember(challenge, member);
+    }
+
+    public void saveAnswer(Answer answer) {
+        answerRepository.save(answer);
     }
 
 }

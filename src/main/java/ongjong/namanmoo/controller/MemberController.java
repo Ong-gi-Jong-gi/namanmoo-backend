@@ -59,7 +59,7 @@ public class MemberController {
 
         // 파일을 전송했을 경우에만 S3 파일 업로드 수행
         if (memberUpdateDto.userImg().isPresent() && !memberUpdateDto.userImg().get().isEmpty()) {
-            uploadImageUrl = AwsS3Service.upload(memberUpdateDto.userImg().get());
+            uploadImageUrl = AwsS3Service.uploadFile(memberUpdateDto.userImg().get());
         }
 
         memberService.update(memberUpdateDto);
