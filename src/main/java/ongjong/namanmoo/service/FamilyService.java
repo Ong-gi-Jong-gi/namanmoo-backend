@@ -58,8 +58,7 @@ public class FamilyService {
         familyOwner.setRole(ownerRole);
         familyOwner.setFamily(family);
         memberRepository.save(familyOwner);
-
-
+        
         return family;
     }
 
@@ -163,5 +162,13 @@ public class FamilyService {
             code.append(CHARACTERS.charAt(RANDOM.nextInt(CHARACTERS.length())));
         }
         return code.toString();
+    }
+
+    public Long findFamilyId() {
+        String currentLoginId = SecurityUtil.getLoginLoginId();
+        Member currentUser = memberRepository.findByLoginId(currentLoginId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found for loginId: " + currentLoginId));
+
+        return currentUser.getFamily().getFamilyId();
     }
 }

@@ -16,6 +16,6 @@ public class FileController {
 
     @PostMapping("/upload")
     public String upload(@RequestParam("file") MultipartFile multipartFile) throws IOException {
-        return awsS3Service.upload(multipartFile);
+        return AwsS3Service.uploadFile(multipartFile);
     }
 }

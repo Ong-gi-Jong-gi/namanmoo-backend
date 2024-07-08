@@ -9,9 +9,8 @@ import ongjong.namanmoo.domain.Lucky;
 import java.util.List;
 
 @Entity
-@DiscriminatorColumn(name = "ctype")
 @Getter @Setter
-public abstract class Challenge {
+public class Challenge {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long challengeId;
@@ -20,11 +19,19 @@ public abstract class Challenge {
 //    @JoinColumn(name = "lucky_id")
 //    private Lucky lucky;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+//    @Column(nullable = false)
+    private ChallengeType challengeType;        //enum 타입
+
+    private String challengeTitle;
+
+    //    @Column(nullable = false)
     private Long challengeNum;
 
     @OneToMany(mappedBy = "challenge")
     private List<Answer> answers;
 
+
+//    public abstract ChallengeType getChallengeType();
     // Getters and Setters
 }

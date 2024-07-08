@@ -32,12 +32,12 @@ public class Member {
     private String name; // 이름
 
     @Builder.Default
+//    @Enumerated(EnumType.STRING)
     private String role = "미정"; // 가족에서의 역할
 
     private String nickname; // 별명
 
-    @Builder.Default
-    private String memberImage = "https://~"; // 프로필 사진(아직 정확히 모름)
+    private String memberImage; // 프로필 사진(아직 정확히 모름)
 
     @Enumerated(EnumType.STRING)
     private LogInRole logInRole; // 권한 -> USER, ADMIN

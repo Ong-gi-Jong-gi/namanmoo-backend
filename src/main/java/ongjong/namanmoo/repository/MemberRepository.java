@@ -19,6 +19,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findByFamilyFamilyId(Long familyId);
 
     @Query("SELECT COUNT(m) FROM Member m WHERE m.family.familyId = :familyId")
-    long countByFamilyId(@Param("familyId") Long familyId); // 멤버의 같은 패밀리 아이디 개수로 확인
+    int countByFamilyId(@Param("familyId") Long familyId); // 멤버의 같은 패밀리 아이디 개수로 확인
 
 }

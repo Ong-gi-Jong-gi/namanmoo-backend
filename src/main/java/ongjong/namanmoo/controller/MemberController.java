@@ -8,10 +8,12 @@ import ongjong.namanmoo.dto.member.MemberSignUpDto;
 import ongjong.namanmoo.dto.member.MemberUpdateDto;
 import ongjong.namanmoo.dto.member.UpdatePasswordDto;
 import ongjong.namanmoo.response.ApiResponse;
+import ongjong.namanmoo.service.AwsS3Service;
 import ongjong.namanmoo.service.MemberService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 
 import java.util.HashMap;
@@ -51,11 +53,22 @@ public class MemberController {
     // 회원 정보 수정
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<MemberInfoDto> updateBasicInfo(@Valid @RequestBody MemberUpdateDto memberUpdateDto) throws Exception {
+    public ApiResponse<MemberInfoDto> updateBasicInfo(@RequestPart("userInfo") MemberUpdateDto memberUpdateDto) throws Exception {
+
+        String uploadImageUrl = null;
+
+        // 파일을 전송했을 경우에만 S3 파일 업로드 수행
+        if (memberUpdateDto.userImg().isPresent() && !memberUpdateDto.userImg().get().isEmpty()) {
+            uploadImageUrl = AwsS3Service.uploadFile(memberUpdateDto.userImg().get());
+        }
+
         memberService.update(memberUpdateDto);
+
+        // MemberService의 update 메소드에서 imagePath를 갱신해야 합니다.
         MemberInfoDto info = memberService.getMyInfo();
         return new ApiResponse<>("200", "Update User Info Success", info);
     }
+
 
     // 비밀 번호 수정
     @PostMapping("/users/password")

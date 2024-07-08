@@ -37,7 +37,7 @@
 //        family1 = familyRepository.save(family1);
 //
 //        Family family2 = new Family();
-//        family2.setFamilyName("Test Family 2");
+//        family2.setFamilyName("Test Family 2");x
 //        family2.setMaxFamilySize(4);
 //        family2.setCurrentFamilySize(4);
 //        family2.setInviteCode("testcode2");
