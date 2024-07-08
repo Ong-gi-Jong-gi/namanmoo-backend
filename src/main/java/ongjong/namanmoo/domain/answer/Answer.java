@@ -29,7 +29,7 @@ public class Answer {
     @Enumerated(EnumType.STRING)
     private AnswerType answerType;      // enum 타입
 
-    private boolean checkChallenge = false;
+    private boolean bubbleVisible = false;
 
 //    @Column(nullable = false)
     private String createDate;

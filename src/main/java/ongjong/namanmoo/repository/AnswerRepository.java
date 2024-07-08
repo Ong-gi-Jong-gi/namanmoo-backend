@@ -12,6 +12,6 @@ import java.util.Optional;
 public interface AnswerRepository extends JpaRepository<Answer, Long> {
     Optional<Answer> findByChallengeAndMember(Challenge challenge, Member member);
     List<Answer> findByChallenge(Challenge challenge);
-    Optional<Answer> findByMember(Member member);
+    Optional<Answer> findByMemberAndCreateDate(Member member, String createDate);
     boolean existsByMemberAndCreateDateAndAnswerContentIsNotNull(Member member, String createDate);
 }

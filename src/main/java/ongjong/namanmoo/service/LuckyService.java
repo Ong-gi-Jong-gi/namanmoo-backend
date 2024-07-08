@@ -3,10 +3,7 @@ package ongjong.namanmoo.service;
 
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
-
-
-import java.sql.Timestamp;
-
+import ongjong.namanmoo.dto.lucky.OffBubbleDto;
 
 
 public interface LuckyService {
@@ -17,7 +14,7 @@ public interface LuckyService {
 
     LuckyStatusDto getLuckyStatus(String createDate);
 
-    boolean join(Long familyId);
+    boolean createLucky(Long familyId);
 
     Integer calculateLuckyStatus(Family Family);
 

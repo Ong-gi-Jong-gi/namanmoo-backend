@@ -7,13 +7,16 @@ import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
+import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -62,7 +65,7 @@ public class AnswerService {
                 answer.setMember(member);
 //                String currentDateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
 //                answer.setCreateDate(currentDateStr);
-                answer.setCheckChallenge(false);
+                answer.setBubbleVisible(false);
                 answer.setChallenge(challenge);
 
                 if (challenge.getChallengeType()== ChallengeType.NORMAL) {
@@ -108,7 +111,7 @@ public class AnswerService {
     @Transactional(readOnly = true)
     public boolean findIsCompleteAnswer(Challenge challenge,Member member){
         return answerRepository.findByChallengeAndMember(challenge, member)
-                .map(Answer::isCheckChallenge)      // answer가 존재할 경우 ischeckChallenge 값을 반환
+                .map(Answer::isBubbleVisible)      // answer가 존재할 경우 ischeckChallenge 값을 반환
                 .orElse(false);
     }
 
@@ -165,5 +168,24 @@ public class AnswerService {
     @Transactional(readOnly = true)
     public boolean checkUserResponse(Member member, String createDate) {
         return answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, createDate);
+    }
+
+
+    @Transactional
+    public void offBalloon(Long challengeDate) throws Exception {
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId())
+                .orElseThrow(() -> new Exception("회원이 존재하지 않습니다"));
+
+        // 타임스탬프를 yyyy.MM.dd 형식의 문자열로 변환
+        Instant instant = Instant.ofEpochMilli(challengeDate);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd").withZone(ZoneId.systemDefault());
+        String createDate = formatter.format(instant);
+
+        Optional<Answer> answer = answerRepository.findByMemberAndCreateDate(member, createDate);
+        if (answer.isPresent()) {
+            answer.get().setBubbleVisible(false);
+        } else {
+            throw new IllegalArgumentException("No answer found for the given loginId and createDate");
+        }
     }
 }

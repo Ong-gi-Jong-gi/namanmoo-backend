@@ -5,8 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
+import ongjong.namanmoo.repository.AnswerRepository;
 import ongjong.namanmoo.repository.FamilyRepository;
 import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
@@ -31,7 +33,7 @@ public class LuckyServiceImpl implements LuckyService{
     private final FamilyRepository familyRepository;
 
 
-    public boolean join(Long familyId){     // 캐릭터 생성
+    public boolean createLucky(Long familyId){     // 캐릭터 생성
         Optional<Family> familyOptional = familyRepository.findById(familyId);
         if (familyOptional.isPresent()) {
             Family family = familyOptional.get();
@@ -94,7 +96,5 @@ public class LuckyServiceImpl implements LuckyService{
         }
 
     }
-
-
 
 }

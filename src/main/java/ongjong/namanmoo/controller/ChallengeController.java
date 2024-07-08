@@ -9,18 +9,14 @@ import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.challenge.ChallengeDto;
 import ongjong.namanmoo.dto.challenge.ChallengeListDto;
 import ongjong.namanmoo.dto.challenge.NormalChallengeDto;
-import ongjong.namanmoo.repository.AnswerRepository;
 import ongjong.namanmoo.response.ApiResponse;
 import ongjong.namanmoo.service.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -36,7 +32,7 @@ public class ChallengeController {
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     public ResponseEntity<ApiResponse> saveChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         Long familyId = familyService.findFamilyId();
-        if (!luckyService.join(familyId) || !answerService.createAnswer(familyId, challengeDate)) {
+        if (!luckyService.createLucky(familyId) || !answerService.createAnswer(familyId, challengeDate)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse("404", "Challenge not found", null));
         }

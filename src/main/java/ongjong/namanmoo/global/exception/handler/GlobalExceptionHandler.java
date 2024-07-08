@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleException(Exception ex, WebRequest request) {
-        ApiResponse<String> response = new ApiResponse<>("500", "Internal Server Error", null);
+        ApiResponse<String> response = new ApiResponse<>("500", ex.getMessage(), null);
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
