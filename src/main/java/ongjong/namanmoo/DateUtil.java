@@ -2,9 +2,9 @@ package ongjong.namanmoo;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -111,6 +111,18 @@ public class DateUtil {
         LocalDate date = LocalDate.parse(strChallengeDate, formatter); // 문자열을 LocalDate로 변환
         LocalDate newDate = date.plusDays(days); // 날짜에 days를 더하기
         return newDate.format(formatter); //
+    }
+
+    @Transactional(readOnly = true)
+    public Long stringToTimestamp(String answerDate, String format) throws Exception{       //  "yyyy.MM.dd"형식의 문자열을 timeStamp로 바꾸기
+        if ((answerDate == null || answerDate.isEmpty()) || (format == null || format.isEmpty())) {
+            return null;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        LocalDate date = LocalDate.parse(answerDate, formatter);
+        LocalDateTime dateTime = date.atStartOfDay(); // LocalDate를 LocalDateTime으로 변환 (00:00:00)
+        return Timestamp.valueOf(dateTime).getTime();
     }
 
 

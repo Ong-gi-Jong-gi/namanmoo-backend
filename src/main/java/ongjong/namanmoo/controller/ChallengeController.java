@@ -36,7 +36,8 @@ public class ChallengeController {
     private final AnswerRepository answerRepository;
 
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
-    public ResponseEntity<ApiResponse> saveChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+    public ResponseEntity<ApiResponse> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
+        Long challengeDate = request.challengeDate;
         Long familyId = familyService.findFamilyId();
         if (!luckyService.join(familyId) || !answerService.createAnswer(familyId, challengeDate)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -55,8 +56,6 @@ public class ChallengeController {
                     .body(new ApiResponse("404", "Challenge not found", null));
 
         }
-
-//        answerService.saveCreateDate(challenge);    // answer에 createdate 저장
         Long currentNum  = challengeService.findCurrentNum(challengeDate);
         ChallengeDto challengeDto = new ChallengeDto(challenge,currentNum);
         return ResponseEntity.status(HttpStatus.OK)
@@ -103,15 +102,20 @@ public class ChallengeController {
         return ResponseEntity.ok(new ApiResponse<>("success", "Challenge retrieved successfully", Collections.singletonList(NormalChallengeDto)));      // 객체를 리스트 형태로 감싸서 반환
     }
 
-//    @PostMapping("/normal")     // 일반 챌린지 내용 수정
-//    public  ResponseEntity<ApiResponse> saveAnswer(@RequestBody AnswerRequest request){
-//        Long challengeId = request.getChallengeId();
-//        String answer = request.getAnswer();
-//
-//    }
+    @PostMapping("/normal")     // 일반 챌린지 내용 수정
+    public  ResponseEntity<ApiResponse> saveAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
+        Long challengeId = request.challengeId;
+        String answer = request.answer;
+        // 로그인한 멤버를 찾고 해당 멤버가 작성한 answer중에 request로 받은 challengeId로 answer를 찾는다. 그리고 request로 받은 answer를 answer_content에 넣는다.
+    }
 
     @Data
-    static class AnswerRequest {
+    static class SaveChallengeRequest {
+        private Long challengeDate;
+    }
+
+    @Data
+    static class SaveAnswerRequest{
         private Long challengeId;
         private String answer;
     }

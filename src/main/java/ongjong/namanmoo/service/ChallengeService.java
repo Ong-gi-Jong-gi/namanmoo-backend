@@ -94,7 +94,7 @@ public class ChallengeService {
         return challengeRepository.findById(id).get();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)     // TODO 이거 옮기기
     public Member findMemberByLoginId() throws Exception{      // 회원 아이디로 회원 조회
         return memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
     }
@@ -164,7 +164,7 @@ public class ChallengeService {
         return findCurrentChallengeNum(family.getFamilyId(),challengeDate);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Long findStartChallengeNum(Long familyId){     // 시작해야하는 challenge 넘버 찾기
         // luckies를 순회화면서 lucky의 boolean 타입인 running이 false인 lucky의 개수를 찾고
         // 찾은 개수 * 30 + 1부터 number까지의 challengenum 으로 challengeList를 구하는 걸로 변경
@@ -184,4 +184,5 @@ public class ChallengeService {
 
         return challengeRepository.findByChallengeNumBetween(findStartChallengeNum(family.getFamilyId()), findStartChallengeNum(family.getFamilyId()) + 30);
     }
+
 }

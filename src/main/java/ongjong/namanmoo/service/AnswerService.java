@@ -7,14 +7,11 @@ import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
+import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,12 +21,12 @@ import java.util.Optional;
 public class AnswerService {
 
     private final AnswerRepository answerRepository;
-    private final ChallengeRepository challengeRepository;
     private final MemberRepository memberRepository;
     private final FaceTimeAnswerRepository faceTimeAnswerRepository;
     private final LuckyRepository luckyRepository;
-    private final ChallengeService challengeService;
     private final FamilyRepository familyRepository;
+    private final ChallengeService challengeService;
+    private final ChallengeRepository challengeRepository;
 
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
 
@@ -37,9 +34,9 @@ public class AnswerService {
         List<Member> members = memberRepository.findByFamilyFamilyId(familyId);
         Optional<Family> family  = familyRepository.findById(familyId);
         // 모든 챌린지를 조회
-        List<Challenge> challenges = challengeService.findRunningChallenges(challengeDate); // todo 챌린지가 30개가 넘어갈때를 고려해야함  -> 답변 테이블이 challenge가 시작 될때마다 30개씩 들어가야함
+        List<Challenge> challenges = challengeService.findRunningChallenges(challengeDate);
 
-        // 가족에 해당하는 회원이 없으면 false를 반환
+        // 가족이 다 방에 들어오지 않았을 경우 null 반환
         if (members.size() != family.get().getMaxFamilySize()) {
             return false;
         }
@@ -61,9 +58,6 @@ public class AnswerService {
 
                 Answer answer = new Answer(); // Answer 객체 생성
                 answer.setMember(member);
-//                String currentDateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-//                answer.setCreateDate(currentDateStr);
-                answer.setCheckChallenge(false);
                 answer.setChallenge(challenge);
 
                 if (challenge.getChallengeType()== ChallengeType.NORMAL) {
@@ -105,42 +99,24 @@ public class AnswerService {
         return true;
     }
 
-
     @Transactional(readOnly = true)
-    public boolean findIsCompleteAnswer(Challenge challenge,Member member){
-        return answerRepository.findByChallengeAndMember(challenge, member)
-                .map(Answer::isCheckChallenge)      // answer가 존재할 경우 ischeckChallenge 값을 반환
-                .orElse(false);
+    public boolean findIsCompleteAnswer(Challenge challenge,Member member){         // challenge와 member로 answer찾기
+        Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge, member);
+        return answer.map(a -> a.getAnswerContent() != null).orElse(false); // answercontent 가 존재하지 않을 경우 false, 존재할 경우 true 반환
     }
 
     @Transactional(readOnly = true)
-    public Long findAnswerByChallengeMember(Challenge challenge, Member member) throws Exception{
-        Answer answer = answerRepository.findByChallengeAndMember(challenge, member).orElse(null);
-        return getTimeStamp(answer.getCreateDate(),"yyyy.MM.dd");
-    }
-
-    @Transactional(readOnly = true)
-    public Long getTimeStamp(String answerDate, String format) throws Exception{       //  "yyyy.MM.dd"형식의 문자열을 timeStamp로 바꾸기
-        if ((answerDate == null || answerDate.equals("")) || (format == null || format.equals(""))) {
-            return null;
-        }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-        LocalDate date = LocalDate.parse(answerDate, formatter);
-        LocalDateTime dateTime = date.atStartOfDay(); // LocalDate를 LocalDateTime으로 변환 (00:00:00)
-        return Timestamp.valueOf(dateTime).getTime();
+    public Long findAnswerByChallengeMember(Challenge challenge, Member member) throws Exception{       // answer의 createDate를 timeStamp로 바꾸기
+        Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge, member);
+        DateUtil dateUtil = DateUtil.getInstance();
+        return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
     }
 
 
     @Transactional(readOnly = true)
-    public List<Answer> findAnswerByChallenge(Challenge challenge){
+    public List<Answer> findAnswerByChallenge(Challenge challenge){     // challenge로 answer 리스트 찾기
         return answerRepository.findByChallenge(challenge);
     }
-
-//    public Answer saveAnswer(Long challengeId, String answer){
-//        Challenge challenge =  challengeService.findChallengeById(challengeId);
-//        Optional<Member> member = memberService.findLoginMember();
-//    }
 
     @Transactional(readOnly = true)
     public Lucky findCurrentLucky(Long familyId) {       // 현재 진행중인 lucky id 조회
@@ -153,14 +129,13 @@ public class AnswerService {
         return null;
     }
 
-//    public void saveCreateDate(Challenge challenge){                // 오늘의 챌리지를 조회할때 해당 challenge에 해당하는 answer의 createDate에 오늘의 날짜를 저장한다.
-//        List <Answer> answerList = answerRepository.findByChallenge(challenge);
-//        for(Answer answer : answerList){
-//            if (answer.getCreateDate().isEmpty()){      // answer의 createDate가 비어있을 경우에만 오늘의 날짜 set
-//                String currentDateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-//                answer.setCreateDate(currentDateStr);
-//            }
-//        }
-//    }
+    // 로그인한 멤버를 찾고 해당 멤버가 작성한 answer중에 request로 받은 challengeId로 answer를 찾는다. 그리고 request로 받은 answer를 answer_content에 넣는다.
+    public boolean modifyAnswer(Long challengeId, String newAnswer) throws Exception{
+        Optional<Member> member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
+        Optional<Challenge> challenge = challengeRepository.findById(challengeId);
+        Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge.get(), member.get()) ;
+        answer.get().setAnswerContent(newAnswer);
+        answerRepository.save(answer.get());
+    }
 
 }
