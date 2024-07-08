@@ -2,6 +2,7 @@ package ongjong.namanmoo;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,13 +32,24 @@ public class DateUtil {
     public static String FORMAT_4 = "yyyy.MM.dd";
 
 
-//    /**
-//     * 년,월,일,시간,분,초
-//     */
-//    public static String FORMAT_6 = "yyyyMMddHHmmss";
-//    public static String FORMAT_7 = "yyyy-MM-dd HH:mm:ss";
-//    public static String FORMAT_8 = "yyyy/MM/dd HH:mm:ss";
+    /**
+     * 년,월,일,시간,분,초
+     */
+    public static String FORMAT_6 = "yyyyMMddHHmmss";
+    public static String FORMAT_7 = "yyyy-MM-dd HH:mm:ss";
+    public static String FORMAT_8 = "yyyy/MM/dd HH:mm:ss";
 
+    // (1) 날짜시간 데이터를 지정한 포맷의 문자열로 리턴
+
+    /**
+     * 현재 시간을 지정한 날짜시간 포맷의 문자열로 리턴하기
+     */
+    public String getNowStr(String format) {
+        if (format==null || format.equals("")) return null;
+        Date date = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat(format);
+        return formatter.format(date);
+    }
 
     /**
      * 지정한 타임스탬프를 지정한 날짜시간 포맷의 문자열로 리턴하기
@@ -48,20 +60,6 @@ public class DateUtil {
         SimpleDateFormat formatter = new SimpleDateFormat(format);
         return formatter.format(date);
     }
-
-//    // (1) 날짜시간 데이터를 지정한 포맷의 문자열로 리턴
-//    /**
-//     * 현재 시간을 지정한 날짜시간 포맷의 문자열로 리턴하기
-//     */
-////    public String getNowStr(String format) {
-////        if (format==null || format.equals("")) return null;
-////        Date date = new Date();
-////        SimpleDateFormat formatter = new SimpleDateFormat(format);
-////        return formatter.format(date);
-//
-////    }
-
-
 
 
     // (2) 날짜시간 포맷의 문자열을 날짜시간 데이터 타입으로 리턴
@@ -106,11 +104,9 @@ public class DateUtil {
     }
 
     @Transactional(readOnly = true)
-    public String addDaysToStringDate(String strChallengeDate,int days) { // "yyyy.MM.dd" 형식의 문자열에 날짜 더하기
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-        LocalDate date = LocalDate.parse(strChallengeDate, formatter); // 문자열을 LocalDate로 변환
-        LocalDate newDate = date.plusDays(days); // 날짜에 days를 더하기
-        return newDate.format(formatter); //
+    public String timestampToString(Long challengeDate) {       // timstamp형식을   "yyyy.MM.dd"형식의 문자열로 바꾸기
+        DateUtil dateUtil = DateUtil.getInstance();
+        return dateUtil.getDateStr(challengeDate, DateUtil.FORMAT_4);
     }
 
     @Transactional(readOnly = true)
@@ -125,5 +121,14 @@ public class DateUtil {
         return Timestamp.valueOf(dateTime).getTime();
     }
 
+
+
+    @Transactional(readOnly = true)
+    public String addDaysToStringDate(String strChallengeDate,int days) { // "yyyy.MM.dd" 형식의 문자열에 날짜 더하기
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        LocalDate date = LocalDate.parse(strChallengeDate, formatter); // 문자열을 LocalDate로 변환
+        LocalDate newDate = date.plusDays(days); // 날짜에 days를 더하기
+        return newDate.format(formatter); //
+    }
 
 }

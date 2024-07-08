@@ -12,6 +12,8 @@ import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -29,6 +31,10 @@ public class AnswerService {
     private final FamilyRepository familyRepository;
     private final ChallengeService challengeService;
     private final ChallengeRepository challengeRepository;
+    private final MemberServiceImpl memberServiceImpl;
+    private final MemberService memberService;
+    private final FamilyRepository familyRepository;
+    private final ChallengeService challengeService;
 
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
 
@@ -96,8 +102,6 @@ public class AnswerService {
             }
         }
 
-
-
         return true;
     }
 
@@ -108,17 +112,34 @@ public class AnswerService {
     }
 
     @Transactional(readOnly = true)
-    public Long findAnswerByChallengeMember(Challenge challenge, Member member) throws Exception{       // answer의 createDate를 timeStamp로 바꾸기
+    public Long findDateByChallengeMember(Challenge challenge, Member member) throws Exception{       // answer의 createDate를 timeStamp로 바꾸기
         Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge, member);
         DateUtil dateUtil = DateUtil.getInstance();
         return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
     }
 
+//    @Transactional(readOnly = true)
+//    public Long getTimeStamp(String answerDate, String format) throws Exception{       //  "yyyy.MM.dd"형식의 문자열을 timeStamp로 바꾸기
+//        if ((answerDate == null || answerDate.equals("")) || (format == null || format.equals(""))) {
+//            return null;
+//        }
+//
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+//        LocalDate date = LocalDate.parse(answerDate, formatter);
+//        LocalDateTime dateTime = date.atStartOfDay(); // LocalDate를 LocalDateTime으로 변환 (00:00:00)
+//        return Timestamp.valueOf(dateTime).getTime();
+//    }
+
 
     @Transactional(readOnly = true)
-    public List<Answer> findAnswerByChallenge(Challenge challenge){     // challenge로 answer 리스트 찾기
+    public List<Answer> findAnswerByChallenge(Challenge challenge){
         return answerRepository.findByChallenge(challenge);
     }
+
+//    public Answer saveAnswer(Long challengeId, String answer){
+//        Challenge challenge =  challengeService.findChallengeById(challengeId);
+//        Optional<Member> member = memberService.findLoginMember();
+//    }
 
     @Transactional(readOnly = true)
     public Lucky findCurrentLucky(Long familyId) {       // 현재 진행중인 lucky id 조회
@@ -144,6 +165,14 @@ public class AnswerService {
         answer.setModifiedDate(LocalDateTime.now().format(formatter));
         answerRepository.save(answer);
         return answer;
+    }
+
+    public Optional<Answer> findAnswerByChallengeAndMember(Challenge challenge, Member member) {
+        return answerRepository.findByChallengeAndMember(challenge, member);
+    }
+
+    public void saveAnswer(Answer answer) {
+        answerRepository.save(answer);
     }
 
 }
