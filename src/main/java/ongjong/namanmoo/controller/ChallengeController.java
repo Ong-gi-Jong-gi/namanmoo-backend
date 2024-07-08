@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -103,10 +105,10 @@ public class ChallengeController {
     }
 
 //    @PostMapping("/normal")     // 일반 챌린지 내용 수정
-//    public  ResponseEntity<ApiResponse> saveAnswer(@RequestBody AnswerRequest request){
-//        Long challengeId = request.getChallengeId();
-//        String answer = request.getAnswer();
-//
+//    public  ResponseEntity<ApiResponse> saveAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
+//        Long challengeId = request.challengeId;
+//        String answer = request.answer;
+//        // 로그인한 멤버를 찾고 해당 멤버가 작성한 answer중에 request로 받은 challengeId로 answer를 찾는다. 그리고 request로 받은 answer를 answer_content에 넣는다.
 //    }
 
     // 사진 챌린지 조회
@@ -161,7 +163,7 @@ public class ChallengeController {
         if (optionalAnswer.isPresent()) {
             Answer answer = optionalAnswer.get();
             answer.setAnswerContent(uploadImageUrl);
-            answer.setModifiedDate(LocalDate.now().toString());
+            answer.setModifiedDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")));
             answerService.saveAnswer(answer);
 
             // Map 형태로 답변 URL 반환
@@ -187,20 +189,25 @@ public class ChallengeController {
                     .body(new ApiResponse<>("404", "Challenge not found for the provided challengeId", null));
         }
 
-        Member member = memberService.findMemberByLoginId(); // 현재 로그인한 멤버
-
         // 챌린지 번호를 가져옴 (예를 들어, 해당 챌린지의 현재 진행 번호)
         Long currentNum = challengeService.findCurrentNum(challengeId);
 
+        // 챌린지와 멤버를 통해 timestamp를 가져옴
+        Long timestamp = answerService.findDateByChallengeMember(challenge);
+
         // 화상 통화 챌린지 정보 가져오기
-        ChallengeDto challengeDto = new ChallengeDto(challenge, currentNum, );
+        ChallengeDto challengeDto = new ChallengeDto(challenge, currentNum, timestamp.toString());
 
         return ResponseEntity.ok(new ApiResponse<>("200", "Success", challengeDto));
     }
 
+    @Data
+    static class SaveChallengeRequest {
+        private Long challengeDate;
+    }
 
     @Data
-    static class AnswerRequest {
+    static class SaveAnswerRequest{
         private Long challengeId;
         private String answer;
     }

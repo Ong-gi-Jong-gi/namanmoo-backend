@@ -1,9 +1,11 @@
 package ongjong.namanmoo.repository;
 
 import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.global.security.util.SecurityUtil;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
