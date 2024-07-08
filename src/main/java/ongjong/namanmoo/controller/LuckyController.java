@@ -18,8 +18,8 @@ public class LuckyController {
     private final LuckyService luckyService;
 
     @GetMapping
-    public ApiResponse<LuckyStatusDto> getLuckyStatus(@RequestParam("createDate") Timestamp createDate) {
-        LuckyStatusDto luckyStatusDto = luckyService.getLuckyStatus(createDate);
+    public ApiResponse<LuckyStatusDto> getLuckyStatus(@RequestParam("challengeDate") String challengeDate) {
+        LuckyStatusDto luckyStatusDto = luckyService.getLuckyStatus(challengeDate);
         return new ApiResponse<>("200", "Success", luckyStatusDto);
     }
 

@@ -22,12 +22,12 @@ import lombok.extern.log4j.Log4j2;
 @Service
 public class AwsS3Service {
 
-    private final AmazonS3Client amazonS3Client;
+    private static AmazonS3Client amazonS3Client;
 
     @Value("${cloud.aws.s3.bucket}")
-    private String bucket;
+    private static String bucket;
 
-    public String upload(MultipartFile multipartFile) throws IOException {
+    public static String upload(MultipartFile multipartFile) throws IOException {
         File uploadFile = convert(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
 
@@ -38,7 +38,7 @@ public class AwsS3Service {
         return uploadImageUrl;
     }
 
-    private Optional<File> convert(MultipartFile file) throws IOException {
+    private static Optional<File> convert(MultipartFile file) throws IOException {
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
         File convertFile = new File(fileName);
 
@@ -53,11 +53,11 @@ public class AwsS3Service {
         return Optional.empty();
     }
 
-    private String generateFileName(File uploadFile) {
+    private static String generateFileName(File uploadFile) {
         return UUID.randomUUID() + "_" + uploadFile.getName();
     }
 
-    private String uploadFileToS3(File uploadFile, String fileName) {
+    private static String uploadFileToS3(File uploadFile, String fileName) {
         amazonS3Client.putObject(
                 new PutObjectRequest(bucket, fileName, uploadFile)
                         .withCannedAcl(CannedAccessControlList.PublicRead)
@@ -68,12 +68,12 @@ public class AwsS3Service {
         return getS3FileURL(fileName);
     }
 
-    private String getS3FileURL(String fileName) {
+    private static String getS3FileURL(String fileName) {
         String defaultUrl = "https://s3.amazonaws.com/";
         return defaultUrl + bucket + "/" + fileName;
     }
 
-    private void removeNewFile(File targetFile) {
+    private static void removeNewFile(File targetFile) {
         if (!targetFile.delete()) {
             log.error("File delete fail: " + targetFile.getName() + " at path: " + targetFile.getAbsolutePath());
         }

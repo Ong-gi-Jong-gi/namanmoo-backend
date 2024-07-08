@@ -1,23 +1,23 @@
 package ongjong.namanmoo.dto.challenge;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import ongjong.namanmoo.domain.Member;
-import ongjong.namanmoo.domain.challenge.Challenge;
-import ongjong.namanmoo.domain.challenge.NormalC;
+import ongjong.namanmoo.domain.challenge.*;
 
 @Data
 public class ChallengeListDto {
-    private Long challengeId;
-    private Long challengeNumber;
+    private String challengeId;
+    private String challengeNumber;
     private String challengeTitle;
     private String challengeType;
+    @JsonProperty("isComplete")
     private boolean isComplete;
 
     public ChallengeListDto(Challenge challenge, boolean isComplete) {
-        this.challengeId = challenge.getChallengeId();
-        this.challengeNumber = challenge.getChallengeNum();
-        this.challengeTitle = ((NormalC) challenge).getNormalChallenge();
-        this.challengeType = challenge.getClass().getSimpleName(); // TODO: 타입이 제대로 나오니
+        this.challengeId = challenge.getChallengeId().toString();
+        this.challengeNumber = challenge.getChallengeNum().toString();
+        this.challengeTitle = challenge.getChallengeTitle();
+        this.challengeType = challenge.getClass().getSimpleName();
         this.isComplete = isComplete;
     }
 }
