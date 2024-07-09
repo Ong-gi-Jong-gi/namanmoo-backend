@@ -1,4 +1,4 @@
-package ongjong.namanmoo;
+package ongjong.namanmoo.global.security.util;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
