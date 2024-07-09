@@ -106,7 +106,6 @@ public class FamilyService {
             throw new IllegalStateException("User already belongs to a family");
         }
 
-
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Family not found with id: " + familyId));
 
