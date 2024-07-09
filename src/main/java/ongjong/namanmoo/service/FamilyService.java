@@ -62,7 +62,6 @@ public class FamilyService {
         return family;
     }
 
-
     // 내 가족 정보 확인
     public List<FamilyMemberDto> getFamilyMembersInfo() {
         String currentLoginId = SecurityUtil.getLoginLoginId();
@@ -92,8 +91,6 @@ public class FamilyService {
         return new FamilyInviteResponse(family.getFamilyName(), family.getFamilyId().toString(), memberDtos);
     }
 
-
-
     // 가족에 멤버 추가
     @Transactional
     public void addMemberToFamily(Long familyId, String role) {
@@ -105,7 +102,6 @@ public class FamilyService {
         if (member.getFamily() != null) {
             throw new IllegalStateException("User already belongs to a family");
         }
-
 
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Family not found with id: " + familyId));

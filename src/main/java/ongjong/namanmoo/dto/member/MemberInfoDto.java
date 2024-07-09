@@ -13,7 +13,7 @@ public class MemberInfoDto {
     private final String name;
     private final String nickname;
     private final String role;
-    private final String memberImage;
+    private final String userImg;
 
 
     public MemberInfoDto(Member member) {
@@ -21,7 +21,6 @@ public class MemberInfoDto {
         this.name = member.getName();
         this.nickname = member.getNickname();
         this.role = member.getRole();
-        this.memberImage = member.getMemberImage();
-
+        this.userImg = member.getMemberImage();
     }
 }

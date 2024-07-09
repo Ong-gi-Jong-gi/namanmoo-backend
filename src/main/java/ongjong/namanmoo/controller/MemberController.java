@@ -60,23 +60,8 @@ public class MemberController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<MemberInfoDto> updateBasicInfo(@RequestPart("userInfo") MemberUpdateDto memberUpdateDto,
                                                       @RequestPart("userImg") Optional<MultipartFile> userImg) throws Exception {
-
-        log.info("Received MemberUpdateDto: {}", memberUpdateDto);
-        log.info("Received MultipartFile: {}", userImg);
-
-        // 파일을 전송했을 경우에만 S3 파일 업로드 수행
-        if (userImg.isPresent() && !userImg.get().isEmpty()) {
-            log.debug("Uploading file to S3...");
-            String uploadImageUrl = awsS3Service.uploadFile(userImg.get());
-            log.debug("File uploaded to S3: {}", uploadImageUrl);
-        }
-
-        log.debug("Updating member information...");
         memberService.update(memberUpdateDto, userImg);
-        log.debug("Member information updated.");
-
         MemberInfoDto info = memberService.getMyInfo();
-        log.debug("Member info retrieved: {}", info);
         return new ApiResponse<>("200", "Update User Info Success", info);
     }
 

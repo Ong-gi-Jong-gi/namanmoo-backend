@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.dto.challenge.*;
 import ongjong.namanmoo.global.security.util.DateUtil;
 import ongjong.namanmoo.domain.Member;
@@ -14,12 +15,15 @@ import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.answer.ModifyAnswerDto;
 import ongjong.namanmoo.response.ApiResponse;
 import ongjong.namanmoo.service.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -159,12 +163,8 @@ public class ChallengeController {
     // 사진 챌린지 수정
     @PostMapping("/photo")
     public ApiResponse<Map<String, String>> savePhotoAnswer(
-            @ModelAttribute PhotoAnswerRequest photoAnswerRequest) throws Exception {
-//            @RequestPart("challengeId") Long challengeId,
-//            @RequestPart("answer") MultipartFile answerFile) throws Exception {
-
-        Long challengeId = photoAnswerRequest.getChallengeId();
-        MultipartFile answerFile = photoAnswerRequest.getAnswer();
+            @RequestPart("challengeId") Long challengeId,
+            @RequestPart("answer") MultipartFile answerFile) throws Exception {
 
         Member member = memberService.findMemberByLoginId();
         Challenge challenge = challengeService.findChallengeById(challengeId);
@@ -200,21 +200,29 @@ public class ChallengeController {
 
     // 화상 통화 챌린지 조회
     @GetMapping("/face")
-    public ApiResponse<ChallengeDto> getFaceChallenge(
+    public ApiResponse<Object> getFaceChallenge(
             @RequestParam("challengeId") Long challengeId) throws Exception {
 
+        // 챌린지 조회
         Challenge challenge = challengeService.findChallengeById(challengeId);
         if (challenge == null) {
             return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
         }
 
-        // 챌린지 번호를 가져옴 (예를 들어, 해당 챌린지의 현재 진행 번호)
-        Long currentNum = challengeService.findCurrentNum(challengeId);
-        // 챌린지와 멤버를 통해 timestamp를 가져옴
+        // 멤버와 챌린지를 통해 timestamp 조회
         Long timestamp = answerService.findDateByChallengeMember(challenge);
 
-        // 화상 통화 챌린지 정보 가져오기
-        ChallengeDto challengeDto = new ChallengeDto(challenge, currentNum, timestamp.toString());
+        // 가족 초대 코드 조회 (멤버를 통해 가족 정보를 가져온 후 초대 코드 획득)
+        Member member = memberService.findMemberByLoginId();
+        Family family = member.getFamily();
+        String inviteCode = family != null ? family.getInviteCode() : null;
+        assert family != null;
+
+        // isComplete 계산 로직
+        boolean isComplete = answerService.isAnyAnswerComplete(challenge, family);
+
+        // 화상 통화 챌린지 정보 DTO 생성
+        FaceChallengeDto challengeDto = new FaceChallengeDto(challenge, timestamp, isComplete, inviteCode);
 
         return new ApiResponse<>("200", "Success", challengeDto);
     }
@@ -272,14 +280,29 @@ public class ChallengeController {
         }
 
         Member member = memberService.findMemberByLoginId();
-        Optional<Answer> existingAnswer = answerService.findAnswerByChallengeAndMember(challenge, member);
+        Family family = member.getFamily();
 
-        if (existingAnswer.isEmpty()) {
-            return new ApiResponse<>("404", "Answer not found for the provided challengeId and member", null);
+        if (family == null) {
+            return new ApiResponse<>("404", "Family not found for the current member", null);
         }
 
-        Answer answer = existingAnswer.get();
-        String answerContent = answer.getAnswerContent();
+        // 가족의 모든 멤버를 순회하며 답변을 찾음
+        List<Member> members = family.getMembers();
+        Answer foundAnswer = null;
+
+        for (Member familyMember : members) {
+            Optional<Answer> answerOpt = answerService.findAnswerByChallengeAndMember(challenge, familyMember);
+            if (answerOpt.isPresent() && answerOpt.get().getAnswerContent() != null) {
+                foundAnswer = answerOpt.get();
+                break;
+            }
+        }
+
+        if (foundAnswer == null) {
+            return new ApiResponse<>("404", "Answer not found for the provided challengeId in any family member", null);
+        }
+
+        String answerContent = foundAnswer.getAnswerContent();
 
         // JSON 형식으로 변환된 URL 목록을 Map 형태로 변환
         ObjectMapper objectMapper = new ObjectMapper();
