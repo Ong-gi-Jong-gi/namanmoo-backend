@@ -200,9 +200,10 @@ public class ChallengeController {
         Member member = memberService.findMemberByLoginId();
         Family family = member.getFamily();
         String inviteCode = family != null ? family.getInviteCode() : null;
+        assert family != null;
 
         // isComplete 계산 로직
-        boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
+        boolean isComplete = answerService.isAnyAnswerComplete(challenge, family);
 
         // 화상 통화 챌린지 정보 DTO 생성
         FaceChallengeDto challengeDto = new FaceChallengeDto(challenge, timestamp, isComplete, inviteCode);
@@ -267,15 +268,31 @@ public class ChallengeController {
         }
 
         Member member = memberService.findMemberByLoginId();
-        Optional<Answer> existingAnswer = answerService.findAnswerByChallengeAndMember(challenge, member);
+        Family family = member.getFamily();
 
-        if (existingAnswer.isEmpty()) {
+        if (family == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>("404", "Answer not found for the provided challengeId and member", null));
+                    .body(new ApiResponse<>("404", "Family not found for the current member", null));
         }
 
-        Answer answer = existingAnswer.get();
-        String answerContent = answer.getAnswerContent();
+        // 가족의 모든 멤버를 순회하며 답변을 찾음
+        List<Member> members = family.getMembers();
+        Answer foundAnswer = null;
+
+        for (Member familyMember : members) {
+            Optional<Answer> answerOpt = answerService.findAnswerByChallengeAndMember(challenge, familyMember);
+            if (answerOpt.isPresent() && answerOpt.get().getAnswerContent() != null) {
+                foundAnswer = answerOpt.get();
+                break;
+            }
+        }
+
+        if (foundAnswer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>("404", "Answer not found for the provided challengeId in any family member", null));
+        }
+
+        String answerContent = foundAnswer.getAnswerContent();
 
         // JSON 형식으로 변환된 URL 목록을 Map 형태로 변환
         ObjectMapper objectMapper = new ObjectMapper();
@@ -288,6 +305,7 @@ public class ChallengeController {
 
         return ResponseEntity.ok(new ApiResponse<>("200", "Success", responseData));
     }
+
 
     @Data
     static class SaveChallengeRequest {

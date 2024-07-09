@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 @Data
 public class FaceChallengeDto {
+
     private String challengeTitle;
     private String challengeNumber;
     private Long challengeDate;

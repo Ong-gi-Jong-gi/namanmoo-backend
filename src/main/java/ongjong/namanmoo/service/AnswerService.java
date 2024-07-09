@@ -137,6 +137,19 @@ public class AnswerService {
         return answerRepository.findByChallenge(challenge);
     }
 
+    // 가족 구성원들의 답변 유무 검사
+    @Transactional(readOnly = true)
+    public boolean isAnyAnswerComplete(Challenge challenge, Family family) {
+        List<Member> members = family.getMembers();
+        for (Member member : members) {
+            Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge, member);
+            if (answer.isPresent() && answer.get().getAnswerContent() != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Transactional(readOnly = true)
     public Lucky findCurrentLucky(Long familyId) {       // 현재 진행중인 lucky id 조회
         List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
@@ -147,7 +160,6 @@ public class AnswerService {
         }
         return null;
     }
-
 
     public Answer modifyAnswer(Long challengeId, String answerContent) throws Exception{        // 로그인한 맴버가 수정한 답변을 저장한다.
         Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId())
@@ -190,7 +202,6 @@ public class AnswerService {
     public boolean checkUserResponse(Member member, String createDate) {
         return answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, createDate);
     }
-
 
     @Transactional
     public void offBalloon(Long challengeDate) throws Exception {
