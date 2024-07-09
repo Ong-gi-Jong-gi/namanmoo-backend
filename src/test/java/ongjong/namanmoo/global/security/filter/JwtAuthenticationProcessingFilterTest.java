@@ -7,6 +7,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import ongjong.namanmoo.domain.LogInRole;
 import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.domain.MemberRole;
 import ongjong.namanmoo.global.security.jwt.service.JwtService;
 import ongjong.namanmoo.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,7 +85,7 @@ class JwtAuthenticationProcessingFilterTest {
                 .name("Member1")
                 .nickname("Nickname1")
                 .logInRole(LogInRole.USER)
-                .role("아들")
+                .role(MemberRole.SON)
                 .build());
         clear();
     }

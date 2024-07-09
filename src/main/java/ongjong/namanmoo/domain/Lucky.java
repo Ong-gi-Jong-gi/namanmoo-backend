@@ -20,13 +20,15 @@ public class Lucky {
     @JoinColumn(name = "family_id")
     private Family family;
 
-    @Column(nullable = false, columnDefinition = "bigint default 0")
+    @Column(nullable = false, columnDefinition = "int default 0")
     private Integer status;
 
     private String challengeStartDate;
 
-
     private boolean running;
+
+    @Enumerated(EnumType.STRING)
+    private ChallengeLength lifetime = ChallengeLength.THIRTY_DAYS; // 행운이 기본 수명 ( 30일 단위 챌린지 )
 
     @OneToMany(mappedBy = "lucky")
     private List<FaceTimeAnswer> faceTimeAnswers;

@@ -1,6 +1,7 @@
 package ongjong.namanmoo.dto.answer;
 
 import lombok.Data;
+import ongjong.namanmoo.domain.MemberRole;
 import ongjong.namanmoo.domain.answer.Answer;
 
 @Data

@@ -6,6 +6,12 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static ongjong.namanmoo.domain.MemberRole.*;
+
+
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -32,8 +38,9 @@ public class Member {
     private String name; // 이름
 
     @Builder.Default
-//    @Enumerated(EnumType.STRING)
     private String role = "미정"; // 가족에서의 역할
+//    @Enumerated(EnumType.STRING)
+//    private MemberRole role = UNSPECIFIED;
 
     private String nickname; // 별명
 
@@ -69,4 +76,21 @@ public class Member {
     public void addUserAuthority() {
         this.logInRole = LogInRole.USER;
     }
+
+//    private static final Map<MemberRole, String> roleToTextMap = Map.of(
+//            MemberRole.FATHER, "아빠",
+//            MemberRole.MOTHER, "엄마",
+//            MemberRole.SON, "아들",
+//            MemberRole.DAUGHTER, "딸");
+//
+//    private static final Map<String, MemberRole> textToRoleMap = roleToTextMap.entrySet().stream()
+//            .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+//
+//    public String getRole() {
+//        return roleToTextMap.getOrDefault(this.role, "미정");
+//    }
+//
+//    public void setRole(String role) {
+//        this.role = textToRoleMap.getOrDefault(role, MemberRole.UNSPECIFIED);
+//    }
 }
