@@ -3,7 +3,7 @@ package ongjong.namanmoo.controller;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import ongjong.namanmoo.DateUtil;
+import ongjong.namanmoo.global.security.util.DateUtil;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
@@ -12,7 +12,6 @@ import ongjong.namanmoo.dto.challenge.ChallengeDto;
 import ongjong.namanmoo.dto.challenge.ChallengeListDto;
 import ongjong.namanmoo.dto.challenge.NormalChallengeDto;
 import ongjong.namanmoo.dto.challenge.PhotoChallengeDto;
-import ongjong.namanmoo.repository.AnswerRepository;
 import ongjong.namanmoo.response.ApiResponse;
 import ongjong.namanmoo.service.*;
 import org.springframework.http.HttpStatus;
@@ -20,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -36,7 +34,6 @@ public class ChallengeController {
     private final LuckyService luckyService;
     private final AnswerService answerService;
     private final FamilyService familyService;
-    private final AnswerRepository answerRepository;
 
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     public ResponseEntity<ApiResponse> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
@@ -99,7 +96,6 @@ public class ChallengeController {
 
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
         Long challengeDate = answerService.findDateByChallengeMember(challenge);
-//        Long challenegeDate = answerService.findAnswerByChallengeMember(challenge,member);
         List<Answer> answers = answerService.findAnswerByChallenge(challenge);
 
         NormalChallengeDto normalChallengeDto = new NormalChallengeDto(challenge, isComplete, challengeDate, answers);
