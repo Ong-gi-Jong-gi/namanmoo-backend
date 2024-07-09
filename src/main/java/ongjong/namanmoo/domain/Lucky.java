@@ -28,7 +28,7 @@ public class Lucky {
     private boolean running;
 
     @Enumerated(EnumType.STRING)
-    private ChallengeLength lifetime;
+    private ChallengeLength lifetime = ChallengeLength.THIRTY_DAYS; // 행운이 기본 수명 ( 30일 단위 챌린지 )
 
     @OneToMany(mappedBy = "lucky")
     private List<FaceTimeAnswer> faceTimeAnswers;

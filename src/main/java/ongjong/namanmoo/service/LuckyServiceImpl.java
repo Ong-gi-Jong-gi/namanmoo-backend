@@ -32,7 +32,6 @@ public class LuckyServiceImpl implements LuckyService{
     private final MemberRepository memberRepository;
     private final AnswerService answerService;
     private final FamilyRepository familyRepository;
-    private final DateUtil dateUtil;
 
     public boolean createLucky(Long familyId, Long challengeDate){     // 캐릭터 생성
         Optional<Family> familyOptional = familyRepository.findById(familyId);
