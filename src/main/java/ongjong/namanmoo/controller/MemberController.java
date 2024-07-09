@@ -56,15 +56,17 @@ public class MemberController {
     // 회원 정보 수정
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<MemberInfoDto> updateBasicInfo(@RequestPart("userInfo") MemberUpdateDto memberUpdateDto) throws Exception {
+    public ApiResponse<MemberInfoDto> updateBasicInfo(@RequestPart("userInfo") MemberUpdateDto memberUpdateDto,
+                                                      @RequestPart(value = "userImg", required = false) MultipartFile userImg) throws Exception {
         log.debug("Received MemberUpdateDto: {}", memberUpdateDto);
+        log.debug("Received MultipartFile: {}", userImg);
 
         String uploadImageUrl = null;
 
         // 파일을 전송했을 경우에만 S3 파일 업로드 수행
-        if (memberUpdateDto.userImg().isPresent() && !memberUpdateDto.userImg().get().isEmpty()) {
+        if (userImg != null && !userImg.isEmpty()) {
             log.debug("Uploading file to S3...");
-            uploadImageUrl = awsS3Service.uploadFile(memberUpdateDto.userImg().get());
+            uploadImageUrl = awsS3Service.uploadFile(userImg);
             log.debug("File uploaded to S3: {}", uploadImageUrl);
         }
 
