@@ -1,9 +1,9 @@
 package ongjong.namanmoo.service;
 
 
-import ongjong.namanmoo.domain.Family;
+
+import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
-import ongjong.namanmoo.dto.lucky.OffBubbleDto;
 
 
 public interface LuckyService {
@@ -16,6 +16,6 @@ public interface LuckyService {
 
     boolean createLucky(Long familyId);
 
-    Integer calculateLuckyStatus(Family Family);
+    Integer calculateLuckyStatus(Lucky lucky);
 
 }

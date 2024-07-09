@@ -27,9 +27,6 @@ public class Family {
 
     private String inviteCode;
 
-    @Column(columnDefinition = "bigint default 0")
-    private Integer challengeFamilyCount;
-
     private Long familyOwnerId;
 
     @OneToMany(mappedBy = "family")

@@ -71,7 +71,7 @@ public class LuckyServiceImpl implements LuckyService{
 
 
         boolean isBubble = answerService.checkUserResponse(member, createDate);
-        Integer luckyStatus = calculateLuckyStatus(lucky.getFamily());
+        Integer luckyStatus = calculateLuckyStatus(lucky);
 
         return new LuckyStatusDto(luckyStatus, isBubble);
     }
@@ -80,8 +80,8 @@ public class LuckyServiceImpl implements LuckyService{
 
     // 행운이 상태 계산
     @Override
-    public Integer calculateLuckyStatus(Family family) {
-        Integer familyContribution = family.getChallengeFamilyCount();
+    public Integer calculateLuckyStatus(Lucky lucky) {
+        Integer familyContribution = lucky.getStatus(); // 가족의 총 챌린지 참여 횟수
 
         // 비율 계산
         double percentage = (double) familyContribution / 120 * 100;
