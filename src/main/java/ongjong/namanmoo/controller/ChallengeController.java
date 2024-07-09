@@ -126,10 +126,11 @@ public class ChallengeController {
     }
 
     // 그룹 챌린지 답변 수정
-    @PostMapping("/group")     // 일반 챌린지 내용 수정 -> 새 내용, 수정날짜 저장
+    @PostMapping("/group")
     public  ApiResponse saveGroupAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
         Long challengeId = request.getChallengeId();
         String answerContent = request.getAnswerContent();
+        log.info("aaaaa: {}",answerContent);
         Answer answer = answerService.modifyAnswer(challengeId, answerContent);
         ModifyAnswerDto modifyAnswerDto = new ModifyAnswerDto(answer);
         return new ApiResponse("200", "Success", modifyAnswerDto);
