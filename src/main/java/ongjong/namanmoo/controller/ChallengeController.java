@@ -145,13 +145,8 @@ public class ChallengeController {
     // 사진 챌린지 수정
     @PostMapping("/photo")
     public ResponseEntity<ApiResponse<Map<String, String>>> savePhotoAnswer(
-            @ModelAttribute PhotoAnswerRequest photoAnswerRequest) throws Exception {
-//            @RequestPart("challengeId") Long challengeId,
-//            @RequestPart("answer") MultipartFile answerFile) throws Exception {
-        log.debug("PhotoAnswerRequest received: {}", photoAnswerRequest);
-
-        Long challengeId = photoAnswerRequest.getChallengeId();
-        MultipartFile answerFile = photoAnswerRequest.getAnswer();
+            @RequestPart("challengeId") Long challengeId,
+            @RequestPart("answer") MultipartFile answerFile) throws Exception {
 
         Member member = memberService.findMemberByLoginId();
         Challenge challenge = challengeService.findChallengeById(challengeId);
