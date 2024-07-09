@@ -10,22 +10,17 @@ import java.util.stream.Collectors;
 
 @Data
 public class FaceChallengeDto {
-
     private String challengeTitle;
     private String challengeNumber;
     private Long challengeDate;
     private boolean isComplete;
-    private List<AnswerDto> answerList;
+    private String code;
 
-    public FaceChallengeDto(Challenge challenge, boolean isComplete, Long timeStamp , List<Answer> answers) {
+    public FaceChallengeDto(Challenge challenge, Long timeStamp, boolean isComplete, String inviteCode) {
         this.challengeTitle = challenge.getChallengeTitle();
         this.challengeNumber = challenge.getChallengeNum().toString();
-        this.challengeDate = timeStamp; // Use actual challenge date if available
+        this.challengeDate = timeStamp;
         this.isComplete = isComplete;
-        this.answerList = answers.stream()
-                .map(AnswerDto::new)
-                .collect(Collectors.toList());
+        this.code = inviteCode;
     }
-
-    private List<AnswerDto> answerDto;
 }
