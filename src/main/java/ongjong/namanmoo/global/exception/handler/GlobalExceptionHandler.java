@@ -32,7 +32,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleException(Exception ex, WebRequest request) {
-        ApiResponse<String> response = new ApiResponse<>("500", ex.getMessage(), null);
+        ex.printStackTrace(); // 콘솔에 예외의 스택 트레이스를 출력합니다.
+        ApiResponse<String> response = new ApiResponse<>("500", "Internal Server Error: " + ex.getMessage(), null);
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

@@ -31,12 +31,16 @@ public class AwsS3Service {
     private String bucket;
 
     public String uploadFile(MultipartFile multipartFile) throws IOException {
+        log.debug("Converting MultipartFile to File...");
         File uploadFile = convertFile(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
 
         String fileName = generateFileName(uploadFile);
 
+        log.debug("Uploading file to S3: {}", fileName);
         String uploadImageUrl = uploadFileToS3(uploadFile, fileName);
+        log.debug("File uploaded to S3: {}", uploadImageUrl);
+
         removeNewFile(uploadFile);
         return uploadImageUrl;
     }
