@@ -24,6 +24,7 @@ import java.util.Map;
 public class MemberController {
 
     private final MemberService memberService;
+    private final AwsS3Service awsS3Service;
 
     // 회원 가입
     @PostMapping("/signup")
@@ -59,7 +60,7 @@ public class MemberController {
 
         // 파일을 전송했을 경우에만 S3 파일 업로드 수행
         if (memberUpdateDto.userImg().isPresent() && !memberUpdateDto.userImg().get().isEmpty()) {
-            uploadImageUrl = AwsS3Service.uploadFile(memberUpdateDto.userImg().get());
+            uploadImageUrl = awsS3Service.uploadFile(memberUpdateDto.userImg().get());
         }
 
         memberService.update(memberUpdateDto);
