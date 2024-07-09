@@ -13,7 +13,11 @@ import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -119,6 +123,19 @@ public class AnswerService {
     }
 
     @Transactional(readOnly = true)
+    public Long getTimeStamp(String answerDate, String format) throws Exception{       //  "yyyy.MM.dd"형식의 문자열을 timeStamp로 바꾸기
+        if ((answerDate == null || answerDate.isEmpty()) || (format == null || format.isEmpty())) {
+            return null;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        LocalDate date = LocalDate.parse(answerDate, formatter);
+        LocalDateTime dateTime = date.atStartOfDay(); // LocalDate를 LocalDateTime으로 변환 (00:00:00)
+        return Timestamp.valueOf(dateTime).getTime();
+    }
+
+
+    @Transactional(readOnly = true)
     public List<Answer> findAnswerByChallenge(Challenge challenge){
         return answerRepository.findByChallenge(challenge);
     }
@@ -142,8 +159,12 @@ public class AnswerService {
                 .orElseThrow(() -> new RuntimeException("주어진 challengeId에 해당하는 챌린지를 찾을 수 없습니다."));
         Answer answer = answerRepository.findByChallengeAndMember(challenge, member)
                 .orElseThrow(() -> new RuntimeException("해당 멤버가 작성한 답변을 찾을 수 없습니다."));
+        Lucky lucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(member.getFamily().getFamilyId())
+                .orElseThrow(() -> new RuntimeException("로그인한 멤버의 행운이를 찾을 수 없습니다"));
         if (answer.getAnswerContent() == null){
             answer.setBubbleVisible(true);
+            lucky.setStatus(lucky.getStatus()+1);
+            luckyRepository.save(lucky);
         }
         answer.setAnswerContent(answerContent);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
@@ -159,5 +180,36 @@ public class AnswerService {
     public void saveAnswer(Answer answer) {
         answerRepository.save(answer);
     }
+//    public void saveCreateDate(Challenge challenge){                // 오늘의 챌리지를 조회할때 해당 challenge에 해당하는 answer의 createDate에 오늘의 날짜를 저장한다.
+//        List <Answer> answerList = answerRepository.findByChallenge(challenge);
+//        for(Answer answer : answerList){
+//            if (answer.getCreateDate().isEmpty()){      // answer의 createDate가 비어있을 경우에만 오늘의 날짜 set
+//                String currentDateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+//                answer.setCreateDate(currentDateStr);
+//            }
+//        }
+//    }
+    @Transactional(readOnly = true)
+    public boolean checkUserResponse(Member member, String createDate) {
+        return answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, createDate);
+    }
 
+
+    @Transactional
+    public void offBalloon(Long challengeDate) throws Exception {
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId())
+                .orElseThrow(() -> new Exception("회원이 존재하지 않습니다"));
+
+        // 타임스탬프를 yyyy.MM.dd 형식의 문자열로 변환
+        Instant instant = Instant.ofEpochMilli(challengeDate);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd").withZone(ZoneId.systemDefault());
+        String createDate = formatter.format(instant);
+
+        Optional<Answer> answer = answerRepository.findByMemberAndCreateDate(member, createDate);
+        if (answer.isPresent()) {
+            answer.get().setBubbleVisible(false);
+        } else {
+            throw new IllegalArgumentException("No answer found for the given loginId and createDate");
+        }
+    }
 }

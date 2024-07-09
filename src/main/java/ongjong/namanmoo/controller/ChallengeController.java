@@ -23,6 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.ResponseEntity.status;
@@ -41,30 +43,26 @@ public class ChallengeController {
     private final AwsS3Service awsS3Service;
 
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
-    public ResponseEntity<ApiResponse> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
+    public ApiResponse saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
         Long challengeDate = request.getChallengeDate();
         Long familyId = familyService.findFamilyId();
-        if (!luckyService.join(familyId) || !answerService.createAnswer(familyId, challengeDate)) {
-            return status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse("404", "Challenge not found", null));
+        if (!luckyService.createLucky(familyId, challengeDate) || !answerService.createAnswer(familyId, challengeDate)) {
+            return new ApiResponse("404", "Challenge not found", null);
         }
-        return status(HttpStatus.OK)
-                .body(new ApiResponse("200", "Success", null));
+        return new ApiResponse("200", "Success", null);
     }
 
     @GetMapping("/today")     // 오늘의 챌린지 조회
-    public ResponseEntity<ApiResponse> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+    public ApiResponse getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         List<Challenge> challenges = challengeService.findChallengeByMemberId(challengeDate);
         Challenge challenge = challengeService.findCurrentChallenge(challenges);
         if (challenge == null) {
-            return status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse("404", "Challenge not found", null));
+            return new ApiResponse("404", "Challenge not found", null);
         }
         Long currentNum  = challengeService.findCurrentNum(challengeDate);
         DateUtil dateUtil = DateUtil.getInstance();
         ChallengeDto challengeDto = new ChallengeDto(challenge, currentNum, dateUtil.timestampToString(challengeDate));
-        return status(HttpStatus.OK)
-                .body(new ApiResponse("200", "Success", challengeDto));
+        return new ApiResponse("200", "Success", challengeDto);
     }
 
     @GetMapping("/list")        // 챌린지 리스트 조회 , 챌린지 리스트는 lucky가 여러개 일때를 고려하여 죽은 럭키 개수 * 30 +1 부터 챌린지가 보여져야한다.
@@ -105,13 +103,12 @@ public class ChallengeController {
     }
 
     @PostMapping("/normal")     // 일반 챌린지 내용 수정 -> 새 내용, 수정날짜 저장
-    public  ResponseEntity<ApiResponse> saveAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
+    public  ApiResponse saveAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
         Long challengeId = request.getChallengeId();
         String answerContent = request.getAnswerContent();
         Answer answer = answerService.modifyAnswer(challengeId, answerContent);
         ModifyAnswerDto modifyAnswerDto = new ModifyAnswerDto(answer);
-        return status(HttpStatus.OK)
-                .body(new ApiResponse("200", "Success", modifyAnswerDto));
+        return new ApiResponse("200", "Success", modifyAnswerDto);
     }
 
 //    // 그룹 챌린지 조회

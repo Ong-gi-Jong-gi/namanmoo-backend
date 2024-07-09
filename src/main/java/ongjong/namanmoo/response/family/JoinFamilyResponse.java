@@ -1,8 +1,7 @@
-package ongjong.namanmoo.response;
+package ongjong.namanmoo.response.family;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 @Data
 @AllArgsConstructor

@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
-    Optional<Member> findByLoginId (String loginId);
+    Optional<Member> findByLoginId(String loginId);
 
     boolean existsByLoginId (String loginId);
 
