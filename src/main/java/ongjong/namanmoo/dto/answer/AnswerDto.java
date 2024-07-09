@@ -1,4 +1,4 @@
-package ongjong.namanmoo.dto.challenge;
+package ongjong.namanmoo.dto.answer;
 
 import lombok.Data;
 import ongjong.namanmoo.domain.answer.Answer;
