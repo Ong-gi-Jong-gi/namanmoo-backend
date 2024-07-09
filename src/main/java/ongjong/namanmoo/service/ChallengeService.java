@@ -46,7 +46,7 @@ public class ChallengeService {
         for (Lucky lucky : luckies) {
             if (lucky.isRunning()) {
                 DateUtil dateUtil = DateUtil.getInstance();
-                return dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.timestampToString(challengeDate))+1; // 현재 진행되어야할 challenge를 반환
+                return dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.timestampToString(challengeDate)); // 현재 진행되어야할 challenge를 반환
             }
         }
         return null;

@@ -95,7 +95,7 @@ public class ChallengeController {
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
         Long challengeDate = answerService.findDateByChallengeMember(challenge);
-        List<Answer> answers = answerService.findAnswerByChallenge(challenge);
+        List<Answer> answers = answerService.findAnswerByChallengeandFamily(challenge, member);
 
         NormalChallengeDto normalChallengeDto = new NormalChallengeDto(challenge, isComplete, challengeDate, answers);
 
@@ -123,7 +123,7 @@ public class ChallengeController {
         Long challengeDate = answerService.findDateByChallengeMember(challenge);
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
-        List<Answer> allAnswers = answerService.findAnswersByChallenges(challenge);     // 특정 그룹 챌린지에 매핑된 answer list 찾기
+        List<Answer> allAnswers = answerService.findAnswersByChallenges(challenge, member);     // 특정 그룹 챌린지에 매핑된 answer list 찾기
 
         GroupChallengeDto groupChallengeDto = new GroupChallengeDto(challenge, challengeDate, isComplete, allAnswers);
         return new ApiResponse<>("success", "Challenge retrieved successfully", groupChallengeDto);
@@ -153,7 +153,7 @@ public class ChallengeController {
 
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
         Long challengeDate = answerService.findDateByChallengeMember(challenge);
-        List<Answer> answers = answerService.findAnswerByChallenge(challenge);
+        List<Answer> answers = answerService.findAnswerByChallengeandFamily(challenge, member);
 
         PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, isComplete, challengeDate, answers);
 
@@ -328,7 +328,7 @@ public class ChallengeController {
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
         Long challengeDate = answerService.findDateByChallengeMember(challenge);
-        List<Answer> answers = answerService.findAnswerByChallenge(challenge);
+        List<Answer> answers = answerService.findAnswerByChallengeandFamily(challenge, member);
 
         VoiceChallengeDto voiceChallengeDto = new VoiceChallengeDto(challenge, isComplete, challengeDate, answers);
 
