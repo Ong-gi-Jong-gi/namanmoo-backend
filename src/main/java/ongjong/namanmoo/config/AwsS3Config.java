@@ -1,4 +1,4 @@
-package ongjong.namanmoo.global.security.config;
+package ongjong.namanmoo.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
