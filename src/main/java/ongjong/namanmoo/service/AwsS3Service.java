@@ -30,10 +30,12 @@ public class AwsS3Service {
     private final String bucket;
 
     public AwsS3Service(
-            @Value("${aws.accessKeyId}") String accessKeyId,
-            @Value("${aws.secretKey}") String secretKey,
+
+            @Value("${cloud.aws.credentials.access-key}") String accessKeyId,
+            @Value("${cloud.aws.credentials.secret-key}") String secretKey,
             @Value("${cloud.aws.s3.bucket}") String bucket,
-            @Value("${aws.region}") String region) {
+            @Value("${cloud.aws.region.static}") String region) {
+
         BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKeyId, secretKey);
         this.amazonS3Client = AmazonS3ClientBuilder.standard()
                 .withRegion(region)
