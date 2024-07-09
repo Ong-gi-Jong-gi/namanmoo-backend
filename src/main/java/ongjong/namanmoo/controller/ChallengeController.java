@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.global.security.util.DateUtil;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
@@ -27,6 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/challenges")
@@ -145,6 +147,7 @@ public class ChallengeController {
             @ModelAttribute PhotoAnswerRequest photoAnswerRequest) throws Exception {
 //            @RequestPart("challengeId") Long challengeId,
 //            @RequestPart("answer") MultipartFile answerFile) throws Exception {
+        log.debug("PhotoAnswerRequest received: {}", photoAnswerRequest);
 
         Long challengeId = photoAnswerRequest.getChallengeId();
         MultipartFile answerFile = photoAnswerRequest.getAnswer();
@@ -164,14 +167,17 @@ public class ChallengeController {
 
         // S3에 파일 업로드
         String uploadImageUrl = awsS3Service.uploadFile(answerFile);
+        log.debug("Uploaded image URL: {}", uploadImageUrl);
 
         // Answer 객체 수정 및 저장
         Optional<Answer> optionalAnswer = answerService.findAnswerByChallengeAndMember(challenge, member);
         if (optionalAnswer.isPresent()) {
             Answer answer = optionalAnswer.get();
+            log.debug("Answer found: {}", answer);
             answer.setAnswerContent(uploadImageUrl);
             answer.setModifiedDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")));
             answerService.saveAnswer(answer);
+            log.debug("Answer saved: {}", answer);
 
             // Map 형태로 답변 URL 반환
             Map<String, String> responseData = new HashMap<>();
