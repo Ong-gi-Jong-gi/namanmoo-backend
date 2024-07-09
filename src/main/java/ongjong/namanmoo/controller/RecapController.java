@@ -24,7 +24,7 @@ public class RecapController {
     private final LuckyServiceImpl luckyService;
 
     @GetMapping("/list")
-    public ResponseEntity<?> getLuckyListStatus() {
+    public ResponseEntity<?> getLuckyList() {
         List<LuckyListDto> luckyListStatus = luckyService.getLuckyListStatus();
         return ResponseEntity.ok().body(new ApiResponse<>("200", "Success", luckyListStatus));
     }

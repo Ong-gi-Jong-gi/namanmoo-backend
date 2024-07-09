@@ -32,6 +32,7 @@ public class LuckyServiceImpl implements LuckyService{
     private final MemberRepository memberRepository;
     private final AnswerService answerService;
     private final FamilyRepository familyRepository;
+    private final DateUtil dateUtil;
 
     public boolean createLucky(Long familyId, Long challengeDate){     // 캐릭터 생성
         Optional<Family> familyOptional = familyRepository.findById(familyId);
@@ -110,16 +111,30 @@ public class LuckyServiceImpl implements LuckyService{
     // 행운이 리스트 조회 ( RECAP list )
     @Transactional(readOnly = true)
     public List<LuckyListDto> getLuckyListStatus() {
+        // 현재 로그인한 사용자의 로그인 ID 가져오기
         String loginId = SecurityUtil.getLoginLoginId();
+
+        // 로그인 ID로 회원 정보 조회
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("No member found for login id: " + loginId));
 
+        // 회원의 가족 ID로 행운 리스트 조회
         List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(member.getFamily().getFamilyId());
 
+        // 행운 리스트를 LuckyListDto로 매핑하여 반환
         return luckies.stream().map(lucky -> {
+            // 도전 시작 날짜를 timestamp로 변환
             Long startDateTimestamp = DateUtil.getInstance().stringToTimestamp(lucky.getChallengeStartDate(), DateUtil.FORMAT_4);
-            Long endDateTimestamp = startDateTimestamp + (lucky.getLifetime().getDays() * 86400000L);
+
+            // 도전 시작 날짜에 도전 기간을 더하여 종료 날짜 timestamp 계산
+            Long endDateTimestamp = DateUtil.getInstance().stringToTimestamp(
+                    DateUtil.getInstance().addDaysToStringDate(
+                            DateUtil.getInstance().timestampToString(startDateTimestamp), lucky.getLifetime().getDays()), DateUtil.FORMAT_4);
+
+            // 행운 상태 계산
             Integer luckyStatus = calculateLuckyStatus(lucky);
+
+            // LuckyListDto 객체 생성하여 반환
             return new LuckyListDto(lucky.getLuckyId().toString(), startDateTimestamp, endDateTimestamp, luckyStatus);
         }).collect(Collectors.toList());
     }
