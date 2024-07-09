@@ -20,7 +20,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ChallengeService {
 
-    private final FamilyRepository familyRepository;
+
     private final ChallengeRepository challengeRepository;
     private final LuckyRepository luckyRepository;
     private final MemberRepository memberRepository;
@@ -174,4 +174,5 @@ public class ChallengeService {
 
         return challengeRepository.findByChallengeNumBetween(findStartChallengeNum(family.getFamilyId()), findStartChallengeNum(family.getFamilyId()) + 30);
     }
+
 }

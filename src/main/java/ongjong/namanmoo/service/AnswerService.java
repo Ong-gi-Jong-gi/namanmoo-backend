@@ -7,11 +7,12 @@ import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
+import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -22,14 +23,14 @@ import java.util.Optional;
 public class AnswerService {
 
     private final AnswerRepository answerRepository;
-    private final ChallengeRepository challengeRepository;
     private final MemberRepository memberRepository;
     private final FaceTimeAnswerRepository faceTimeAnswerRepository;
     private final LuckyRepository luckyRepository;
-    private final MemberServiceImpl memberServiceImpl;
-    private final MemberService memberService;
     private final FamilyRepository familyRepository;
     private final ChallengeService challengeService;
+    private final ChallengeRepository challengeRepository;
+    private final MemberServiceImpl memberServiceImpl;
+    private final MemberService memberService;
 
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
 
@@ -61,10 +62,8 @@ public class AnswerService {
 
                 Answer answer = new Answer(); // Answer 객체 생성
                 answer.setMember(member);
-//                String currentDateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-//                answer.setCreateDate(currentDateStr);
-                answer.setCheckChallenge(false);
                 answer.setChallenge(challenge);
+                answer.setBubbleVisible(false);
 
                 if (challenge.getChallengeType()== ChallengeType.NORMAL) {
                     answer.setAnswerType(AnswerType.NORMAL);
@@ -117,16 +116,10 @@ public class AnswerService {
         return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
     }
 
-
     @Transactional(readOnly = true)
-    public List<Answer> findAnswerByChallenge(Challenge challenge){     // challenge로 answer 리스트 찾기
+    public List<Answer> findAnswerByChallenge(Challenge challenge){
         return answerRepository.findByChallenge(challenge);
     }
-
-//    public Answer saveAnswer(Long challengeId, String answer){
-//        Challenge challenge =  challengeService.findChallengeById(challengeId);
-//        Optional<Member> member = memberService.findLoginMember();
-//    }
 
     @Transactional(readOnly = true)
     public Lucky findCurrentLucky(Long familyId) {       // 현재 진행중인 lucky id 조회
@@ -139,23 +132,22 @@ public class AnswerService {
         return null;
     }
 
-//    // 로그인한 멤버를 찾고 해당 멤버가 작성한 answer중에 request로 받은 challengeId로 answer를 찾는다. 그리고 request로 받은 answer를 answer_content에 넣는다.
-//    public boolean modifyAnswer(Long challengeId, String newAnswer) throws Exception{
-//        Optional<Member> member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
-//        Optional<Challenge> challenge = challengeRepository.findById(challengeId);
-//        Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge.get(), member.get()) ;
-//        answer.get().setAnswerContent(newAnswer);
-//        answerRepository.save(answer.get());
-//    }
 
-    public void saveCreateDate(Challenge challenge){                // 오늘의 챌리지를 조회할때 해당 challenge에 해당하는 answer의 createDate에 오늘의 날짜를 저장한다.
-        List <Answer> answerList = answerRepository.findByChallenge(challenge);
-        for(Answer answer : answerList){
-            if (answer.getCreateDate().isEmpty()){      // answer의 createDate가 비어있을 경우에만 오늘의 날짜 set
-                String currentDateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-                answer.setCreateDate(currentDateStr);
-            }
+    public Answer modifyAnswer(Long challengeId, String answerContent) throws Exception{        // 로그인한 맴버가 수정한 답변을 저장한다.
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId())
+                .orElseThrow(() -> new RuntimeException("로그인한 멤버를 찾을 수 없습니다."));
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new RuntimeException("주어진 challengeId에 해당하는 챌린지를 찾을 수 없습니다."));
+        Answer answer = answerRepository.findByChallengeAndMember(challenge, member)
+                .orElseThrow(() -> new RuntimeException("해당 멤버가 작성한 답변을 찾을 수 없습니다."));
+        if (answer.getAnswerContent() == null){
+            answer.setBubbleVisible(true);
         }
+        answer.setAnswerContent(answerContent);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
+        answer.setModifiedDate(LocalDateTime.now().format(formatter));
+        answerRepository.save(answer);
+        return answer;
     }
 
     public Optional<Answer> findAnswerByChallengeAndMember(Challenge challenge, Member member) {

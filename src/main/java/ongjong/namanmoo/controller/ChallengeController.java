@@ -9,6 +9,7 @@ import ongjong.namanmoo.global.security.util.DateUtil;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
+import ongjong.namanmoo.dto.answer.ModifyAnswerDto;
 import ongjong.namanmoo.dto.challenge.ChallengeDto;
 import ongjong.namanmoo.dto.challenge.ChallengeListDto;
 import ongjong.namanmoo.dto.challenge.NormalChallengeDto;
@@ -39,26 +40,25 @@ public class ChallengeController {
     private final AnswerRepository answerRepository;
     private final AwsS3Service awsS3Service;
 
-//    @PostMapping("/")       // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
-//    public ResponseEntity<ApiResponse> saveChallenge() throws Exception {
-//        Long familyId = familyService.findFamilyId();
-//        if (!luckyService.join(familyId) || !answerService.createAnswer(familyId)) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body(new ApiResponse("404", "Challenge not found", null));
-//        }
-//        return ResponseEntity.status(HttpStatus.OK)
-//                .body(new ApiResponse("200", "Success", null));
-//    }
+    @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
+    public ResponseEntity<ApiResponse> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
+        Long challengeDate = request.getChallengeDate();
+        Long familyId = familyService.findFamilyId();
+        if (!luckyService.join(familyId) || !answerService.createAnswer(familyId, challengeDate)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse("404", "Challenge not found", null));
+        }
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse("200", "Success", null));
+    }
 
     @GetMapping("/today")     // 오늘의 챌린지 조회
     public ResponseEntity<ApiResponse> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         List<Challenge> challenges = challengeService.findChallengeByMemberId(challengeDate);
         Challenge challenge = challengeService.findCurrentChallenge(challenges);
-        answerService.saveCreateDate(challenge);    // answer에 createdate 저장
         if (challenge == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse("404", "Challenge not found", null));
-
         }
         Long currentNum  = challengeService.findCurrentNum(challengeDate);
         DateUtil dateUtil = DateUtil.getInstance();
@@ -87,8 +87,7 @@ public class ChallengeController {
         return ResponseEntity.ok(new ApiResponse<>("success", "Challenge list retrieved successfully", challengeList));
     }
 
-    // 일반 챌린지 조회
-    @GetMapping("/normal")
+    @GetMapping("/normal")      // 일반 챌린지 조회
     public ResponseEntity<ApiResponse<List<NormalChallengeDto>>> getNormalChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
@@ -101,6 +100,7 @@ public class ChallengeController {
 
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
         Long challengeDate = answerService.findDateByChallengeMember(challenge);
+//        Long challenegeDate = answerService.findAnswerByChallengeMember(challenge,member);
         List<Answer> answers = answerService.findAnswerByChallenge(challenge);
 
         NormalChallengeDto normalChallengeDto = new NormalChallengeDto(challenge, isComplete, challengeDate, answers);
@@ -108,12 +108,15 @@ public class ChallengeController {
         return ResponseEntity.ok(new ApiResponse<>("success", "Challenge retrieved successfully", Collections.singletonList(normalChallengeDto)));      // 객체를 리스트 형태로 감싸서 반환
     }
 
-//    @PostMapping("/normal")     // 일반 챌린지 내용 수정
-//    public  ResponseEntity<ApiResponse> saveAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
-//        Long challengeId = request.challengeId;
-//        String answer = request.answer;
-//        // 로그인한 멤버를 찾고 해당 멤버가 작성한 answer중에 request로 받은 challengeId로 answer를 찾는다. 그리고 request로 받은 answer를 answer_content에 넣는다.
-//    }
+    @PostMapping("/normal")     // 일반 챌린지 내용 수정 -> 새 내용, 수정날짜 저장
+    public  ResponseEntity<ApiResponse> saveAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
+        Long challengeId = request.getChallengeId();
+        String answerContent = request.getAnswerContent();
+        Answer answer = answerService.modifyAnswer(challengeId, answerContent);
+        ModifyAnswerDto modifyAnswerDto = new ModifyAnswerDto(answer);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse("200", "Success", modifyAnswerDto));
+    }
 
     // 사진 챌린지 조회
     @GetMapping("/photo")
@@ -291,7 +294,7 @@ public class ChallengeController {
     @Data
     static class SaveAnswerRequest{
         private Long challengeId;
-        private String answer;
+        private String answerContent;
     }
 
     @Data
