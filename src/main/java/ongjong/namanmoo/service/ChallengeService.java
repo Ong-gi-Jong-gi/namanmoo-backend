@@ -43,8 +43,9 @@ public class ChallengeService {
         return challengeRepository.findByChallengeNum(number + findStartChallengeNum(familyId));
     }
 
+    // 현재 진행중인 challenge 번호 조회
     @Transactional(readOnly = true)
-    public Integer findCurrentChallengeNum(Long familyId, Long challengeDate) {       // 현재 진행중인 challenge 번호 조회
+    public Integer findCurrentChallengeNum(Long familyId, Long challengeDate) {
         List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
         for (Lucky lucky : luckies) {
             if (lucky.isRunning()) {
@@ -55,8 +56,9 @@ public class ChallengeService {
         return null;
     }
 
+    // 현재 진행하고 있는 행운이의 챌린지 리스트 가져오기
     @Transactional(readOnly = true)
-    public List<Challenge> findChallenges(Long challengeDate) throws Exception{      // 현재 진행하고있는 행운이의 챌린지 리스트 가져오기
+    public List<Challenge> findChallenges(Long challengeDate) throws Exception{
         Member member = memberService.findMemberByLoginId();  // 로그인한 member
         Family family = member.getFamily();
 
@@ -85,12 +87,14 @@ public class ChallengeService {
         return challengeList;
     }
 
+    // challenge id로 challenge 찾기
     @Transactional(readOnly = true)
     public Challenge findChallengeById(Long id){
         return challengeRepository.findById(id).get();
     }
 
-    @Transactional(readOnly = true)     // 회원 아이디로 오늘의 챌린지 조회
+    // 회원 아이디로 오늘의 챌린지 조회
+    @Transactional(readOnly = true)
     public List<Challenge> findChallengeByMemberId(Long challengeDate) throws Exception{      // 회원 아이디로 회원 조회
         Member member = memberService.findMemberByLoginId();  // 로그인한 member
         Family family = member.getFamily();
@@ -114,9 +118,9 @@ public class ChallengeService {
         List <Challenge> challenges = findCurrentChallenges(member.getFamily().getFamilyId(), challengeDate);     //familyId를 통해 오늘의 챌린지 조회
         return challenges;
     }
-
+    // 오늘의 챌린지 조회
     @Transactional(readOnly = true)
-    public Challenge findCurrentChallenge(List<Challenge> challenges) throws Exception{     // 오늘의 챌린지 조회
+    public Challenge findCurrentChallenge(List<Challenge> challenges) throws Exception{
         if (challenges.isEmpty()) {
             return null;        // 오늘의 챌린지리스트가 비어있는 경우 null 리턴
         }
@@ -147,7 +151,8 @@ public class ChallengeService {
         return null;
     }
 
-    @Transactional(readOnly = true)     // 현재 날짜와 챌린지 시작 날짜를 비교하여 몇번째 챌린지를 진행중인지 반환
+    // 현재 날짜와 챌린지 시작 날짜를 비교하여 몇번째 챌린지를 진행중인지 반환
+    @Transactional(readOnly = true)
     public Integer findCurrentNum(Long challengeDate) throws Exception{
         //현재 맴버 찾고 가족찾고 ,lucky찾아서 lucky의 challenge start date구해서 challengedate 빼기
         Member member = memberService.findMemberByLoginId();  // 로그인한 member
@@ -155,10 +160,10 @@ public class ChallengeService {
         return findCurrentChallengeNum(family.getFamilyId(), challengeDate);
     }
 
+    // 시작해야 하는 challenge 넘버 찾기
     @Transactional(readOnly = true)
-    public Integer findStartChallengeNum(Long familyId){     // 시작해야하는 challenge 넘버 찾기
+    public Integer findStartChallengeNum(Long familyId){
         // luckies를 순회화면서 lucky의 lifetime의 합을 구하여 반환
-
         List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
 
         int totalDays = luckies.stream()
@@ -168,6 +173,7 @@ public class ChallengeService {
         return totalDays;
     }
 
+    // 현재 실행 중인 Lucky 객체의 lifetime (챌린지 길이) 가져오기
     @Transactional(readOnly = true)
     public Integer findCurrentLuckyLifetime(Long familyId) {
         return luckyRepository.findByFamilyFamilyId(familyId).stream()
@@ -177,8 +183,9 @@ public class ChallengeService {
                 .orElse(0);
     }
 
+    // 현재 진행하고 있는 챌린지를 행운이의 챌린지 길이만큼 가져오기
     @Transactional(readOnly = true)
-    public List<Challenge> findRunningChallenges(Long challengeDate) throws Exception {      // 현재 진행하고있는 행운이의 챌린지 리스트 30개 가져오기
+    public List<Challenge> findRunningChallenges(Long challengeDate) throws Exception {
         Member member = memberService.findMemberByLoginId();  // 로그인한 member
         Family family = member.getFamily();
 
@@ -189,5 +196,4 @@ public class ChallengeService {
 
         return challengeRepository.findByChallengeNumBetween(startChallengeNum, startChallengeNum + runningLuckyLifetime);
     }
-
 }
