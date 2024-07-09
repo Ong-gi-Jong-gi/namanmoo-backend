@@ -30,5 +30,4 @@ public class PhotoChallengeDto {
                 .collect(Collectors.toList());
     }
 
-    private List<AnswerDto> answerDto;
 }

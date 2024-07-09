@@ -173,5 +173,9 @@ public class ChallengeService {
         return challengeRepository.findByChallengeNumBetween(findStartChallengeNum(family.getFamilyId()), findStartChallengeNum(family.getFamilyId()) + 30);
     }
 
+    @Transactional(readOnly = true)
+    public List<Challenge> findChallengesByChallengeNum(Long challengeNumber) {     // challenge num으로 group_challenge찾기
+        return challengeRepository.findByChallengeNum(challengeNumber);
+    }
 
 }

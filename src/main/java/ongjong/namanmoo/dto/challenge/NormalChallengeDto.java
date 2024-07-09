@@ -29,6 +29,4 @@ public class NormalChallengeDto {
                 .map(AnswerDto::new)
                 .collect(Collectors.toList());
     }
-
-    private List<AnswerDto> answerDto;
 }

@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -212,4 +213,16 @@ public class AnswerService {
             throw new IllegalArgumentException("No answer found for the given loginId and createDate");
         }
     }
+
+    @Transactional(readOnly = true)
+    public List<Answer> findAnswersByChallenges(Challenge challenge) {         // 특정 그룹 챌린지에 매핑된 answer list 찾기
+        List<Challenge> groupChallenges = challengeService.findChallengesByChallengeNum(challenge.getChallengeNum());       // challengeNum이 같은 챌린지 찾기
+        List<Answer> allAnswers = new ArrayList<>();        // 해당 그룹질문으로 묶인 answer 가져오기
+        for (Challenge relatedChallenge : groupChallenges) {
+            List<Answer> answers = findAnswerByChallenge(relatedChallenge);
+            allAnswers.addAll(answers);
+        }
+        return allAnswers;
+    }
+
 }

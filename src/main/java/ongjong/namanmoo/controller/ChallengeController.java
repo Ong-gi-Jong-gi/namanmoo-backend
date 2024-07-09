@@ -12,18 +12,14 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.answer.ModifyAnswerDto;
-import ongjong.namanmoo.repository.AnswerRepository;
 import ongjong.namanmoo.response.ApiResponse;
 import ongjong.namanmoo.service.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -85,7 +81,7 @@ public class ChallengeController {
     }
 
     @GetMapping("/normal")      // 일반 챌린지 조회
-    public ApiResponse<List<NormalChallengeDto>> getNormalChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
+    public ApiResponse<NormalChallengeDto> getNormalChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
         if (challenge == null) {
@@ -99,11 +95,12 @@ public class ChallengeController {
 
         NormalChallengeDto normalChallengeDto = new NormalChallengeDto(challenge, isComplete, challengeDate, answers);
 
-        return new ApiResponse<>("success", "Challenge retrieved successfully", Collections.singletonList(normalChallengeDto));      // 객체를 리스트 형태로 감싸서 반환
+        return new ApiResponse<>("success", "Challenge retrieved successfully", normalChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
     }
 
-    @PostMapping("/normal")     // 일반 챌린지 내용 수정 -> 새 내용, 수정날짜 저장
-    public  ApiResponse saveAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
+    // 일반 챌린지 내용 수정 -> 새 내용, 수정날짜 저장
+    @PostMapping("/normal")
+    public  ApiResponse saveNormalAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
         Long challengeId = request.getChallengeId();
         String answerContent = request.getAnswerContent();
         Answer answer = answerService.modifyAnswer(challengeId, answerContent);
@@ -111,22 +108,36 @@ public class ChallengeController {
         return new ApiResponse("200", "Success", modifyAnswerDto);
     }
 
-//    // 그룹 챌린지 조회
-//    @GetMapping("/group")      // 일반 챌린지 조회
-//    public ApiResponse<List<GroupChallengeDto>> getGroupChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
-//        Challenge challenge = challengeService.findChallengeById(challengeId);
-//
-//    }
+    // 그룹 챌린지 조회
+    @GetMapping("/group")
+    public ApiResponse<GroupChallengeDto> getGroupChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
+        Challenge challenge = challengeService.findChallengeById(challengeId);
+        if (challenge == null) {
+            return new ApiResponse<>("failure", "Challenge not found for the provided challengeId", null);
+        }
 
+        Long challengeDate = answerService.findDateByChallengeMember(challenge);
+        Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
+        boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
+        List<Answer> allAnswers = answerService.findAnswersByChallenges(challenge);     // 특정 그룹 챌린지에 매핑된 answer list 찾기
 
+        GroupChallengeDto groupChallengeDto = new GroupChallengeDto(challenge, challengeDate, isComplete, allAnswers);
+        return new ApiResponse<>("success", "Challenge retrieved successfully", groupChallengeDto);
+    }
 
-
-
-
+    // 그룹 챌린지 답변 수정
+    @PostMapping("/group")     // 일반 챌린지 내용 수정 -> 새 내용, 수정날짜 저장
+    public  ApiResponse saveGroupAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
+        Long challengeId = request.getChallengeId();
+        String answerContent = request.getAnswerContent();
+        Answer answer = answerService.modifyAnswer(challengeId, answerContent);
+        ModifyAnswerDto modifyAnswerDto = new ModifyAnswerDto(answer);
+        return new ApiResponse("200", "Success", modifyAnswerDto);
+    }
 
     // 사진 챌린지 조회
     @GetMapping("/photo")
-    public ApiResponse<List<PhotoChallengeDto>> getPhotoChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
+    public ApiResponse<PhotoChallengeDto> getPhotoChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
         if (challenge == null) {
@@ -141,7 +152,7 @@ public class ChallengeController {
 
         PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, isComplete, challengeDate, answers);
 
-        return new ApiResponse<>("success", "Challenge retrieved successfully", Collections.singletonList(photoChallengeDto));      // 객체를 리스트 형태로 감싸서 반환
+        return new ApiResponse<>("success", "Challenge retrieved successfully",photoChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
     }
 
     // 사진 챌린지 수정
@@ -283,7 +294,7 @@ public class ChallengeController {
 
 
     @GetMapping("/voice")      // 음성 챌린지 조회
-    public ApiResponse<List<VoiceChallengeDto>> getVoiceChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
+    public ApiResponse<VoiceChallengeDto> getVoiceChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
         if (challenge == null) {
@@ -297,7 +308,7 @@ public class ChallengeController {
 
         VoiceChallengeDto voiceChallengeDto = new VoiceChallengeDto(challenge, isComplete, challengeDate, answers);
 
-        return new ApiResponse<>("success", "Challenge retrieved successfully", Collections.singletonList(voiceChallengeDto));      // 객체를 리스트 형태로 감싸서 반환
+        return new ApiResponse<>("success", "Challenge retrieved successfully",voiceChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
     }
 
     @Data

@@ -29,6 +29,4 @@ public class VoiceChallengeDto {
                 .map(AnswerDto::new)
                 .collect(Collectors.toList());
     }
-
-    private List<AnswerDto> answerDto;
 }
