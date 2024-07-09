@@ -11,6 +11,7 @@ import ongjong.namanmoo.dto.member.UpdatePasswordDto;
 import ongjong.namanmoo.response.ApiResponse;
 import ongjong.namanmoo.service.AwsS3Service;
 import ongjong.namanmoo.service.MemberService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -56,27 +58,23 @@ public class MemberController {
     // 회원 정보 수정
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<MemberInfoDto> updateBasicInfo(
-            @RequestPart("userInfo") MemberUpdateDto memberUpdateDto,
-            @RequestPart(value = "userImg", required = false) MultipartFile userImg) throws Exception {
+    public ApiResponse<MemberInfoDto> updateBasicInfo(@RequestPart("userInfo") MemberUpdateDto memberUpdateDto,
+                                                      @RequestPart("userImg") Optional<MultipartFile> userImg) throws Exception {
 
-        log.debug("Received MemberUpdateDto: {}", memberUpdateDto);
-        log.debug("Received MultipartFile: {}", userImg);
-
-        String uploadImageUrl = null;
+        log.info("Received MemberUpdateDto: {}", memberUpdateDto);
+        log.info("Received MultipartFile: {}", userImg);
 
         // 파일을 전송했을 경우에만 S3 파일 업로드 수행
-        if (userImg != null && !userImg.isEmpty()) {
+        if (userImg.isPresent() && !userImg.get().isEmpty()) {
             log.debug("Uploading file to S3...");
-            uploadImageUrl = awsS3Service.uploadFile(userImg);
+            String uploadImageUrl = awsS3Service.uploadFile(userImg.get());
             log.debug("File uploaded to S3: {}", uploadImageUrl);
         }
 
         log.debug("Updating member information...");
-        memberService.update(memberUpdateDto);
+        memberService.update(memberUpdateDto, userImg);
         log.debug("Member information updated.");
 
-        // MemberService의 update 메소드에서 imagePath를 갱신해야 합니다.
         MemberInfoDto info = memberService.getMyInfo();
         log.debug("Member info retrieved: {}", info);
         return new ApiResponse<>("200", "Update User Info Success", info);

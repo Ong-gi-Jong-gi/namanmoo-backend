@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,15 +23,26 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
 public class AwsS3Service {
 
-    @Autowired
-    private AmazonS3 amazonS3Client;
+    private final AmazonS3 amazonS3Client;
+    private final String bucket;
 
-    @Value("${cloud.aws.s3.bucket}")
-    private String bucket;
+    public AwsS3Service(
+
+            @Value("${cloud.aws.credentials.access-key}") String accessKeyId,
+            @Value("${cloud.aws.credentials.secret-key}") String secretKey,
+            @Value("${cloud.aws.s3.bucket}") String bucket,
+            @Value("${cloud.aws.region.static}") String region) {
+
+        BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKeyId, secretKey);
+        this.amazonS3Client = AmazonS3ClientBuilder.standard()
+                .withRegion(region)
+                .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
+                .build();
+        this.bucket = bucket;
+    }
 
     public String uploadFile(MultipartFile multipartFile) throws IOException {
         log.debug("Converting MultipartFile to File...");
