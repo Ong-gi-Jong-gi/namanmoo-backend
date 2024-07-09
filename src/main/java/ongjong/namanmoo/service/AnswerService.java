@@ -1,6 +1,7 @@
 package ongjong.namanmoo.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.global.security.util.DateUtil;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
@@ -18,9 +19,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -47,6 +50,7 @@ public class AnswerService {
         if (members.size() != family.get().getMaxFamilySize()) {
             return false;
         }
+
         DateUtil dateUtil = DateUtil.getInstance();
         // 각 회원마다 모든 챌린지에 대해 답변 생성
         for (Member member : members) {
@@ -220,4 +224,16 @@ public class AnswerService {
             throw new IllegalArgumentException("No answer found for the given loginId and createDate");
         }
     }
+
+    @Transactional(readOnly = true)
+    public List<Answer> findAnswersByChallenges(Challenge challenge) {         // 특정 그룹 챌린지에 매핑된 answer list 찾기
+        List<Challenge> groupChallenges = challengeService.findChallengesByChallengeNum(challenge.getChallengeNum());       // challengeNum이 같은 챌린지 찾기
+        List<Answer> allAnswers = new ArrayList<>();        // 해당 그룹질문으로 묶인 answer 가져오기
+        for (Challenge relatedChallenge : groupChallenges) {
+            List<Answer> answers = findAnswerByChallenge(relatedChallenge);
+            allAnswers.addAll(answers);
+        }
+        return allAnswers;
+    }
+
 }
