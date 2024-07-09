@@ -194,4 +194,10 @@ public class ChallengeService {
 
         return challengeRepository.findByChallengeNumBetween(startChallengeNum, startChallengeNum + runningLuckyLifetime);
     }
+
+    @Transactional(readOnly = true)
+    public List<Challenge> findChallengesByChallengeNum(Integer challengeNumber) {     // challenge num으로 group_challenge찾기
+        return challengeRepository.findByChallengeNum(challengeNumber);
+    }
+
 }

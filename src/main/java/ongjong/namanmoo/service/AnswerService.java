@@ -1,6 +1,7 @@
 package ongjong.namanmoo.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
@@ -17,9 +18,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -136,6 +141,19 @@ public class AnswerService {
         return answerRepository.findByChallenge(challenge);
     }
 
+    // 해당 챌린지와 매핑된 답변 중 로그인 하고 있는 맴버 가족의 답변리스트만을 반환
+    @Transactional(readOnly = true)
+    public List<Answer> findAnswerByChallengeandFamily(Challenge challenge, Member member){
+        Family family = member.getFamily();
+        // answers 리스트를 순회하면서 answer의 memberid값을 member를 구하고 그 member가 가지고 있는 familyid가 위에서 구한 familyid와 다를 경우 answers에서 제거해야해
+        return answerRepository.findByChallenge(challenge).stream()
+                .filter(answer -> {
+                    Member answerMember = answer.getMember();
+                    return answerMember != null && family.getFamilyId().equals(answerMember.getFamily().getFamilyId());
+                })
+                .collect(Collectors.toList());
+    }
+
     // 가족 구성원들의 답변 유무 검사
     @Transactional(readOnly = true)
     public boolean isAnyAnswerComplete(Challenge challenge, Family family) {
@@ -219,4 +237,22 @@ public class AnswerService {
             throw new IllegalArgumentException("No answer found for the given loginId and createDate");
         }
     }
+
+    @Transactional(readOnly = true)
+    public List<Answer> findAnswersByChallenges(Challenge challenge, Member member) {         // 특정 그룹 챌린지에 매핑된 answer list 찾기
+        List<Challenge> groupChallenges = challengeService.findChallengesByChallengeNum(challenge.getChallengeNum());       // challengeNum이 같은 챌린지 찾기
+        Family family = member.getFamily();
+        List<Answer> allAnswers = new ArrayList<>();        // 해당 그룹질문으로 묶인 answer 가져오기
+        for (Challenge relatedChallenge : groupChallenges) {
+            List<Answer> answers = findAnswerByChallenge(relatedChallenge);
+            allAnswers.addAll(answers);
+        }
+        return allAnswers.stream()
+                .filter(answer -> {
+                    Member answerMember = answer.getMember();
+                    return answerMember != null && family.getFamilyId().equals(answerMember.getFamily().getFamilyId());
+                })
+                .collect(Collectors.toList());
+    }
+
 }
