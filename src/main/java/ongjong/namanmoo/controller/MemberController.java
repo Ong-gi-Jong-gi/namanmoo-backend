@@ -56,8 +56,10 @@ public class MemberController {
     // 회원 정보 수정
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<MemberInfoDto> updateBasicInfo(@RequestPart("userInfo") MemberUpdateDto memberUpdateDto,
-                                                      @RequestPart(value = "userImg", required = false) MultipartFile userImg) throws Exception {
+    public ApiResponse<MemberInfoDto> updateBasicInfo(
+            @RequestPart("userInfo") MemberUpdateDto memberUpdateDto,
+            @RequestPart(value = "userImg", required = false) MultipartFile userImg) throws Exception {
+
         log.debug("Received MemberUpdateDto: {}", memberUpdateDto);
         log.debug("Received MultipartFile: {}", userImg);
 

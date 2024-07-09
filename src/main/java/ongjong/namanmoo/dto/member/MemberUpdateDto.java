@@ -7,7 +7,6 @@ import java.util.Optional;
 public record MemberUpdateDto(
         Optional<String> name,
         Optional<String> nickname,
-        Optional<String> role,
-        Optional<MultipartFile> userImg
+        Optional<String> role
 ) {
 }
