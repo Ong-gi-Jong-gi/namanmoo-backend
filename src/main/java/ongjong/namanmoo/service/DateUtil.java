@@ -1,4 +1,4 @@
-package ongjong.namanmoo.global.security.util;
+package ongjong.namanmoo.service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
@@ -103,18 +103,21 @@ public class DateUtil {
     }
 
     @Transactional(readOnly = true)
-    public Long stringToTimestamp(String answerDate, String format) throws Exception{       //  "yyyy.MM.dd"형식의 문자열을 timeStamp로 바꾸기
-        if ((answerDate == null || answerDate.isEmpty()) || (format == null || format.isEmpty())) {
+    public Long stringToTimestamp(String answerDate, String format){       //  "yyyy.MM.dd"형식의 문자열을 timeStamp로 바꾸기
+        try {
+            if ((answerDate == null || answerDate.isEmpty()) || (format == null || format.isEmpty())) {
+                return null;
+            }
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+            LocalDate date = LocalDate.parse(answerDate, formatter);
+            LocalDateTime dateTime = date.atStartOfDay(); // LocalDate를 LocalDateTime으로 변환 (00:00:00)
+            return Timestamp.valueOf(dateTime).getTime();
+        } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-        LocalDate date = LocalDate.parse(answerDate, formatter);
-        LocalDateTime dateTime = date.atStartOfDay(); // LocalDate를 LocalDateTime으로 변환 (00:00:00)
-        return Timestamp.valueOf(dateTime).getTime();
     }
-
-
 
     @Transactional(readOnly = true)
     public String addDaysToStringDate(String strChallengeDate,int days) { // "yyyy.MM.dd" 형식의 문자열에 날짜 더하기

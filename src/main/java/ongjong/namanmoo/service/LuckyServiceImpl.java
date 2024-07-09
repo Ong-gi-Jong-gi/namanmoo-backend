@@ -5,11 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
-import ongjong.namanmoo.domain.answer.Answer;
+import ongjong.namanmoo.dto.lucky.LuckyListDto;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
-import ongjong.namanmoo.global.security.util.DateUtil;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
-import ongjong.namanmoo.repository.AnswerRepository;
 import ongjong.namanmoo.repository.FamilyRepository;
 import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
@@ -18,11 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -100,13 +98,29 @@ public class LuckyServiceImpl implements LuckyService{
         double percentage = (double) familyContribution / denominator * 100;
 
         // 행운이 상태 결정
-        if (percentage >= 75) { // 90개
+        if (percentage >= 75) { // 75% (30일 주기일 때 90개)
             return 3; // 행목
-        } else if (percentage >= 25) { // 40개
+        } else if (percentage >= 25) { // 25% (30일 주기일 때 40개)
             return 2; // 행운
         } else {
             return 1; // 새싹
         }
     }
 
+    // 행운이 리스트 조회 ( RECAP list )
+    @Transactional(readOnly = true)
+    public List<LuckyListDto> getLuckyListStatus() {
+        String loginId = SecurityUtil.getLoginLoginId();
+        Member member = memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("No member found for login id: " + loginId));
+
+        List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(member.getFamily().getFamilyId());
+
+        return luckies.stream().map(lucky -> {
+            Long startDateTimestamp = DateUtil.getInstance().stringToTimestamp(lucky.getChallengeStartDate(), DateUtil.FORMAT_4);
+            Long endDateTimestamp = startDateTimestamp + (lucky.getLifetime().getDays() * 86400000L);
+            Integer luckyStatus = calculateLuckyStatus(lucky);
+            return new LuckyListDto(lucky.getLuckyId().toString(), startDateTimestamp, endDateTimestamp, luckyStatus);
+        }).collect(Collectors.toList());
+    }
 }

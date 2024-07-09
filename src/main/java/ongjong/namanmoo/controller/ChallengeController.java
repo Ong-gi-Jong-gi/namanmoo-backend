@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.dto.challenge.*;
-import ongjong.namanmoo.global.security.util.DateUtil;
+import ongjong.namanmoo.service.DateUtil;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;

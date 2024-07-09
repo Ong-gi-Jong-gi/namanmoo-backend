@@ -1,7 +1,6 @@
 package ongjong.namanmoo.service;
 
 import lombok.RequiredArgsConstructor;
-import ongjong.namanmoo.global.security.util.DateUtil;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;

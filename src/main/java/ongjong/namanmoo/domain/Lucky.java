@@ -20,7 +20,7 @@ public class Lucky {
     @JoinColumn(name = "family_id")
     private Family family;
 
-    @Column(nullable = false, columnDefinition = "bigint default 0")
+    @Column(nullable = false, columnDefinition = "int default 0")
     private Integer status;
 
     private String challengeStartDate;
