@@ -29,11 +29,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Transactional
 public class LuckyServiceImpl implements LuckyService{
+
     private final LuckyRepository luckyRepository;
     private final MemberRepository memberRepository;
     private final AnswerService answerService;
     private final FamilyRepository familyRepository;
-
 
     public boolean createLucky(Long familyId, Long challengeDate){     // 캐릭터 생성
         Optional<Family> familyOptional = familyRepository.findById(familyId);
@@ -60,7 +60,6 @@ public class LuckyServiceImpl implements LuckyService{
         }
     }
 
-
     // 사용자의 챌린지 참여여부 확인하여 행운이 상태 반환
     @Transactional(readOnly = true)
     public LuckyStatusDto getLuckyStatus(String challengeDate) throws IllegalArgumentException{
@@ -86,15 +85,19 @@ public class LuckyServiceImpl implements LuckyService{
         return new LuckyStatusDto(luckyStatus, isBubble);
     }
 
-
-
     // 행운이 상태 계산
     @Override
     public Integer calculateLuckyStatus(Lucky lucky) {
         Integer familyContribution = lucky.getStatus(); // 가족의 총 챌린지 참여 횟수
+        Family family = lucky.getFamily(); // 가족 정보 추출
+        int maxFamilySize = family.getMaxFamilySize(); // 가족 최대 인원 수 추출
+        int challengeDays = lucky.getLifetime().getDays(); // 챌린지 주기 추출
+
+        // 비율 계산을 위한 분모 계산 (가족 최대 인원 수 x 챌린지 주기)
+        int denominator = maxFamilySize * challengeDays;
 
         // 비율 계산
-        double percentage = (double) familyContribution / 120 * 100;
+        double percentage = (double) familyContribution / denominator * 100;
 
         // 행운이 상태 결정
         if (percentage >= 75) { // 90개
@@ -104,7 +107,6 @@ public class LuckyServiceImpl implements LuckyService{
         } else {
             return 1; // 새싹
         }
-
     }
 
 }

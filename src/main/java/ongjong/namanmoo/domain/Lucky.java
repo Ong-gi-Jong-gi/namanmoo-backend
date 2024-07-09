@@ -25,8 +25,10 @@ public class Lucky {
 
     private String challengeStartDate;
 
-
     private boolean running;
+
+    @Enumerated(EnumType.STRING)
+    private ChallengeLength lifetime;
 
     @OneToMany(mappedBy = "lucky")
     private List<FaceTimeAnswer> faceTimeAnswers;

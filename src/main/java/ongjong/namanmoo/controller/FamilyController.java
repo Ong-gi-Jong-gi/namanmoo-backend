@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
+import ongjong.namanmoo.domain.MemberRole;
 import ongjong.namanmoo.dto.family.FamilyMemberDto;
 import ongjong.namanmoo.response.*;
 import ongjong.namanmoo.response.family.CreateFamilyResponse;

@@ -3,6 +3,7 @@ package ongjong.namanmoo.repository;
 import jakarta.persistence.EntityManager;
 import ongjong.namanmoo.domain.LogInRole;
 import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.domain.MemberRole;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 
@@ -41,7 +42,7 @@ class MemberRepositoryTest {
                 .password("1234567890")
                 .name("Member1")
                 .nickname("Nickname1")
-                .role("아들")
+                .role(MemberRole.SON)
 //                .challengeMemberCount(1L)
 //                .checkChallenge(false)
                 .logInRole(LogInRole.USER)
@@ -85,7 +86,7 @@ class MemberRepositoryTest {
                 .password("1234567890")
                 .name("Member1")
                 .nickname("Nickname1")
-                .role("아들")
+                .role(MemberRole.SON)
 //                .challengeMemberCount(1L)
 //                .checkChallenge(false)
                 .logInRole(LogInRole.USER)
@@ -104,7 +105,7 @@ class MemberRepositoryTest {
                 .password("1234567890")
                 .name("Member1")
                 .nickname("Nickname1")
-                .role("아들")
+                .role(MemberRole.SON)
 //                .challengeMemberCount(1L)
 //                .checkChallenge(false)
                 .logInRole(LogInRole.USER)
@@ -115,7 +116,7 @@ class MemberRepositoryTest {
                 .password("0987654321")
                 .name("Member2")
                 .nickname("Nickname2")
-                .role("아빠")
+                .role(MemberRole.FATHER)
 //                .challengeMemberCount(1L)
 //                .checkChallenge(false)
                 .logInRole(LogInRole.USER)
@@ -136,7 +137,7 @@ class MemberRepositoryTest {
 //                .password("1234567890")
 //                .name("Member1")
 //                .nickname("NickName1")
-//                .role("아들")
+//                .role(MemberRole.SON)
 ////                .challengeMemberCount(1L)
 ////                .checkChallenge(false)
 //                .logInRole(LogInRole.USER)

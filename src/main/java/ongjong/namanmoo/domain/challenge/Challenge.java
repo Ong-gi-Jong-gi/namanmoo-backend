@@ -20,7 +20,7 @@ public class Challenge {
 
     private String challengeTitle;
 
-    private Long challengeNum;
+    private Integer challengeNum;
 
     @OneToMany(mappedBy = "challenge")
     private List<Answer> answers;

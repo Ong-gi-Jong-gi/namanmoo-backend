@@ -60,7 +60,7 @@ public class ChallengeController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse("404", "Challenge not found", null));
         }
-        Long currentNum  = challengeService.findCurrentNum(challengeDate);
+        Integer currentNum  = challengeService.findCurrentNum(challengeDate);
         DateUtil dateUtil = DateUtil.getInstance();
         ChallengeDto challengeDto = new ChallengeDto(challenge, currentNum, dateUtil.timestampToString(challengeDate));
         return ResponseEntity.status(HttpStatus.OK)
