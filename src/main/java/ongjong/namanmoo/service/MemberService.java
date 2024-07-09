@@ -27,8 +27,6 @@ public interface MemberService {
 
     void withdraw(String checkPassword) throws Exception;
 
-//    MemberInfoDto getInfo(Long memberId) throws Exception;
-
     MemberInfoDto getMyInfo() throws Exception;
 
     @Transactional(readOnly = true)
