@@ -193,9 +193,6 @@ public class ChallengeController {
                     .body(new ApiResponse<>("404", "Challenge not found for the provided challengeId", null));
         }
 
-        // 현재 진행 번호 조회
-        Long currentNum = challengeService.findCurrentNum(challengeId);
-
         // 멤버와 챌린지를 통해 timestamp 조회
         Long timestamp = answerService.findDateByChallengeMember(challenge);
 
