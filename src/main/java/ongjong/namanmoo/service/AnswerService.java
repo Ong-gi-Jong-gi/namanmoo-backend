@@ -1,6 +1,7 @@
 package ongjong.namanmoo.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.global.security.util.DateUtil;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
@@ -17,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -29,7 +31,6 @@ public class AnswerService {
     private final FamilyRepository familyRepository;
     private final ChallengeService challengeService;
     private final ChallengeRepository challengeRepository;
-    private final MemberServiceImpl memberServiceImpl;
     private final MemberService memberService;
 
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
@@ -44,6 +45,7 @@ public class AnswerService {
         if (members.size() != family.get().getMaxFamilySize()) {
             return false;
         }
+
         DateUtil dateUtil = DateUtil.getInstance();
         // 각 회원마다 모든 챌린지에 대해 답변 생성
         for (Member member : members) {

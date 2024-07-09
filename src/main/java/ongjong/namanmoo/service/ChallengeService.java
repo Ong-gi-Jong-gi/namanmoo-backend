@@ -9,6 +9,7 @@ import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.repository.*;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,10 +25,7 @@ public class ChallengeService {
     private final ChallengeRepository challengeRepository;
     private final LuckyRepository luckyRepository;
     private final MemberRepository memberRepository;
-    private final AnswerRepository answerRepository;
     private final MemberService memberService;
-
-
     // familyId를 통해 해당 날짜에 해당하는 오늘의 challenge 조회
     // 해당 가족 id를 가지고 있는 행운이 모두 조회
     // 행운이들 중 오늘의 챌린지 값이 30이 아닌 행운이의 오늘의 챌린지 값을 가져와야한다.
@@ -48,7 +46,7 @@ public class ChallengeService {
         for (Lucky lucky : luckies) {
             if (lucky.isRunning()) {
                 DateUtil dateUtil = DateUtil.getInstance();
-                return dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.timestampToString(challengeDate)); // 현재 진행되어야할 challenge를 반환
+                return dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.timestampToString(challengeDate))+1; // 현재 진행되어야할 challenge를 반환
             }
         }
         return null;
@@ -174,5 +172,6 @@ public class ChallengeService {
 
         return challengeRepository.findByChallengeNumBetween(findStartChallengeNum(family.getFamilyId()), findStartChallengeNum(family.getFamilyId()) + 30);
     }
+
 
 }

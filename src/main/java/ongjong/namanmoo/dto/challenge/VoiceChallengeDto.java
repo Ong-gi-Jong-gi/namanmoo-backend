@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 @Data
 @JsonPropertyOrder({ "challengeTitle", "challengeNumber", "challengeDate", "isComplete", "answerList" })
-public class PhotoChallengeDto {
+public class VoiceChallengeDto {
     private String challengeTitle;
     private String challengeNumber;
     private Long challengeDate;
@@ -20,7 +20,7 @@ public class PhotoChallengeDto {
     private boolean isComplete;
     private List<AnswerDto> answerList;
 
-    public PhotoChallengeDto(Challenge challenge, boolean isComplete, Long timeStamp , List<Answer> answers) {
+    public VoiceChallengeDto(Challenge challenge, boolean isComplete, Long timeStamp , List<Answer> answers) {
         this.challengeTitle = challenge.getChallengeTitle();
         this.challengeNumber = challenge.getChallengeNum().toString();
         this.challengeDate = timeStamp; // Use actual challenge date if available
