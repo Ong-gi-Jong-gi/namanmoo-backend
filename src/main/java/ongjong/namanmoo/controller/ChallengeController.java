@@ -26,6 +26,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,18 +37,17 @@ import java.util.stream.Collectors;
 public class ChallengeController {
 
     private final ChallengeService challengeService;
-    private final MemberService memberService;
     private final LuckyService luckyService;
     private final AnswerService answerService;
     private final FamilyService familyService;
-    private final AnswerRepository answerRepository;
     private final AwsS3Service awsS3Service;
+    private final MemberService memberService;
 
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     public ResponseEntity<ApiResponse> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
         Long challengeDate = request.getChallengeDate();
         Long familyId = familyService.findFamilyId();
-        if (!luckyService.join(familyId) || !answerService.createAnswer(familyId, challengeDate)) {
+        if (!luckyService.createLucky(familyId, challengeDate) || !answerService.createAnswer(familyId, challengeDate)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse("404", "Challenge not found", null));
         }

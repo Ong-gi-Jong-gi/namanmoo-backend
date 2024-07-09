@@ -15,23 +15,13 @@ public class Challenge {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long challengeId;
 
-//    @ManyToOne
-//    @JoinColumn(name = "lucky_id")
-//    private Lucky lucky;
-
     @Enumerated(EnumType.STRING)
-//    @Column(nullable = false)
     private ChallengeType challengeType;        //enum 타입
 
     private String challengeTitle;
 
-    //    @Column(nullable = false)
     private Long challengeNum;
 
     @OneToMany(mappedBy = "challenge")
     private List<Answer> answers;
-
-
-//    public abstract ChallengeType getChallengeType();
-    // Getters and Setters
 }

@@ -1,13 +1,11 @@
 package ongjong.namanmoo.domain.answer;
 
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.challenge.Challenge;
-
 
 
 @Entity
@@ -41,7 +39,5 @@ public class Answer {
     private String modifiedDate;
 
     private String answerContent;
-
-    // Getters and Setters
 }
 
