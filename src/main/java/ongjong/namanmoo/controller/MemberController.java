@@ -2,6 +2,7 @@ package ongjong.namanmoo.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.dto.member.LoginRequestDto;
 import ongjong.namanmoo.dto.member.MemberInfoDto;
 import ongjong.namanmoo.dto.member.MemberSignUpDto;
@@ -19,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class MemberController {
@@ -55,18 +57,24 @@ public class MemberController {
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<MemberInfoDto> updateBasicInfo(@RequestPart("userInfo") MemberUpdateDto memberUpdateDto) throws Exception {
+        log.debug("Received MemberUpdateDto: {}", memberUpdateDto);
 
         String uploadImageUrl = null;
 
         // 파일을 전송했을 경우에만 S3 파일 업로드 수행
         if (memberUpdateDto.userImg().isPresent() && !memberUpdateDto.userImg().get().isEmpty()) {
+            log.debug("Uploading file to S3...");
             uploadImageUrl = awsS3Service.uploadFile(memberUpdateDto.userImg().get());
+            log.debug("File uploaded to S3: {}", uploadImageUrl);
         }
 
+        log.debug("Updating member information...");
         memberService.update(memberUpdateDto);
+        log.debug("Member information updated.");
 
         // MemberService의 update 메소드에서 imagePath를 갱신해야 합니다.
         MemberInfoDto info = memberService.getMyInfo();
+        log.debug("Member info retrieved: {}", info);
         return new ApiResponse<>("200", "Update User Info Success", info);
     }
 
