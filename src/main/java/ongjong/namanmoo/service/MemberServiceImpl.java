@@ -11,6 +11,7 @@ import ongjong.namanmoo.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -48,7 +49,7 @@ public class MemberServiceImpl implements MemberService {
 
     // 회원 정보 수정
     @Override
-    public void update (MemberUpdateDto memberUpdateDto) throws Exception {
+    public void update(MemberUpdateDto memberUpdateDto, Optional<MultipartFile> userImg) throws Exception {
         Member member = memberRepository
                 .findByLoginId(SecurityUtil.getLoginLoginId())
                 .orElseThrow(() -> new Exception("회원이 존재하지 않습니다"));
@@ -57,15 +58,18 @@ public class MemberServiceImpl implements MemberService {
         memberUpdateDto.name().ifPresent(member::setName);
         memberUpdateDto.nickname().ifPresent(member::setNickname);
         memberUpdateDto.role().ifPresent(member::setRole);
+
         // 파일을 전송했을 경우에만 S3 파일 업로드 수행
-        memberUpdateDto.userImg().ifPresent(image -> {
+        if (userImg.isPresent() && !userImg.get().isEmpty()) {
             try {
-                String imagePath = awsS3Service.uploadFile(image);
+                String imagePath = awsS3Service.uploadFile(userImg.get());
                 member.setMemberImage(imagePath);
             } catch (IOException e) {
                 throw new RuntimeException("S3 업로드 중 에러가 발생했습니다.", e);
             }
-        });
+        }
+
+        memberRepository.save(member);
     }
 
     // 비밀번호 변경 -> 비밀번호를 입력 받는다

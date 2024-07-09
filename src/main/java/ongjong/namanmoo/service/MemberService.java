@@ -6,6 +6,9 @@ import ongjong.namanmoo.dto.member.MemberInfoDto;
 import ongjong.namanmoo.dto.member.MemberSignUpDto;
 import ongjong.namanmoo.dto.member.MemberUpdateDto;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Optional;
 
 public interface MemberService {
 
@@ -21,7 +24,7 @@ public interface MemberService {
     // 아이디 중복 체크
     boolean isDuplicateId(LoginRequestDto loginRequestDto);
 
-    void update(MemberUpdateDto memberUpdateDto) throws Exception;
+    void update(MemberUpdateDto memberUpdateDto, Optional<MultipartFile> userImg) throws Exception;
 
     void updatePassword(String checkPassword, String toBePassword) throws Exception;
 
