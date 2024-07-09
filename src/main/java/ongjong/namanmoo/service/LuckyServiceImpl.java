@@ -7,6 +7,7 @@ import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
+import ongjong.namanmoo.global.security.util.DateUtil;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.AnswerRepository;
 import ongjong.namanmoo.repository.FamilyRepository;
@@ -20,6 +21,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -33,14 +35,22 @@ public class LuckyServiceImpl implements LuckyService{
     private final FamilyRepository familyRepository;
 
 
-    public boolean createLucky(Long familyId){     // 캐릭터 생성
+    public boolean createLucky(Long familyId, Long challengeDate){     // 캐릭터 생성
         Optional<Family> familyOptional = familyRepository.findById(familyId);
-        if (familyOptional.isPresent()) {
+
+        if (familyOptional.isEmpty()) {
+            return false; // Family가 존재하지 않으면 false 반환
+        }
+
+        List<Lucky> luckyList = luckyRepository.findByFamilyFamilyId(familyId);
+        boolean allNotRunning = luckyList.stream().noneMatch(Lucky::isRunning); // 모든 lucky의 running이 false인지 확인
+       if (allNotRunning) {
             Family family = familyOptional.get();
             Lucky lucky = new Lucky();
             lucky.setFamily(family);
             lucky.setStatus(1);
-            String currentDateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+            DateUtil dateUtil = DateUtil.getInstance();
+            String currentDateStr = dateUtil.timestampToString(challengeDate);
             lucky.setChallengeStartDate(currentDateStr); // 문자열 형식으로 날짜 저장
             lucky.setRunning(true);       // 현재 진행하고있는 challenge에 따라 current challenge가 바뀌어야함 // 챌린지를 다시 시작할 경우 1이아닌 31이 될 수도 있어야함
             luckyRepository.save(lucky);

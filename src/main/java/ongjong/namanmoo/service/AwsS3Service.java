@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.amazonaws.services.s3.AmazonS3;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,20 +18,20 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 
-@Log4j2
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class AwsS3Service {
 
-    private static AmazonS3Client amazonS3Client;
+    @Autowired
+    private AmazonS3 amazonS3Client;
 
     @Value("${cloud.aws.s3.bucket}")
-    private static String bucket;
+    private String bucket;
 
-    public static String upload(MultipartFile multipartFile) throws IOException {
-        File uploadFile = convert(multipartFile)
+    public String uploadFile(MultipartFile multipartFile) throws IOException {
+        File uploadFile = convertFile(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
 
         String fileName = generateFileName(uploadFile);
@@ -38,7 +41,7 @@ public class AwsS3Service {
         return uploadImageUrl;
     }
 
-    private static Optional<File> convert(MultipartFile file) throws IOException {
+    private Optional<File> convertFile(MultipartFile file) throws IOException {
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
         File convertFile = new File(fileName);
 
@@ -46,18 +49,17 @@ public class AwsS3Service {
             try (FileOutputStream fos = new FileOutputStream(convertFile)) {
                 fos.write(file.getBytes());
             }
-
             return Optional.of(convertFile);
         }
 
         return Optional.empty();
     }
 
-    private static String generateFileName(File uploadFile) {
+    private String generateFileName(File uploadFile) {
         return UUID.randomUUID() + "_" + uploadFile.getName();
     }
 
-    private static String uploadFileToS3(File uploadFile, String fileName) {
+    private String uploadFileToS3(File uploadFile, String fileName) {
         amazonS3Client.putObject(
                 new PutObjectRequest(bucket, fileName, uploadFile)
                         .withCannedAcl(CannedAccessControlList.PublicRead)
@@ -68,14 +70,16 @@ public class AwsS3Service {
         return getS3FileURL(fileName);
     }
 
-    private static String getS3FileURL(String fileName) {
+    private String getS3FileURL(String fileName) {
         String defaultUrl = "https://s3.amazonaws.com/";
         return defaultUrl + bucket + "/" + fileName;
     }
 
-    private static void removeNewFile(File targetFile) {
-        if (!targetFile.delete()) {
-            log.error("File delete fail: " + targetFile.getName() + " at path: " + targetFile.getAbsolutePath());
+    private void removeNewFile(File targetFile) {
+        if (targetFile.delete()) {
+            log.info("File delete success");
+        } else {
+            log.info("File delete fail");
         }
     }
 

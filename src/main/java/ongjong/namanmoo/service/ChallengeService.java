@@ -3,22 +3,16 @@ package ongjong.namanmoo.service;
 
 import lombok.RequiredArgsConstructor;
 
-import ongjong.namanmoo.DateUtil;
+import ongjong.namanmoo.global.security.util.DateUtil;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.challenge.*;
-import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-
-import java.time.LocalDate;
-
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -30,7 +24,8 @@ public class ChallengeService {
     private final ChallengeRepository challengeRepository;
     private final LuckyRepository luckyRepository;
     private final MemberRepository memberRepository;
-
+    private final AnswerRepository answerRepository;
+    private final MemberService memberService;
 
 
     // familyId를 통해 해당 날짜에 해당하는 오늘의 challenge 조회
@@ -53,7 +48,7 @@ public class ChallengeService {
         for (Lucky lucky : luckies) {
             if (lucky.isRunning()) {
                 DateUtil dateUtil = DateUtil.getInstance();
-                return dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.getDateStirng(challengeDate)); // 현재 진행되어야할 challenge를 반환
+                return dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.timestampToString(challengeDate)); // 현재 진행되어야할 challenge를 반환
             }
         }
         return null;
@@ -61,7 +56,7 @@ public class ChallengeService {
 
     @Transactional(readOnly = true)
     public List<Challenge> findChallenges(Long challengeDate) throws Exception{      // 현재 진행하고있는 행운이의 챌린지 리스트 가져오기
-        Member member = findMemberByLoginId();  // 로그인한 member
+        Member member = memberService.findMemberByLoginId();  // 로그인한 member
         Family family = member.getFamily();
 
         Long number = findCurrentChallengeNum(family.getFamilyId(),challengeDate);      // 진행하는 challenge 번호
@@ -94,14 +89,9 @@ public class ChallengeService {
         return challengeRepository.findById(id).get();
     }
 
-    @Transactional(readOnly = true)
-    public Member findMemberByLoginId() throws Exception{      // 회원 아이디로 회원 조회
-        return memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
-    }
-
     @Transactional(readOnly = true)     // 회원 아이디로 오늘의 챌린지 조회
     public List<Challenge> findChallengeByMemberId(Long challengeDate) throws Exception{      // 회원 아이디로 회원 조회
-        Member member = findMemberByLoginId();  // 로그인한 member
+        Member member = memberService.findMemberByLoginId();  // 로그인한 member
         Family family = member.getFamily();
 
         int currentFamilySize = memberRepository.countByFamilyId(family.getFamilyId());
@@ -135,7 +125,7 @@ public class ChallengeService {
         else if(challenges.size() == 2){    // 오늘의 챌린지리스트 사이즈가 2일 경우
             Challenge challenge1 = challenges.get(0);
             Challenge challenge2 = challenges.get(1);
-            Member member = findMemberByLoginId();  //로그인한 member
+            Member member = memberService.findMemberByLoginId();  //로그인한 member
             if (challenge1.getChallengeType() == ChallengeType.GROUP_PARENT){
                 if (member.getRole().equals("아빠") || member.getRole().equals("엄마")){
                     return challenge1;
@@ -159,12 +149,12 @@ public class ChallengeService {
     @Transactional(readOnly = true)     // 현재 날짜와 챌린지 시작 날짜를 비교하여 몇번째 챌린지를 진행중인지 반환
     public Long findCurrentNum(Long challengeDate) throws Exception{
         //현재 맴버 찾고 가족찾고 ,lucky찾아서 lucky의 challenge start date구해서 challengedate 빼기
-        Member member = findMemberByLoginId();  // 로그인한 member
+        Member member = memberService.findMemberByLoginId();  // 로그인한 member
         Family family = member.getFamily();
         return findCurrentChallengeNum(family.getFamilyId(),challengeDate);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Long findStartChallengeNum(Long familyId){     // 시작해야하는 challenge 넘버 찾기
         // luckies를 순회화면서 lucky의 boolean 타입인 running이 false인 lucky의 개수를 찾고
         // 찾은 개수 * 30 + 1부터 number까지의 challengenum 으로 challengeList를 구하는 걸로 변경
@@ -179,9 +169,10 @@ public class ChallengeService {
 
     @Transactional(readOnly = true)
     public List<Challenge> findRunningChallenges(Long challengeDate) throws Exception {      // 현재 진행하고있는 행운이의 챌린지 리스트 30개 가져오기
-        Member member = findMemberByLoginId();  // 로그인한 member
+        Member member = memberService.findMemberByLoginId();  // 로그인한 member
         Family family = member.getFamily();
 
         return challengeRepository.findByChallengeNumBetween(findStartChallengeNum(family.getFamilyId()), findStartChallengeNum(family.getFamilyId()) + 30);
     }
+
 }

@@ -18,6 +18,7 @@ repositories {
 }
 
 dependencies {
+
 	// Spring Boot dependencies
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -39,6 +40,7 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
+
 	// Other dependencies
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	implementation 'commons-codec:commons-codec:1.13'
@@ -48,8 +50,11 @@ dependencies {
 	// AWS SDK dependencies using BOM
 	implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.529')
 	implementation 'com.amazonaws:aws-java-sdk-s3'
-//	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 	implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
+//	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+
+	// Jackson for JSON processing
+	implementation 'com.fasterxml.jackson.jr:jackson-jr-all:2.15.2'
 }
 
 tasks.named('test') {

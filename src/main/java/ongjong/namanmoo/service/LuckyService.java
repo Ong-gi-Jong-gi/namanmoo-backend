@@ -14,7 +14,7 @@ public interface LuckyService {
 
     LuckyStatusDto getLuckyStatus(String createDate);
 
-    boolean createLucky(Long familyId);
+    boolean createLucky(Long familyId, Long challengeDate);
 
     Integer calculateLuckyStatus(Lucky lucky);
 

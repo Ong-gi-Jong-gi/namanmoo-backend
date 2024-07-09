@@ -1,7 +1,7 @@
 package ongjong.namanmoo.service;
 
 import lombok.RequiredArgsConstructor;
-import ongjong.namanmoo.DateUtil;
+import ongjong.namanmoo.global.security.util.DateUtil;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
@@ -30,8 +30,10 @@ public class AnswerService {
     private final MemberRepository memberRepository;
     private final FaceTimeAnswerRepository faceTimeAnswerRepository;
     private final LuckyRepository luckyRepository;
-    private final ChallengeService challengeService;
     private final FamilyRepository familyRepository;
+    private final ChallengeService challengeService;
+    private final ChallengeRepository challengeRepository;
+    private final MemberService memberService;
 
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
 
@@ -39,16 +41,16 @@ public class AnswerService {
         List<Member> members = memberRepository.findByFamilyFamilyId(familyId);
         Optional<Family> family  = familyRepository.findById(familyId);
         // 모든 챌린지를 조회
-        List<Challenge> challenges = challengeService.findRunningChallenges(challengeDate); // todo 챌린지가 30개가 넘어갈때를 고려해야함  -> 답변 테이블이 challenge가 시작 될때마다 30개씩 들어가야함
+        List<Challenge> challenges = challengeService.findRunningChallenges(challengeDate);
 
-        // 가족에 해당하는 회원이 없으면 false를 반환
+        // 가족이 다 방에 들어오지 않았을 경우 null 반환
         if (members.size() != family.get().getMaxFamilySize()) {
             return false;
         }
         DateUtil dateUtil = DateUtil.getInstance();
         // 각 회원마다 모든 챌린지에 대해 답변 생성
         for (Member member : members) {
-            String strChallengeDate = dateUtil.getDateStirng(challengeDate);        // timestamp인 challengedate를 string "yyyy.MM.dd" 으로 변환
+            String strChallengeDate = dateUtil.timestampToString(challengeDate);        // timestamp인 challengedate를 string "yyyy.MM.dd" 으로 변환
             for (Challenge challenge : challenges) {                            // 현재 챌린지의 개수 만큼 answer 생성 -> 챌린지의 개수가 30개가 넘었을 경우 stop
                 if (challenge.getChallengeType() == ChallengeType.GROUP_PARENT){            // 만약 member가 아빠 일경우, challenge가 CGROUP이면 ANSWER 생성 X
                     if (member.getRole().equals("아들") || member.getRole().equals("딸")){
@@ -63,10 +65,8 @@ public class AnswerService {
 
                 Answer answer = new Answer(); // Answer 객체 생성
                 answer.setMember(member);
-//                String currentDateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-//                answer.setCreateDate(currentDateStr);
-                answer.setBubbleVisible(false);
                 answer.setChallenge(challenge);
+                answer.setBubbleVisible(false);
 
                 if (challenge.getChallengeType()== ChallengeType.NORMAL) {
                     answer.setAnswerType(AnswerType.NORMAL);
@@ -102,24 +102,21 @@ public class AnswerService {
             }
         }
 
-
-
         return true;
     }
 
-
     @Transactional(readOnly = true)
-    public boolean findIsCompleteAnswer(Challenge challenge,Member member){
-        return answerRepository.findByChallengeAndMember(challenge, member)
-                .map(Answer::isBubbleVisible)      // answer가 존재할 경우 ischeckChallenge 값을 반환
-                .orElse(false);
+    public boolean findIsCompleteAnswer(Challenge challenge,Member member){         // challenge와 member로 answer찾기
+        Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge, member);
+        return answer.map(a -> a.getAnswerContent() != null).orElse(false); // answercontent 가 존재하지 않을 경우 false, 존재할 경우 true 반환
     }
 
     @Transactional(readOnly = true)
-    public Long findAnswerByChallengeMember(Challenge challenge, Member member) throws Exception{
-        Answer answer = answerRepository.findByChallengeAndMember(challenge, member).orElse(null);
-        assert answer != null;
-        return getTimeStamp(answer.getCreateDate(),"yyyy.MM.dd");
+    public Long findDateByChallengeMember(Challenge challenge) throws Exception{       // answer의 createDate를 timeStamp로 바꾸기
+        Member member = memberService.findMemberByLoginId();
+        Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge, member);
+        DateUtil dateUtil = DateUtil.getInstance();
+        return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
     }
 
     @Transactional(readOnly = true)
@@ -140,11 +137,6 @@ public class AnswerService {
         return answerRepository.findByChallenge(challenge);
     }
 
-//    public Answer saveAnswer(Long challengeId, String answer){
-//        Challenge challenge =  challengeService.findChallengeById(challengeId);
-//        Optional<Member> member = memberService.findLoginMember();
-//    }
-
     @Transactional(readOnly = true)
     public Lucky findCurrentLucky(Long familyId) {       // 현재 진행중인 lucky id 조회
         List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
@@ -156,6 +148,35 @@ public class AnswerService {
         return null;
     }
 
+
+    public Answer modifyAnswer(Long challengeId, String answerContent) throws Exception{        // 로그인한 맴버가 수정한 답변을 저장한다.
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId())
+                .orElseThrow(() -> new RuntimeException("로그인한 멤버를 찾을 수 없습니다."));
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new RuntimeException("주어진 challengeId에 해당하는 챌린지를 찾을 수 없습니다."));
+        Answer answer = answerRepository.findByChallengeAndMember(challenge, member)
+                .orElseThrow(() -> new RuntimeException("해당 멤버가 작성한 답변을 찾을 수 없습니다."));
+        Lucky lucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(member.getFamily().getFamilyId())
+                .orElseThrow(() -> new RuntimeException("로그인한 멤버의 행운이를 찾을 수 없습니다"));
+        if (answer.getAnswerContent() == null){
+            answer.setBubbleVisible(true);
+            lucky.setStatus(lucky.getStatus()+1);
+            luckyRepository.save(lucky);
+        }
+        answer.setAnswerContent(answerContent);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
+        answer.setModifiedDate(LocalDateTime.now().format(formatter));
+        answerRepository.save(answer);
+        return answer;
+    }
+
+    public Optional<Answer> findAnswerByChallengeAndMember(Challenge challenge, Member member) {
+        return answerRepository.findByChallengeAndMember(challenge, member);
+    }
+
+    public void saveAnswer(Answer answer) {
+        answerRepository.save(answer);
+    }
 //    public void saveCreateDate(Challenge challenge){                // 오늘의 챌리지를 조회할때 해당 challenge에 해당하는 answer의 createDate에 오늘의 날짜를 저장한다.
 //        List <Answer> answerList = answerRepository.findByChallenge(challenge);
 //        for(Answer answer : answerList){

@@ -2,15 +2,16 @@ package ongjong.namanmoo.domain.answer;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.challenge.Challenge;
 
-import java.sql.Timestamp;
 
 @Entity
 @Getter
 @Setter
+@RequiredArgsConstructor
 public class Answer {
 
     @Id
@@ -29,7 +30,7 @@ public class Answer {
     @Enumerated(EnumType.STRING)
     private AnswerType answerType;      // enum 타입
 
-    private boolean bubbleVisible = false;
+    private boolean bubbleVisible;
 
 //    @Column(nullable = false)
     private String createDate;

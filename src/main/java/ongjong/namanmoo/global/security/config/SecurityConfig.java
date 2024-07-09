@@ -15,22 +15,26 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
+@EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
     private final LoginService loginService;
     private final ObjectMapper objectMapper;
     private final MemberRepository memberRepository;
     private final JwtService jwtService;
+    private final CorsConfigurationSource corsConfigurationSource;
 
-    // 특정 HTTP 요청에 대한 웹 기반 보안 구성
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -38,17 +42,17 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)  // HTTP Basic 비활성화
                 .formLogin(AbstractHttpConfigurer::disable)  // 폼 로그인 비활성화
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/signup", "/","/signup/duplicate", "/login").permitAll()
-                        .anyRequest().authenticated())
+                        .requestMatchers("/signup", "/", "/signup/duplicate", "/login").permitAll() // signup, login 페이지는 인증 없이 접근 가능하도록 설정
+                        .anyRequest().authenticated()) // 그 외의 모든 요청은 인증을 필요로 함
 //				.formLogin(formLogin -> formLogin
 //						.loginPage("/login")
 //						.defaultSuccessUrl("/home"))
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/login")
-                        .invalidateHttpSession(true))
+                        .logoutSuccessUrl("/login") // 로그아웃 성공 시 리다이렉트될 URL 설정
+                        .invalidateHttpSession(true)) // HTTP 세션 무효화 설정
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                );
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 관리 정책 설정 (STATELESS: 세션을 사용하지 않음)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource)); // CORS 설정 추가
         http
                 .addFilterAfter(jsonUsernamePasswordLoginFilter(), LogoutFilter.class) // 추가 : 커스터마이징 된 필터를 SpringSecurityFilterChain에 등록
                 .addFilterBefore(jwtAuthenticationProcessingFilter(), JsonUsernamePasswordAuthenticationFilter.class);
