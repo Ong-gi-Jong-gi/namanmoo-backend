@@ -163,7 +163,7 @@ public class ChallengeController {
     // 사진 챌린지 수정
     @PostMapping("/photo")
     public ApiResponse<Map<String, String>> savePhotoAnswer(
-            @RequestPart("challengeId") Long challengeId,
+            @RequestParam("challengeId") Long challengeId,
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
 
         Member member = memberService.findMemberByLoginId();
