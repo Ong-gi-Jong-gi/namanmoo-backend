@@ -17,10 +17,10 @@ import java.util.List;
 @RequestMapping("/recap")
 public class RecapController {
 
-    // recap 랭킹
-    @GetMapping("/ranking")
-    public ApiResponse getChallenge(@RequestParam("luckyId") Long luckyId) throws Exception {
-        // total 카운트는 현재 가족이 챌린지에 참여한 횟수(가족의 맴버 한명이 참여하면 +1 )
-    }
+//    // recap 랭킹
+//    @GetMapping("/ranking")
+//    public ApiResponse getChallenge(@RequestParam("luckyId") Long luckyId) throws Exception {
+//        // total 카운트는 현재 가족이 챌린지에 참여한 횟수(가족의 맴버 한명이 참여하면 +1 )
+//    }
 
 }
