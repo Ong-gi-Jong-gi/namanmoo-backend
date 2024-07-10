@@ -9,8 +9,7 @@ import ongjong.namanmoo.domain.challenge.Challenge;
 
 
 @Entity
-@Getter
-@Setter
+@Getter @Setter
 @RequiredArgsConstructor
 public class Answer {
 

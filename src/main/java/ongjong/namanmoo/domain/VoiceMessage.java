@@ -7,8 +7,7 @@ import lombok.Setter;
 import java.sql.Timestamp;
 
 @Entity
-@Getter
-@Setter
+@Getter @Setter
 public class VoiceMessage {
 
     @Id
