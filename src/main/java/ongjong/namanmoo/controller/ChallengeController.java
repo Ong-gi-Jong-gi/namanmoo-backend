@@ -165,6 +165,7 @@ public class ChallengeController {
     public ApiResponse<Map<String, String>> savePhotoAnswer(
             @RequestParam("challengeId") Long challengeId,
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
+        // challengeId RequestParam으로 변경해서 테스트
 
         Member member = memberService.findMemberByLoginId();
         Challenge challenge = challengeService.findChallengeById(challengeId);
