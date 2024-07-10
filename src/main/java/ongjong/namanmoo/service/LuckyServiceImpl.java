@@ -107,7 +107,7 @@ public class LuckyServiceImpl implements LuckyService{
         }
     }
 
-    // 행운이 리스트 조회 ( RECAP list )
+    // 행운이 리스트 조회 (RECAP list)
     @Transactional(readOnly = true)
     public List<LuckyListDto> getLuckyListStatus() {
         // 현재 로그인한 사용자의 로그인 ID 가져오기
@@ -134,7 +134,8 @@ public class LuckyServiceImpl implements LuckyService{
             Integer luckyStatus = calculateLuckyStatus(lucky);
 
             // LuckyListDto 객체 생성하여 반환
-            return new LuckyListDto(lucky.getLuckyId().toString(), startDateTimestamp, endDateTimestamp, luckyStatus);
+            return new LuckyListDto(lucky.getLuckyId().toString(), startDateTimestamp, endDateTimestamp, luckyStatus, lucky.isRunning());
         }).collect(Collectors.toList());
     }
+
 }
