@@ -6,8 +6,7 @@ import lombok.Setter;
 import ongjong.namanmoo.domain.Lucky;
 
 @Entity
-@Getter
-@Setter
+@Getter @Setter
 public class FaceTimeAnswer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

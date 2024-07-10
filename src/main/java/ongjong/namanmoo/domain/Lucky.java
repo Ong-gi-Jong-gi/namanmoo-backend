@@ -2,14 +2,15 @@ package ongjong.namanmoo.domain;
 
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import ongjong.namanmoo.domain.answer.FaceTimeAnswer;
 import java.util.List;
 
 @Entity
-@Getter
-@Setter
+@Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Lucky {
 
     @Id
@@ -27,10 +28,10 @@ public class Lucky {
 
     private boolean running;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     private ChallengeLength lifetime = ChallengeLength.THIRTY_DAYS; // 행운이 기본 수명 ( 30일 단위 챌린지 )
 
     @OneToMany(mappedBy = "lucky")
     private List<FaceTimeAnswer> faceTimeAnswers;
-
 }
