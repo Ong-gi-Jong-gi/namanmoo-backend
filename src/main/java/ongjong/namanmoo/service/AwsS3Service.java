@@ -70,7 +70,8 @@ public class AwsS3Service {
         File uploadFile = convertFile(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
 
-        String fileName = generateFileName(uploadFile);
+        String fileType = determineFileType(multipartFile);
+        String fileName = generateFileName(uploadFile, fileType);
 
         log.debug("Uploading file to S3: {}", fileName);
         String uploadImageUrl = uploadFileToS3(uploadFile, fileName);
@@ -78,6 +79,24 @@ public class AwsS3Service {
 
         removeNewFile(uploadFile);
         return uploadImageUrl;
+    }
+
+    /**
+     * 파일 타입을 결정하는 메소드.
+     *
+     * @param multipartFile 파일
+     * @return 파일 타입 (image/audio/video)
+     */
+    private String determineFileType(MultipartFile multipartFile) {
+        String contentType = multipartFile.getContentType();
+        if (contentType != null && contentType.startsWith("image")) {
+            return "image";
+        } else if (contentType != null && contentType.startsWith("audio")) {
+            return "audio";
+        } else if (contentType != null && contentType.startsWith("video")) {
+            return "video";
+        }
+        throw new IllegalArgumentException("Unsupported file type: " + contentType);
     }
 
     /**
@@ -105,10 +124,11 @@ public class AwsS3Service {
      * 업로드될 파일의 고유한 파일 이름을 생성하는 메소드.
      *
      * @param uploadFile 업로드할 파일
+     * @param fileType   파일 타입 (image/audio/video)
      * @return String 고유한 파일 이름
      */
-    private String generateFileName(File uploadFile) {
-        return UUID.randomUUID() + "_" + uploadFile.getName();
+    private String generateFileName(File uploadFile, String fileType) {
+        return fileType + "/" + UUID.randomUUID() + "_" + uploadFile.getName();
     }
 
     /**
