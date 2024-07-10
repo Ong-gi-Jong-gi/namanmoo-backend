@@ -134,7 +134,6 @@ public class ChallengeController {
     public  ApiResponse saveGroupAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
         Long challengeId = request.getChallengeId();
         String answerContent = request.getAnswerContent();
-        log.info("aaaaa: {}",answerContent);
         Answer answer = answerService.modifyAnswer(challengeId, answerContent);
         ModifyAnswerDto modifyAnswerDto = new ModifyAnswerDto(answer);
         return new ApiResponse("200", "Success", modifyAnswerDto);
