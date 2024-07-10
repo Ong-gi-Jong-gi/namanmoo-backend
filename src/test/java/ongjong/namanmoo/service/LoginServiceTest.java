@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import ongjong.namanmoo.domain.LogInRole;
 import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.domain.MemberRole;
 import ongjong.namanmoo.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +66,7 @@ class LoginServiceTest {
                 .name("Member1")
                 .nickname("Nickname1")
                 .logInRole(LogInRole.USER)
-                .role("아들")
+                .role(MemberRole.SON)
                 .build());
         clear();
     }

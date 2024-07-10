@@ -60,7 +60,7 @@ public class ChallengeDataInit {
 
         List<Challenge> challenges = new ArrayList<>();     // 챌린지가 담길 리스트
 
-        long nextChallengeNum = 0;      // 챌린지 번호
+        int nextChallengeNum = 0;      // 챌린지 번호
 
         // Normal 챌린지 생성
         if (challengeRepository.count() == 0) {

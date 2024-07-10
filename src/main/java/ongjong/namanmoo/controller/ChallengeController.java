@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.dto.challenge.*;
-import ongjong.namanmoo.global.security.util.DateUtil;
+import ongjong.namanmoo.service.DateUtil;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
@@ -59,7 +59,7 @@ public class ChallengeController {
         if (challenge == null) {
             return new ApiResponse("404", "Challenge not found", null);
         }
-        Long currentNum  = challengeService.findCurrentNum(challengeDate);
+        Integer currentNum  = challengeService.findCurrentNum(challengeDate);
         DateUtil dateUtil = DateUtil.getInstance();
         ChallengeDto challengeDto = new ChallengeDto(challenge, currentNum, dateUtil.timestampToString(challengeDate));
         return new ApiResponse("200", "Success", challengeDto);
@@ -162,8 +162,9 @@ public class ChallengeController {
     // 사진 챌린지 수정
     @PostMapping("/photo")
     public ApiResponse<Map<String, String>> savePhotoAnswer(
-            @RequestPart("challengeId") Long challengeId,
+            @RequestParam("challengeId") Long challengeId,
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
+        // challengeId RequestParam으로 변경해서 테스트
 
         Member member = memberService.findMemberByLoginId();
         Challenge challenge = challengeService.findChallengeById(challengeId);

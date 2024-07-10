@@ -13,7 +13,7 @@ public class ChallengeDto {
     private String challengeType;
     private String challengeDate;
 
-    public ChallengeDto(Challenge challenge, Long currentNum, String challengeDate) {
+    public ChallengeDto(Challenge challenge, Integer currentNum, String challengeDate) {
         this.challengeId = challenge.getChallengeId().toString();
         this.challengeNumber = currentNum.toString();
         this.challengeTitle = challenge.getChallengeTitle();

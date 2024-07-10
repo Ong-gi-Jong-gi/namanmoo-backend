@@ -5,11 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
-import ongjong.namanmoo.domain.answer.Answer;
+import ongjong.namanmoo.dto.lucky.LuckyListDto;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
-import ongjong.namanmoo.global.security.util.DateUtil;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
-import ongjong.namanmoo.repository.AnswerRepository;
 import ongjong.namanmoo.repository.FamilyRepository;
 import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
@@ -18,32 +16,35 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class LuckyServiceImpl implements LuckyService{
+
     private final LuckyRepository luckyRepository;
     private final MemberRepository memberRepository;
     private final AnswerService answerService;
     private final FamilyRepository familyRepository;
 
-
-    public boolean createLucky(Long familyId, Long challengeDate){     // 캐릭터 생성
+    // 캐릭터 생성
+    public boolean createLucky(Long familyId, Long challengeDate){
         Optional<Family> familyOptional = familyRepository.findById(familyId);
 
+        // Family가 존재하지 않으면 false 반환
         if (familyOptional.isEmpty()) {
-            return false; // Family가 존재하지 않으면 false 반환
+            return false;
         }
 
         List<Lucky> luckyList = luckyRepository.findByFamilyFamilyId(familyId);
-        boolean allNotRunning = luckyList.stream().noneMatch(Lucky::isRunning); // 모든 lucky의 running이 false인지 확인
+        // 모든 lucky의 running이 false인지 확인
+        boolean allNotRunning = luckyList.stream().noneMatch(Lucky::isRunning);
        if (allNotRunning) {
             Family family = familyOptional.get();
             Lucky lucky = new Lucky();
@@ -59,7 +60,6 @@ public class LuckyServiceImpl implements LuckyService{
             return false;
         }
     }
-
 
     // 사용자의 챌린지 참여여부 확인하여 행운이 상태 반환
     @Transactional(readOnly = true)
@@ -86,25 +86,66 @@ public class LuckyServiceImpl implements LuckyService{
         return new LuckyStatusDto(luckyStatus, isBubble);
     }
 
-
-
     // 행운이 상태 계산
     @Override
     public Integer calculateLuckyStatus(Lucky lucky) {
         Integer familyContribution = lucky.getStatus(); // 가족의 총 챌린지 참여 횟수
+        Family family = lucky.getFamily(); // 가족 정보 추출
+        int maxFamilySize = family.getMaxFamilySize(); // 가족 최대 인원 수 추출
+        int challengeDays = lucky.getLifetime().getDays(); // 챌린지 주기 추출
+
+        // 비율 계산을 위한 분모 계산 (가족 최대 인원 수 x 챌린지 주기)
+        int denominator = maxFamilySize * challengeDays;
 
         // 비율 계산
-        double percentage = (double) familyContribution / 120 * 100;
+        double percentage = (double) familyContribution / denominator * 100;
 
         // 행운이 상태 결정
-        if (percentage >= 75) { // 90개
+        if (percentage >= 75) { // 75% (30일 주기일 때 90개)
             return 3; // 행목
-        } else if (percentage >= 25) { // 40개
+        } else if (percentage >= 25) { // 25% (30일 주기일 때 40개)
             return 2; // 행운
         } else {
             return 1; // 새싹
         }
-
     }
+
+    // 행운이 리스트 조회 ( RECAP list )
+    @Transactional(readOnly = true)
+    public List<LuckyListDto> getLuckyListStatus() {
+        // 현재 로그인한 사용자의 로그인 ID 가져오기
+        String loginId = SecurityUtil.getLoginLoginId();
+
+        // 로그인 ID로 회원 정보 조회
+        Member member = memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("No member found for login id: " + loginId));
+
+        // 회원의 가족 ID로 행운 리스트 조회
+        List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(member.getFamily().getFamilyId());
+
+        // 행운 리스트를 LuckyListDto로 매핑하여 반환
+        return luckies.stream().map(lucky -> {
+            // 도전 시작 날짜를 timestamp로 변환
+            Long startDateTimestamp = DateUtil.getInstance().stringToTimestamp(lucky.getChallengeStartDate(), DateUtil.FORMAT_4);
+
+            // 도전 시작 날짜에 도전 기간을 더하여 종료 날짜 timestamp 계산
+            Long endDateTimestamp = DateUtil.getInstance().stringToTimestamp(
+                    DateUtil.getInstance().addDaysToStringDate(
+                            DateUtil.getInstance().timestampToString(startDateTimestamp), lucky.getLifetime().getDays()), DateUtil.FORMAT_4);
+
+            // 행운 상태 계산
+            Integer luckyStatus = calculateLuckyStatus(lucky);
+
+            // LuckyListDto 객체 생성하여 반환
+            return new LuckyListDto(lucky.getLuckyId().toString(), startDateTimestamp, endDateTimestamp, luckyStatus);
+        }).collect(Collectors.toList());
+    }
+
+    // luckyId로 lucky 찾기
+    @Transactional(readOnly = true)
+    public Lucky getLucky(Long luckyId){
+        return luckyRepository.findById(luckyId).get();
+    }
+
 
 }
