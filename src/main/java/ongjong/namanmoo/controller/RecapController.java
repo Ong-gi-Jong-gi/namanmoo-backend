@@ -3,12 +3,15 @@ package ongjong.namanmoo.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Lucky;
+import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.dto.lucky.LuckyListDto;
 import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
 import ongjong.namanmoo.dto.recapMember.MemberRankingListDto;
+import ongjong.namanmoo.dto.recapMember.MemberYouthAnswerDto;
 import ongjong.namanmoo.response.ApiResponse;
 import ongjong.namanmoo.service.AnswerService;
 import ongjong.namanmoo.service.LuckyService;
+import ongjong.namanmoo.service.MemberService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,7 +28,9 @@ public class RecapController {
 
     private final LuckyService luckyService;
     private final AnswerService answerService;
+    private final MemberService memberService;
 
+    // 행운이 리스트
     @GetMapping("/list")
     public ResponseEntity<?> getLuckyList() {
         List<LuckyListDto> luckyListStatus = luckyService.getLuckyListStatus();
@@ -34,14 +39,23 @@ public class RecapController {
 
     // recap 랭킹
     @GetMapping("/ranking")
-    public ApiResponse getRanking(@RequestParam("luckyId") Long luckyId) throws Exception {
-         // getMemberCount() 함수 사용
+    public ApiResponse getRanking(@RequestParam("luckyId") Long luckyId){
         Lucky lucky = luckyService.getLucky(luckyId);
         Integer totalCount = lucky.getStatus();
         Integer luckyStatus = luckyService.calculateLuckyStatus(lucky);
-        List<MemberAndCountDto> memberAndCountList = answerService.getMemberAndCount(lucky);
+        List<MemberAndCountDto> memberAndCountList = memberService.getMemberAndCount(lucky);
         MemberRankingListDto responseDto = new MemberRankingListDto(totalCount,luckyStatus,memberAndCountList);
-        return new ApiResponse<>("success", "Ranking retrieved successfully", responseDto);
+        return new ApiResponse<>("200", "Ranking retrieved successfully", responseDto);
+    }
+
+    // recap 과거 사진
+    // challengeNum => 13: 나의 어렸을 때 장래희망
+    // cahllengeNum => 28 : 자신의 어렸을 적 사진 ( 23 : 학생 때 졸업사진 , 9: 가장 마음에 드는 본인 사진)
+    @GetMapping("/youth")
+    public ApiResponse getYouth(@RequestParam("luckyId") Long luckyId) throws Exception{
+        List<Member> members = memberService.getMembersByLuckyId(luckyId);
+        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getAnswerByMember(members);
+        return new ApiResponse<>("200", "Youth photos retrieved successfully", memberAnswerDtoList);
     }
 
 

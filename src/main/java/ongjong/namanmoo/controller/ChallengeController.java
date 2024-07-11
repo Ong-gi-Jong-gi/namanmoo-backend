@@ -15,19 +15,15 @@ import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.answer.ModifyAnswerDto;
 import ongjong.namanmoo.response.ApiResponse;
 import ongjong.namanmoo.service.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.springframework.http.ResponseEntity.status;
 
 @Slf4j
 @RestController
@@ -117,7 +113,7 @@ public class ChallengeController {
     public ApiResponse<GroupChallengeDto> getGroupChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
         Challenge challenge = challengeService.findChallengeById(challengeId);
         if (challenge == null) {
-            return new ApiResponse<>("failure", "Challenge not found for the provided challengeId", null);
+            return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
         }
 
         Long challengeDate = answerService.findDateByChallengeMember(challenge);
@@ -125,8 +121,8 @@ public class ChallengeController {
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
         List<Answer> allAnswers = answerService.findAnswersByChallenges(challenge, member);     // 특정 그룹 챌린지에 매핑된 answer list 찾기
 
-        GroupChallengeDto groupChallengeDto = new GroupChallengeDto(challenge, challengeDate, isComplete, allAnswers);
-        return new ApiResponse<>("success", "Challenge retrieved successfully", groupChallengeDto);
+        GroupChallengeDto groupChallengeDto = challengeService.createGroupChallengeDto(challenge, challengeDate, isComplete, allAnswers);
+        return new ApiResponse<>("200", "Challenge retrieved successfully", groupChallengeDto);
     }
 
     // 그룹 챌린지 답변 수정
@@ -156,7 +152,7 @@ public class ChallengeController {
 
         PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, isComplete, challengeDate, answers);
 
-        return new ApiResponse<>("success", "Challenge retrieved successfully",photoChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
+        return new ApiResponse<>("200", "Challenge retrieved successfully",photoChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
     }
 
     // 사진 챌린지 수정
@@ -332,7 +328,7 @@ public class ChallengeController {
 
         VoiceChallengeDto voiceChallengeDto = new VoiceChallengeDto(challenge, isComplete, challengeDate, answers);
 
-        return new ApiResponse<>("success", "Challenge retrieved successfully",voiceChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
+        return new ApiResponse<>("200", "Challenge retrieved successfully",voiceChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
     }
 
     @Data

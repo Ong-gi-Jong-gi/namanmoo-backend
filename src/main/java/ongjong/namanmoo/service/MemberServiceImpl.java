@@ -1,18 +1,24 @@
 package ongjong.namanmoo.service;
 
 import lombok.RequiredArgsConstructor;
+import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.dto.member.LoginRequestDto;
 import ongjong.namanmoo.dto.member.MemberInfoDto;
 import ongjong.namanmoo.dto.member.MemberSignUpDto;
 import ongjong.namanmoo.dto.member.MemberUpdateDto;
+import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
+import ongjong.namanmoo.repository.AnswerRepository;
+import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import java.io.IOException;
@@ -23,8 +29,10 @@ import java.io.IOException;
 public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
+    private final AnswerRepository answerRepository;
     private final PasswordEncoder passwordEncoder;
     private final AwsS3Service awsS3Service;
+    private final LuckyRepository luckyRepository;
 
     // 회원 가입 진행
     @Override
@@ -111,5 +119,34 @@ public class MemberServiceImpl implements MemberService {
     @Transactional(readOnly = true)
     public Member findMemberByLoginId() throws Exception{
         return memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
+    }
+
+    // member 정보와 각 member에 대한 답변 입력 횟수 반환
+    @Transactional(readOnly = true)
+    public List<MemberAndCountDto> getMemberAndCount(Lucky lucky) {
+        String startDate = lucky.getChallengeStartDate();
+        Long familyId = lucky.getFamily().getFamilyId();
+        List<Member> memberList = memberRepository.findByFamilyFamilyId(familyId);
+        List<MemberAndCountDto> memberCountList = new ArrayList<>();
+        for (Member member : memberList) {
+            int count = 0;
+            String currentDate = startDate;
+            for (int i = 0; i < lucky.getLifetime().getDays(); i++) {
+                if (answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, currentDate)) {
+                    count++;
+                }
+                currentDate = DateUtil.getInstance().addDaysToStringDate(currentDate, 1);
+            }
+            memberCountList.add(new MemberAndCountDto(member, count));
+        }
+        return memberCountList;
+    }
+
+    // luckId로 해당 가족의 member 모두 반환
+    @Transactional(readOnly = true)
+    public List<Member> getMembersByLuckyId(Long luckyId) {
+        Lucky lucky = luckyRepository.findById(luckyId).get();
+        Long familyId = lucky.getFamily().getFamilyId();
+        return memberRepository.findByFamilyFamilyId(familyId);
     }
 }

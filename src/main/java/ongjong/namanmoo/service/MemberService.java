@@ -1,13 +1,16 @@
 package ongjong.namanmoo.service;
 
+import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.dto.member.LoginRequestDto;
 import ongjong.namanmoo.dto.member.MemberInfoDto;
 import ongjong.namanmoo.dto.member.MemberSignUpDto;
 import ongjong.namanmoo.dto.member.MemberUpdateDto;
+import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MemberService {
@@ -34,4 +37,8 @@ public interface MemberService {
 
     @Transactional(readOnly = true)
     Member findMemberByLoginId() throws Exception;
+
+    List<MemberAndCountDto> getMemberAndCount(Lucky lucky);
+
+    List<Member> getMembersByLuckyId(Long luckyId);
 }

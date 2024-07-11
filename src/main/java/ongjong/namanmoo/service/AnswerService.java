@@ -8,6 +8,7 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
+import ongjong.namanmoo.dto.recapMember.MemberYouthAnswerDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
@@ -117,7 +118,7 @@ public class AnswerService {
 
     @Transactional(readOnly = true)
     public Long findDateByChallengeMember(Challenge challenge) throws Exception{       // answer의 createDate를 timeStamp로 바꾸기
-        Member member = memberService.findMemberByLoginId();
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));;
         Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge, member);
         DateUtil dateUtil = DateUtil.getInstance();
         return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
@@ -192,7 +193,7 @@ public class AnswerService {
     }
 
     public void saveAnswer(Answer answer) throws Exception {
-        Member member = memberService.findMemberByLoginId();
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));;
         Long familyId = member.getFamily().getFamilyId();
         Lucky lucky = challengeService.findCurrentLucky(familyId);
 
@@ -227,9 +228,10 @@ public class AnswerService {
         }
     }
 
+    // 특정 그룹 챌린지에 매핑된 answer list 찾기
     @Transactional(readOnly = true)
-    public List<Answer> findAnswersByChallenges(Challenge challenge, Member member) {         // 특정 그룹 챌린지에 매핑된 answer list 찾기
-        List<Challenge> groupChallenges = challengeService.findChallengesByChallengeNum(challenge.getChallengeNum());       // challengeNum이 같은 챌린지 찾기
+    public List<Answer> findAnswersByChallenges(Challenge challenge, Member member) {
+        List<Challenge> groupChallenges = challengeRepository.findByChallengeNum(challenge.getChallengeNum());       // challengeNum이 같은 챌린지 찾기
         Family family = member.getFamily();
         List<Answer> allAnswers = new ArrayList<>();        // 해당 그룹질문으로 묶인 answer 가져오기
         for (Challenge relatedChallenge : groupChallenges) {
@@ -244,25 +246,35 @@ public class AnswerService {
                 .collect(Collectors.toList());
     }
 
-    // member 정보와 각 member에 대한 답변 입력 횟수 반환
+    // 각 member의 memberimg와 특정 번호의 챌린지 답변을 묶어 반환
     @Transactional(readOnly = true)
-    public List<MemberAndCountDto> getMemberAndCount(Lucky lucky) {
-        String startDate = lucky.getChallengeStartDate();
-        Long familyId = lucky.getFamily().getFamilyId();
-        List<Member> memberList = memberRepository.findByFamilyFamilyId(familyId);
-        List<MemberAndCountDto> memberCountList = new ArrayList<>();
-        for (Member member : memberList) {
-            int count = 0;
-            String currentDate = startDate;
-            for (int i = 0; i < lucky.getLifetime().getDays(); i++) {
-                if (answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, currentDate)) {
-                    count++;
-                }
-                currentDate = DateUtil.getInstance().addDaysToStringDate(currentDate, 1);
-            }
-            memberCountList.add(new MemberAndCountDto(member, count));
+    public List<MemberYouthAnswerDto> getAnswerByMember(List<Member> members) throws Exception{
+        List<MemberYouthAnswerDto> memberAnswerDtoList = new ArrayList<>();
+
+        Challenge challenge13 = challengeRepository.findByChallengeNum(1)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new Exception("Challenge 13 not found"));
+
+        Challenge challenge28 = challengeRepository.findByChallengeNum(2)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new Exception("Challenge 28 not found"));
+
+        for (Member member : members) {
+            String memberImg = member.getMemberImage();
+            Answer challenge13Answer = answerRepository.findByChallengeAndMember(challenge13, member)
+                    .orElseThrow(() -> new Exception("Answer for Challenge 13 not found"));
+            Answer challenge28Answer = answerRepository.findByChallengeAndMember(challenge28, member)
+                    .orElseThrow(() -> new Exception("Answer for Challenge 28 not found"));
+
+            String photo = challenge13Answer.getAnswerContent();
+            String text = challenge28Answer.getAnswerContent();
+
+            MemberYouthAnswerDto dto = new MemberYouthAnswerDto(memberImg, photo, text);
+            memberAnswerDtoList.add(dto);
         }
-        return memberCountList;
+        return memberAnswerDtoList;
     }
 
 }
