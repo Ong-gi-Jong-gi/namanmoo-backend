@@ -17,7 +17,7 @@ public class ChallengeListDto {
         this.challengeId = challenge.getChallengeId().toString();
         this.challengeNumber = challenge.getChallengeNum().toString();
         this.challengeTitle = challenge.getChallengeTitle();
-        this.challengeType = challenge.getClass().getSimpleName();
+        this.challengeType = String.valueOf(challenge.getChallengeType());
         this.isComplete = isComplete;
     }
 }
