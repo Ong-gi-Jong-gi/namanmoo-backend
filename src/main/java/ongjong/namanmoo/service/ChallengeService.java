@@ -3,6 +3,7 @@ package ongjong.namanmoo.service;
 
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
@@ -13,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.*;
-
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -65,6 +66,7 @@ public class ChallengeService {
             return null;
         }
 
+        log.info("number: {}",number);
         List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(findStartChallengeNum(family.getFamilyId()), number);
 
         // 멤버 역할에 맞지 않는 challenge는 리스트에서 제외
@@ -200,4 +202,15 @@ public class ChallengeService {
         return challengeRepository.findByChallengeNum(challengeNumber);
     }
 
+    // 현재 진행중인 lucky id 조회
+    @Transactional(readOnly = true)
+    public Lucky findCurrentLucky(Long familyId) {
+        List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
+        for (Lucky lucky : luckies) {
+            if (lucky.isRunning()) {
+                return lucky; // 현재 진행되고있는 luckyid 반환
+            }
+        }
+        return null;
+    }
 }

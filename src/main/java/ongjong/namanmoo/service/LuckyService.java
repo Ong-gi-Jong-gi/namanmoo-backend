@@ -3,7 +3,10 @@ package ongjong.namanmoo.service;
 
 
 import ongjong.namanmoo.domain.Lucky;
+import ongjong.namanmoo.dto.lucky.LuckyListDto;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
+
+import java.util.List;
 
 
 public interface LuckyService {
@@ -17,5 +20,9 @@ public interface LuckyService {
     boolean createLucky(Long familyId, Long challengeDate);
 
     Integer calculateLuckyStatus(Lucky lucky);
+
+    Lucky getLucky(Long luckyId);
+
+    List<LuckyListDto> getLuckyListStatus();
 
 }

@@ -33,15 +33,18 @@ public class LuckyServiceImpl implements LuckyService{
     private final AnswerService answerService;
     private final FamilyRepository familyRepository;
 
-    public boolean createLucky(Long familyId, Long challengeDate){     // 캐릭터 생성
+    // 캐릭터 생성
+    public boolean createLucky(Long familyId, Long challengeDate){
         Optional<Family> familyOptional = familyRepository.findById(familyId);
 
+        // Family가 존재하지 않으면 false 반환
         if (familyOptional.isEmpty()) {
-            return false; // Family가 존재하지 않으면 false 반환
+            return false;
         }
 
         List<Lucky> luckyList = luckyRepository.findByFamilyFamilyId(familyId);
-        boolean allNotRunning = luckyList.stream().noneMatch(Lucky::isRunning); // 모든 lucky의 running이 false인지 확인
+        // 모든 lucky의 running이 false인지 확인
+        boolean allNotRunning = luckyList.stream().noneMatch(Lucky::isRunning);
        if (allNotRunning) {
             Family family = familyOptional.get();
             Lucky lucky = new Lucky();
@@ -137,4 +140,12 @@ public class LuckyServiceImpl implements LuckyService{
             return new LuckyListDto(lucky.getLuckyId().toString(), startDateTimestamp, endDateTimestamp, luckyStatus);
         }).collect(Collectors.toList());
     }
+
+    // luckyId로 lucky 찾기
+    @Transactional(readOnly = true)
+    public Lucky getLucky(Long luckyId){
+        return luckyRepository.findById(luckyId).get();
+    }
+
+
 }

@@ -7,6 +7,7 @@ import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
+import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,8 +35,8 @@ public class AnswerService {
     private final FaceTimeAnswerRepository faceTimeAnswerRepository;
     private final LuckyRepository luckyRepository;
     private final FamilyRepository familyRepository;
-    private final ChallengeService challengeService;
     private final ChallengeRepository challengeRepository;
+    private final ChallengeService challengeService;
     private final MemberService memberService;
 
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
@@ -87,7 +87,7 @@ public class AnswerService {
 
                     // FaceTimeC일 경우 FaceTimeAnswer 생성 및 저장
                     FaceTimeAnswer faceTimeAnswer = new FaceTimeAnswer();
-                    faceTimeAnswer.setLucky(findCurrentLucky(member.getFamily().getFamilyId()));
+                    faceTimeAnswer.setLucky(challengeService.findCurrentLucky(member.getFamily().getFamilyId()));
                     faceTimeAnswerRepository.save(faceTimeAnswer);
 
                     // FaceTimeAnswer의 ID를 Answer의 answerContent에 저장
@@ -145,7 +145,6 @@ public class AnswerService {
     @Transactional(readOnly = true)
     public List<Answer> findAnswerByChallengeandFamily(Challenge challenge, Member member){
         Family family = member.getFamily();
-        // answers 리스트를 순회하면서 answer의 memberid값을 member를 구하고 그 member가 가지고 있는 familyid가 위에서 구한 familyid와 다를 경우 answers에서 제거해야해
         return answerRepository.findByChallenge(challenge).stream()
                 .filter(answer -> {
                     Member answerMember = answer.getMember();
@@ -165,17 +164,6 @@ public class AnswerService {
             }
         }
         return false;
-    }
-
-    @Transactional(readOnly = true)
-    public Lucky findCurrentLucky(Long familyId) {       // 현재 진행중인 lucky id 조회
-        List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
-        for (Lucky lucky : luckies) {
-            if (lucky.isRunning()) {
-                return lucky; // 현재 진행되고있는 luckyid 반환
-            }
-        }
-        return null;
     }
 
     public Answer modifyAnswer(Long challengeId, String answerContent) throws Exception{        // 로그인한 맴버가 수정한 답변을 저장한다.
@@ -203,21 +191,22 @@ public class AnswerService {
         return answerRepository.findByChallengeAndMember(challenge, member);
     }
 
-    public void saveAnswer(Answer answer) {
+    public void saveAnswer(Answer answer) throws Exception {
+        Member member = memberService.findMemberByLoginId();
+        Long familyId = member.getFamily().getFamilyId();
+        Lucky lucky = challengeService.findCurrentLucky(familyId);
+
+        if (answer.getAnswerContent() == null){
+            answer.setBubbleVisible(true);
+            lucky.setStatus(lucky.getStatus()+1);
+            luckyRepository.save(lucky);
+        }
         answerRepository.save(answer);
     }
-//    public void saveCreateDate(Challenge challenge){                // 오늘의 챌리지를 조회할때 해당 challenge에 해당하는 answer의 createDate에 오늘의 날짜를 저장한다.
-//        List <Answer> answerList = answerRepository.findByChallenge(challenge);
-//        for(Answer answer : answerList){
-//            if (answer.getCreateDate().isEmpty()){      // answer의 createDate가 비어있을 경우에만 오늘의 날짜 set
-//                String currentDateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-//                answer.setCreateDate(currentDateStr);
-//            }
-//        }
-//    }
+
     @Transactional(readOnly = true)
     public boolean checkUserResponse(Member member, String createDate) {
-        return answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, createDate);
+        return answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, createDate);       // 해당 날짜에 member의 답변이 있는지 검사
     }
 
     @Transactional
@@ -253,6 +242,27 @@ public class AnswerService {
                     return answerMember != null && family.getFamilyId().equals(answerMember.getFamily().getFamilyId());
                 })
                 .collect(Collectors.toList());
+    }
+
+    // member 정보와 각 member에 대한 답변 입력 횟수 반환
+    @Transactional(readOnly = true)
+    public List<MemberAndCountDto> getMemberAndCount(Lucky lucky) {
+        String startDate = lucky.getChallengeStartDate();
+        Long familyId = lucky.getFamily().getFamilyId();
+        List<Member> memberList = memberRepository.findByFamilyFamilyId(familyId);
+        List<MemberAndCountDto> memberCountList = new ArrayList<>();
+        for (Member member : memberList) {
+            int count = 0;
+            String currentDate = startDate;
+            for (int i = 0; i < lucky.getLifetime().getDays(); i++) {
+                if (answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, currentDate)) {
+                    count++;
+                }
+                currentDate = DateUtil.getInstance().addDaysToStringDate(currentDate, 1);
+            }
+            memberCountList.add(new MemberAndCountDto(member, count));
+        }
+        return memberCountList;
     }
 
 }
