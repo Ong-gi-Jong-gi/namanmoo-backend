@@ -134,7 +134,6 @@ public class ChallengeController {
     public  ApiResponse saveGroupAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
         Long challengeId = request.getChallengeId();
         String answerContent = request.getAnswerContent();
-        log.info("aaaaa: {}",answerContent);
         Answer answer = answerService.modifyAnswer(challengeId, answerContent);
         ModifyAnswerDto modifyAnswerDto = new ModifyAnswerDto(answer);
         return new ApiResponse("200", "Success", modifyAnswerDto);
@@ -163,8 +162,9 @@ public class ChallengeController {
     // 사진 챌린지 수정
     @PostMapping("/photo")
     public ApiResponse<Map<String, String>> savePhotoAnswer(
-            @RequestPart("challengeId") Long challengeId,
+            @RequestParam("challengeId") Long challengeId,
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
+        // challengeId RequestParam으로 변경해서 테스트
 
         Member member = memberService.findMemberByLoginId();
         Challenge challenge = challengeService.findChallengeById(challengeId);
