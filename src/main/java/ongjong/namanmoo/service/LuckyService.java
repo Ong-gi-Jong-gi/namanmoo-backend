@@ -24,5 +24,5 @@ public interface LuckyService {
     Lucky getLucky(Long luckyId);
 
     List<LuckyListDto> getLuckyListStatus();
-
+  
 }

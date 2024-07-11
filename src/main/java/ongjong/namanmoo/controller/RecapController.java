@@ -44,5 +44,4 @@ public class RecapController {
         return new ApiResponse<>("success", "Ranking retrieved successfully", responseDto);
     }
 
-
 }
