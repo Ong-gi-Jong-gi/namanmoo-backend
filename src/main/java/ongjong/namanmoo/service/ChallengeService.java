@@ -7,13 +7,19 @@ import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.*;
+import ongjong.namanmoo.dto.answer.AnswerDto;
+import ongjong.namanmoo.dto.challenge.GroupChallengeDto;
+import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @Transactional
@@ -24,9 +30,6 @@ public class ChallengeService {
     private final ChallengeRepository challengeRepository;
     private final LuckyRepository luckyRepository;
     private final MemberRepository memberRepository;
-    private final AnswerRepository answerRepository;
-    private final MemberService memberService;
-
 
     // familyId를 통해 해당 날짜에 해당하는 오늘의 challenge 조회
     // 해당 가족 id를 가지고 있는 행운이 모두 조회
@@ -58,7 +61,7 @@ public class ChallengeService {
     // 현재 진행하고 있는 행운이의 챌린지 리스트 가져오기
     @Transactional(readOnly = true)
     public List<Challenge> findChallenges(Long challengeDate) throws Exception{
-        Member member = memberService.findMemberByLoginId();  // 로그인한 member
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));  // 로그인한 member
         Family family = member.getFamily();
 
         Integer number = findCurrentChallengeNum(family.getFamilyId(),challengeDate);      // 진행하는 challenge 번호
@@ -74,7 +77,7 @@ public class ChallengeService {
         while (iterator.hasNext()){
             Challenge challenge = iterator.next();
             if(challenge.getChallengeType() == ChallengeType.GROUP_PARENT){
-                if (member.getRole().equals("아들") || member.getRole().equals("딸")){         //TODO: 현재 문자열 비교를 하고 있는데 ROLE을 enum으로 바꿔서 비교하는게 유지보수성이 좋다.
+                if (member.getRole().equals("아들") || member.getRole().equals("딸")){
                     iterator.remove();
                 }
             }
@@ -96,7 +99,7 @@ public class ChallengeService {
     // 회원 아이디로 오늘의 챌린지 조회
     @Transactional(readOnly = true)
     public List<Challenge> findChallengeByMemberId(Long challengeDate) throws Exception{      // 회원 아이디로 회원 조회
-        Member member = memberService.findMemberByLoginId();  // 로그인한 member
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));  // 로그인한 member
         Family family = member.getFamily();
 
         int currentFamilySize = memberRepository.countByFamilyId(family.getFamilyId());
@@ -130,7 +133,7 @@ public class ChallengeService {
         else if(challenges.size() == 2){    // 오늘의 챌린지리스트 사이즈가 2일 경우
             Challenge challenge1 = challenges.get(0);
             Challenge challenge2 = challenges.get(1);
-            Member member = memberService.findMemberByLoginId();  //로그인한 member
+            Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));  //로그인한 member
             if (challenge1.getChallengeType() == ChallengeType.GROUP_PARENT){
                 if (member.getRole().equals("아빠") || member.getRole().equals("엄마")){
                     return challenge1;
@@ -155,7 +158,7 @@ public class ChallengeService {
     @Transactional(readOnly = true)
     public Integer findCurrentNum(Long challengeDate) throws Exception{
         //현재 맴버 찾고 가족찾고 ,lucky찾아서 lucky의 challenge start date구해서 challengedate 빼기
-        Member member = memberService.findMemberByLoginId();  // 로그인한 member
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));  // 로그인한 member
         Family family = member.getFamily();
         return findCurrentChallengeNum(family.getFamilyId(), challengeDate);
     }
@@ -186,7 +189,7 @@ public class ChallengeService {
     // 현재 진행하고 있는 챌린지를 행운이의 챌린지 길이만큼 가져오기
     @Transactional(readOnly = true)
     public List<Challenge> findRunningChallenges(Long challengeDate) throws Exception {
-        Member member = memberService.findMemberByLoginId();  // 로그인한 member
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다")); // 로그인한 member
         Family family = member.getFamily();
 
         int startChallengeNum = findStartChallengeNum(family.getFamilyId());
@@ -213,4 +216,36 @@ public class ChallengeService {
         }
         return null;
     }
+
+    // groupChallenge 조회를 위한 dto  (부모와 자식의 challenge 질문 구분하기)
+    @Transactional(readOnly = true)
+    public GroupChallengeDto createGroupChallengeDto(Challenge challenge, Long timeStamp, boolean isComplete, List<Answer> answers) {
+        List<Answer> parentAnswerList = new ArrayList<>();
+        List<Answer> childAnswerList = new ArrayList<>();
+
+        for (Answer answer : answers) {
+            if (answer.getChallenge().getChallengeType() == ChallengeType.GROUP_PARENT) {
+                parentAnswerList.add(answer);
+            } else {
+                childAnswerList.add(answer);
+            }
+        }
+        List<AnswerDto> parentAnswerDtoList = parentAnswerList.stream()
+                .map(AnswerDto::new)
+                .collect(Collectors.toList());
+        GroupChallengeDto.NewChallengeDto parentChallenge = parentAnswerList.isEmpty() ?
+                new GroupChallengeDto.NewChallengeDto("No Parent Challenge", new ArrayList<>()) :
+                new GroupChallengeDto.NewChallengeDto(parentAnswerList.get(0).getChallenge().getChallengeTitle(), parentAnswerDtoList);
+
+        List<AnswerDto> childAnswerDtoList = childAnswerList.stream()
+                .map(AnswerDto::new)
+                .collect(Collectors.toList());
+        GroupChallengeDto.NewChallengeDto childrenChallenge = childAnswerList.isEmpty() ?
+                new GroupChallengeDto.NewChallengeDto("No Children Challenge", new ArrayList<>()) :
+                new GroupChallengeDto.NewChallengeDto(childAnswerList.get(0).getChallenge().getChallengeTitle(), childAnswerDtoList);
+
+        return new GroupChallengeDto(challenge.getChallengeNum().toString(), timeStamp, isComplete, parentChallenge, childrenChallenge);
+    }
+
+
 }
