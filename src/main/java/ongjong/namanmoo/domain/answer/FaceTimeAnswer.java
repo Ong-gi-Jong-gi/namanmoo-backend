@@ -12,7 +12,7 @@ public class FaceTimeAnswer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long faceTimeAnswerId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lucky_id")
     private Lucky lucky;
 
