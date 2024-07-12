@@ -27,8 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
 
-import static ongjong.namanmoo.domain.answer.AnswerType.GROUP;
-
 @Slf4j
 @RestController
 @RequestMapping("/recap")
