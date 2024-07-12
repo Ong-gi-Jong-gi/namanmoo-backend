@@ -7,6 +7,7 @@ import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
+import ongjong.namanmoo.dto.challenge.ChallengeDetailsDto;
 import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
@@ -34,10 +35,13 @@ public class AnswerService {
     private final MemberRepository memberRepository;
     private final FaceTimeAnswerRepository faceTimeAnswerRepository;
     private final LuckyRepository luckyRepository;
+    private final LuckyService luckyService;
     private final FamilyRepository familyRepository;
     private final ChallengeRepository challengeRepository;
     private final ChallengeService challengeService;
     private final MemberService memberService;
+
+
 
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
 
@@ -45,7 +49,7 @@ public class AnswerService {
         List<Member> members = memberRepository.findByFamilyFamilyId(familyId);
         Optional<Family> family  = familyRepository.findById(familyId);
         // 모든 챌린지를 조회
-        List<Challenge> challenges = challengeService.findRunningChallenges(challengeDate);
+        List<Challenge> challenges = challengeService.findRunningChallenges();
 
         // 가족이 다 방에 들어오지 않았을 경우 null 반환
         if (members.size() != family.get().getMaxFamilySize()) {
@@ -87,7 +91,7 @@ public class AnswerService {
 
                     // FaceTimeC일 경우 FaceTimeAnswer 생성 및 저장
                     FaceTimeAnswer faceTimeAnswer = new FaceTimeAnswer();
-                    faceTimeAnswer.setLucky(challengeService.findCurrentLucky(member.getFamily().getFamilyId()));
+                    faceTimeAnswer.setLucky(luckyService.findCurrentLucky(member.getFamily().getFamilyId()));
                     faceTimeAnswerRepository.save(faceTimeAnswer);
 
                     // FaceTimeAnswer의 ID를 Answer의 answerContent에 저장
@@ -116,8 +120,8 @@ public class AnswerService {
     }
 
     @Transactional(readOnly = true)
-    public Long findDateByChallengeMember(Challenge challenge) throws Exception{       // answer의 createDate를 timeStamp로 바꾸기
-        Member member = memberService.findMemberByLoginId();
+    public Long findDateByChallengeMember(Challenge challenge, Member member) throws Exception{       // answer의 createDate를 timeStamp로 바꾸기
+//        Member member = memberService.findMemberByLoginId();
         Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge, member);
         DateUtil dateUtil = DateUtil.getInstance();
         return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
@@ -194,7 +198,7 @@ public class AnswerService {
     public void saveAnswer(Answer answer) throws Exception {
         Member member = memberService.findMemberByLoginId();
         Long familyId = member.getFamily().getFamilyId();
-        Lucky lucky = challengeService.findCurrentLucky(familyId);
+        Lucky lucky = luckyService.findCurrentLucky(familyId);
 
         if (answer.getAnswerContent() == null){
             answer.setBubbleVisible(true);
@@ -202,11 +206,6 @@ public class AnswerService {
             luckyRepository.save(lucky);
         }
         answerRepository.save(answer);
-    }
-
-    @Transactional(readOnly = true)
-    public boolean checkUserResponse(Member member, String createDate) {
-        return answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, createDate);       // 해당 날짜에 member의 답변이 있는지 검사
     }
 
     @Transactional
@@ -229,7 +228,7 @@ public class AnswerService {
 
     @Transactional(readOnly = true)
     public List<Answer> findAnswersByChallenges(Challenge challenge, Member member) {         // 특정 그룹 챌린지에 매핑된 answer list 찾기
-        List<Challenge> groupChallenges = challengeService.findChallengesByChallengeNum(challenge.getChallengeNum());       // challengeNum이 같은 챌린지 찾기
+        List<Challenge> groupChallenges = challengeRepository.findByChallengeNum(challenge.getChallengeNum());       // challengeNum이 같은 챌린지 찾기
         Family family = member.getFamily();
         List<Answer> allAnswers = new ArrayList<>();        // 해당 그룹질문으로 묶인 answer 가져오기
         for (Challenge relatedChallenge : groupChallenges) {
@@ -263,6 +262,16 @@ public class AnswerService {
             memberCountList.add(new MemberAndCountDto(member, count));
         }
         return memberCountList;
+    }
+
+
+    // 챌린지 상세조회 중복요소 매핑
+    public ChallengeDetailsDto getChallengeDetails(Challenge challenge, Member member) throws Exception {
+        boolean isComplete = this.findIsCompleteAnswer(challenge, member);
+        Long challengeDate = this.findDateByChallengeMember(challenge, member);
+        List<Answer> answers = this.findAnswerByChallengeandFamily(challenge, member);
+
+        return new ChallengeDetailsDto(challengeDate, isComplete, answers);
     }
 
 }

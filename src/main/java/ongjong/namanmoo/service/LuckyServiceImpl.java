@@ -8,6 +8,7 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.dto.lucky.LuckyListDto;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
+import ongjong.namanmoo.repository.AnswerRepository;
 import ongjong.namanmoo.repository.FamilyRepository;
 import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
@@ -30,10 +31,11 @@ public class LuckyServiceImpl implements LuckyService{
 
     private final LuckyRepository luckyRepository;
     private final MemberRepository memberRepository;
-    private final AnswerService answerService;
     private final FamilyRepository familyRepository;
+    private final AnswerRepository answerRepository;
 
     // 캐릭터 생성
+    @Override
     public boolean createLucky(Long familyId, Long challengeDate){
         Optional<Family> familyOptional = familyRepository.findById(familyId);
 
@@ -62,6 +64,7 @@ public class LuckyServiceImpl implements LuckyService{
     }
 
     // 사용자의 챌린지 참여여부 확인하여 행운이 상태 반환
+    @Override
     @Transactional(readOnly = true)
     public LuckyStatusDto getLuckyStatus(String challengeDate) throws IllegalArgumentException{
         String loginId = SecurityUtil.getLoginLoginId();
@@ -80,7 +83,7 @@ public class LuckyServiceImpl implements LuckyService{
         log.info("createDate: {}", createDate);
 
 
-        boolean isBubble = answerService.checkUserResponse(member, createDate);
+        boolean isBubble = answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, createDate);
         Integer luckyStatus = calculateLuckyStatus(lucky);
 
         return new LuckyStatusDto(luckyStatus, isBubble);
@@ -111,6 +114,7 @@ public class LuckyServiceImpl implements LuckyService{
     }
 
     // 행운이 리스트 조회 ( RECAP list )
+    @Override
     @Transactional(readOnly = true)
     public List<LuckyListDto> getLuckyListStatus() {
         // 현재 로그인한 사용자의 로그인 ID 가져오기
@@ -142,10 +146,48 @@ public class LuckyServiceImpl implements LuckyService{
     }
 
     // luckyId로 lucky 찾기
+    @Override
     @Transactional(readOnly = true)
     public Lucky getLucky(Long luckyId){
         return luckyRepository.findById(luckyId).get();
     }
 
 
+    // 현재 진행중인 lucky id 조회
+    @Override
+    @Transactional(readOnly = true)
+    public Lucky findCurrentLucky(Long familyId) {
+        List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
+        for (Lucky lucky : luckies) {
+            if (lucky.isRunning()) {
+                return lucky; // 현재 진행되고있는 luckyid 반환
+            }
+        }
+        return null;
+    }
+
+    // 시작해야 하는 challenge 넘버 찾기
+    @Override
+    @Transactional(readOnly = true)
+    public Integer findStartChallengeNum(Long familyId){
+        // luckies를 순회화면서 lucky의 lifetime의 합을 구하여 반환
+        List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
+
+        int totalDays = luckies.stream()
+                .filter(lucky -> !lucky.isRunning())
+                .mapToInt(lucky -> lucky.getLifetime().getDays())
+                .sum();
+        return totalDays;
+    }
+
+    // 현재 실행 중인 Lucky 객체의 lifetime (챌린지 길이) 가져오기
+    @Override
+    @Transactional(readOnly = true)
+    public Integer findCurrentLuckyLifetime(Long familyId) {
+        return luckyRepository.findByFamilyFamilyId(familyId).stream()
+                .filter(Lucky::isRunning)
+                .findFirst()
+                .map(lucky -> lucky.getLifetime().getDays())
+                .orElse(0);
+    }
 }
