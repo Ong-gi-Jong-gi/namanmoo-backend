@@ -20,7 +20,7 @@ public class PhotoChallengeDto {
     private boolean isComplete;
     private List<AnswerDto> answerList;
 
-    public PhotoChallengeDto(Challenge challenge, boolean isComplete, Long timeStamp , List<Answer> answers) {
+    public PhotoChallengeDto(Challenge challenge, boolean isComplete, Long timeStamp, List<Answer> answers) {
         this.challengeTitle = challenge.getChallengeTitle();
         this.challengeNumber = challenge.getChallengeNum().toString();
         this.challengeDate = timeStamp; // Use actual challenge date if available

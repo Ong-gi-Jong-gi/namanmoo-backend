@@ -22,4 +22,8 @@ public interface LuckyService {
     Integer calculateLuckyStatus(Lucky lucky);
 
     List<LuckyListDto> getLuckyListStatus();
+
+    void increaseChallengeViews(Long luckyId, Integer challengeNum);
+
+    Lucky findCurrentLucky(Long familyId);
 }

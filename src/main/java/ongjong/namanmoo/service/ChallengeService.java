@@ -6,25 +6,31 @@ import lombok.RequiredArgsConstructor;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class ChallengeService {
 
-
-    private final ChallengeRepository challengeRepository;
-    private final LuckyRepository luckyRepository;
     private final MemberRepository memberRepository;
-    private final AnswerRepository answerRepository;
     private final MemberService memberService;
+    private final AnswerService answerService;
+    @Autowired
+    private ChallengeRepository challengeRepository;
+    @Autowired
+    private AnswerRepository answerRepository;
+    @Autowired
+    private LuckyRepository luckyRepository;
 
 
     // familyId를 통해 해당 날짜에 해당하는 오늘의 challenge 조회
@@ -116,6 +122,7 @@ public class ChallengeService {
         List <Challenge> challenges = findCurrentChallenges(member.getFamily().getFamilyId(), challengeDate);     //familyId를 통해 오늘의 챌린지 조회
         return challenges;
     }
+
     // 오늘의 챌린지 조회
     @Transactional(readOnly = true)
     public Challenge findCurrentChallenge(List<Challenge> challenges) throws Exception{
@@ -198,6 +205,31 @@ public class ChallengeService {
     @Transactional(readOnly = true)
     public List<Challenge> findChallengesByChallengeNum(Integer challengeNumber) {     // challenge num으로 group_challenge찾기
         return challengeRepository.findByChallengeNum(challengeNumber);
+    }
+
+    public Challenge findMostViewedChallenge(Long luckyId) {
+        // 가장 조회수가 많은 챌린지를 조회합니다.
+        return challengeRepository.findTopByLuckyIdOrderByChallengeNumDesc(luckyId);
+    }
+
+    public Challenge findFastestAnsweredChallenge(Long luckyId) {
+        // 모든 답변이 완료된 챌린지 중에서 가장 빨리 답변이 완료된 챌린지를 조회합니다.
+        List<Challenge> challenges = challengeRepository.findAllByLuckyId(luckyId);
+        Challenge fastestChallenge = null;
+        long shortestTime = Long.MAX_VALUE;
+
+        for (Challenge challenge : challenges) {
+            List<Answer> answers = challenge.getAnswers();
+            if (answers.size() == challenge.getChallengeNum()) { // 모든 답변이 완료되었는지 확인
+                long timeToAnswer = answerService.calculateFastestResponseTime(answers);
+                if (timeToAnswer < shortestTime) {
+                    shortestTime = timeToAnswer;
+                    fastestChallenge = challenge;
+                }
+            }
+        }
+
+        return fastestChallenge;
     }
 
 }

@@ -9,6 +9,7 @@ import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,7 @@ public class AnswerService {
     private final ChallengeService challengeService;
     private final ChallengeRepository challengeRepository;
     private final MemberService memberService;
+
 
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
 
@@ -167,8 +169,9 @@ public class AnswerService {
         return false;
     }
 
+    // 현재 진행중인 lucky id 조회
     @Transactional(readOnly = true)
-    public Lucky findCurrentLucky(Long familyId) {       // 현재 진행중인 lucky id 조회
+    public Lucky findCurrentLucky(Long familyId) {
         List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
         for (Lucky lucky : luckies) {
             if (lucky.isRunning()) {
@@ -178,7 +181,8 @@ public class AnswerService {
         return null;
     }
 
-    public Answer modifyAnswer(Long challengeId, String answerContent) throws Exception{        // 로그인한 맴버가 수정한 답변을 저장한다.
+    // 로그인한 멤버가 수정한 답변을 저장한다.
+    public Answer modifyAnswer(Long challengeId, String answerContent) throws Exception {
         Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId())
                 .orElseThrow(() -> new RuntimeException("로그인한 멤버를 찾을 수 없습니다."));
         Challenge challenge = challengeRepository.findById(challengeId)
@@ -187,9 +191,11 @@ public class AnswerService {
                 .orElseThrow(() -> new RuntimeException("해당 멤버가 작성한 답변을 찾을 수 없습니다."));
         Lucky lucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(member.getFamily().getFamilyId())
                 .orElseThrow(() -> new RuntimeException("로그인한 멤버의 행운이를 찾을 수 없습니다"));
-        if (answer.getAnswerContent() == null){
+
+        // Answer 업데이트
+        if (answer.getAnswerContent() == null) {
             answer.setBubbleVisible(true);
-            lucky.setStatus(lucky.getStatus()+1);
+            lucky.setStatus(lucky.getStatus() + 1);
             luckyRepository.save(lucky);
         }
         answer.setAnswerContent(answerContent);
@@ -215,6 +221,7 @@ public class AnswerService {
 //            }
 //        }
 //    }
+
     @Transactional(readOnly = true)
     public boolean checkUserResponse(Member member, String createDate) {
         return answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, createDate);
@@ -238,8 +245,9 @@ public class AnswerService {
         }
     }
 
+    // 특정 그룹 챌린지에 매핑된 answer list 찾기
     @Transactional(readOnly = true)
-    public List<Answer> findAnswersByChallenges(Challenge challenge, Member member) {         // 특정 그룹 챌린지에 매핑된 answer list 찾기
+    public List<Answer> findAnswersByChallenges(Challenge challenge, Member member) {
         List<Challenge> groupChallenges = challengeService.findChallengesByChallengeNum(challenge.getChallengeNum());       // challengeNum이 같은 챌린지 찾기
         Family family = member.getFamily();
         List<Answer> allAnswers = new ArrayList<>();        // 해당 그룹질문으로 묶인 answer 가져오기
@@ -255,4 +263,24 @@ public class AnswerService {
                 .collect(Collectors.toList());
     }
 
+    public long calculateFastestResponseTime(List<Answer> answers) {
+        if (answers == null || answers.isEmpty()) {
+            return 0;
+        }
+
+        String earliestCreateDate = answers.get(0).getCreateDate();
+        String latestCreateDate = answers.get(0).getCreateDate();
+
+        for (Answer answer : answers) {
+            String createDate = answer.getCreateDate();
+            if (createDate.compareTo(earliestCreateDate) < 0) {
+                earliestCreateDate = createDate;
+            }
+            if (createDate.compareTo(latestCreateDate) > 0) {
+                latestCreateDate = createDate;
+            }
+        }
+
+        return DateUtil.getInstance().getTimeDifference(earliestCreateDate, latestCreateDate);
+    }
 }

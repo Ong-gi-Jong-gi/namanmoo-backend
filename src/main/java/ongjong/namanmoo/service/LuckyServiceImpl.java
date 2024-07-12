@@ -32,6 +32,7 @@ public class LuckyServiceImpl implements LuckyService{
     private final MemberRepository memberRepository;
     private final AnswerService answerService;
     private final FamilyRepository familyRepository;
+    private final ChallengeService challengeService;
 
     public boolean createLucky(Long familyId, Long challengeDate){     // 캐릭터 생성
         Optional<Family> familyOptional = familyRepository.findById(familyId);
@@ -138,4 +139,33 @@ public class LuckyServiceImpl implements LuckyService{
         }).collect(Collectors.toList());
     }
 
+
+    // 챌린지 조회 시 조회수 증가 로직
+    @Transactional
+    public void increaseChallengeViews(Long luckyId, Integer challengeNum) {
+        Lucky lucky = luckyRepository.findById(luckyId)
+                .orElseThrow(() -> new RuntimeException("Lucky not found with id: " + luckyId));
+
+        Long familyId = lucky.getFamily().getFamilyId();
+        int startChallengeNum = challengeService.findStartChallengeNum(familyId);
+        int endChallengeNum = startChallengeNum + lucky.getLifetime().getDays();
+
+        // 주어진 챌린지 번호가 해당 Lucky의 범위 내에 있는지 확인
+        if (challengeNum < startChallengeNum || challengeNum > endChallengeNum) {
+            throw new IllegalArgumentException(
+                    "Challenge number " + challengeNum + " is out of the current Lucky's range ("
+                            + startChallengeNum + " - " + endChallengeNum + ").");
+        }
+
+        // 조회수 증가
+        lucky.getChallengeViews().merge(challengeNum, 1, Integer::sum);
+
+        luckyRepository.save(lucky); // 변경된 Lucky 엔티티 저장
+    }
+
+    // 현재 진행중인 럭키 반환
+    public Lucky findCurrentLucky(Long familyId) {
+        return luckyRepository.findByFamilyFamilyIdAndRunningTrue(familyId)
+                .orElse(null);
+    }
 }

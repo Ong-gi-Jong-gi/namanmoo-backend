@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
+import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.dto.challenge.*;
 import ongjong.namanmoo.service.DateUtil;
 import ongjong.namanmoo.domain.Member;
@@ -97,8 +98,11 @@ public class ChallengeController {
         Long challengeDate = answerService.findDateByChallengeMember(challenge);
         List<Answer> answers = answerService.findAnswerByChallengeandFamily(challenge, member);
 
-        NormalChallengeDto normalChallengeDto = new NormalChallengeDto(challenge, isComplete, challengeDate, answers);
+        // 챌린지 조회 시 조회수 증가
+        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
+        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
 
+        NormalChallengeDto normalChallengeDto = new NormalChallengeDto(challenge, isComplete, challengeDate, answers);
         return new ApiResponse<>("success", "Challenge retrieved successfully", normalChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
     }
 
@@ -124,6 +128,10 @@ public class ChallengeController {
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
         List<Answer> allAnswers = answerService.findAnswersByChallenges(challenge, member);     // 특정 그룹 챌린지에 매핑된 answer list 찾기
+
+        // 챌린지 조회 시 조회수 증가
+        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
+        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
 
         GroupChallengeDto groupChallengeDto = new GroupChallengeDto(challenge, challengeDate, isComplete, allAnswers);
         return new ApiResponse<>("success", "Challenge retrieved successfully", groupChallengeDto);
@@ -155,8 +163,11 @@ public class ChallengeController {
         Long challengeDate = answerService.findDateByChallengeMember(challenge);
         List<Answer> answers = answerService.findAnswerByChallengeandFamily(challenge, member);
 
-        PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, isComplete, challengeDate, answers);
+        // 챌린지 조회 시 조회수 증가
+        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
+        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
 
+        PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, isComplete, challengeDate, answers);
         return new ApiResponse<>("success", "Challenge retrieved successfully",photoChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
     }
 
@@ -166,13 +177,6 @@ public class ChallengeController {
             @RequestPart("challengeId") Long challengeId,
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
 
-        Member member = memberService.findMemberByLoginId();
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge not found", null);
-        }
-
         if (answerFile == null || answerFile.isEmpty()) {
             return new ApiResponse<>("400", "Answer file is missing", null);
         }
@@ -180,22 +184,14 @@ public class ChallengeController {
         // S3에 파일 업로드
         String uploadImageUrl = awsS3Service.uploadFile(answerFile);
 
-        // Answer 객체 수정 및 저장
-        Optional<Answer> optionalAnswer = answerService.findAnswerByChallengeAndMember(challenge, member);
-        if (optionalAnswer.isPresent()) {
-            Answer answer = optionalAnswer.get();
-            answer.setAnswerContent(uploadImageUrl);
-            answer.setModifiedDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")));
-            answerService.saveAnswer(answer);
+        // Answer 업데이트
+        Answer answer = answerService.modifyAnswer(challengeId, uploadImageUrl);
 
-            // Map 형태로 답변 URL 반환
-            Map<String, String> responseData = new HashMap<>();
-            responseData.put("answer", uploadImageUrl);
+        // Map 형태로 답변 URL 반환
+        Map<String, String> responseData = new HashMap<>();
+        responseData.put("answer", uploadImageUrl);
 
-            return new ApiResponse<>("200", "Success", responseData);
-        } else {
-            return new ApiResponse<>("404", "Answer not found", null);
-        }
+        return new ApiResponse<>("200", "Success", responseData);
     }
 
     // 화상 통화 챌린지 조회
@@ -237,18 +233,6 @@ public class ChallengeController {
             return new ApiResponse<>("400", "Exactly 4 photos must be uploaded", null);
         }
 
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
-        }
-
-        Member member = memberService.findMemberByLoginId();
-        Optional<Answer> existingAnswer = answerService.findAnswerByChallengeAndMember(challenge, member);
-
-        if (existingAnswer.isEmpty()) {
-            return new ApiResponse<>("404", "Answer not found for the provided challengeId and member", null);
-        }
-
         // S3에 파일 업로드 및 URL 저장
         List<String> uploadedUrls = new ArrayList<>();
         for (MultipartFile photo : familyPhotos) {
@@ -261,10 +245,7 @@ public class ChallengeController {
         String jsonAnswerContent = objectMapper.writeValueAsString(uploadedUrls);
 
         // Answer 업데이트
-        Answer answer = existingAnswer.get();
-        answer.setAnswerContent(jsonAnswerContent);
-        answer.setModifiedDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")));
-        answerService.saveAnswer(answer);
+        Answer answer = answerService.modifyAnswer(challengeId, jsonAnswerContent);
 
         return new ApiResponse<>("200", "Success", null);
     }
@@ -313,11 +294,15 @@ public class ChallengeController {
         responseData.put("challengeTitle", challenge.getChallengeTitle());
         responseData.put("familyPhotos", familyPhotos);
 
+        // 챌린지 조회 시 조회수 증가
+        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
+        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+
         return new ApiResponse<>("200", "Success", responseData);
     }
 
-
-    @GetMapping("/voice")      // 음성 챌린지 조회
+    // 음성 챌린지 조회
+    @GetMapping("/voice")
     public ApiResponse<VoiceChallengeDto> getVoiceChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
@@ -330,8 +315,11 @@ public class ChallengeController {
         Long challengeDate = answerService.findDateByChallengeMember(challenge);
         List<Answer> answers = answerService.findAnswerByChallengeandFamily(challenge, member);
 
-        VoiceChallengeDto voiceChallengeDto = new VoiceChallengeDto(challenge, isComplete, challengeDate, answers);
+        // 챌린지 조회 시 조회수 증가
+        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
+        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
 
+        VoiceChallengeDto voiceChallengeDto = new VoiceChallengeDto(challenge, isComplete, challengeDate, answers);
         return new ApiResponse<>("success", "Challenge retrieved successfully",voiceChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
     }
 
