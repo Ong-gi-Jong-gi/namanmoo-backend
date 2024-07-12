@@ -42,6 +42,7 @@ public class Lucky {
 
 
     // 각 챌린지 번호에 대한 조회수 기록
+    @Builder.Default
     @ElementCollection
     @CollectionTable(name = "lucky_challenge_views", joinColumns = @JoinColumn(name = "lucky_id"))
     @MapKeyColumn(name = "challenge_num")

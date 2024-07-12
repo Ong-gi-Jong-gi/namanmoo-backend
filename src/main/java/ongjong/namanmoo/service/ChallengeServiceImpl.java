@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.*;
+
 @Slf4j
 @Service
 @Transactional
@@ -26,7 +28,6 @@ public class ChallengeServiceImpl implements ChallengeService {
     private final LuckyService luckyService;
     private final MemberRepository memberRepository;
     private final MemberService memberService;
-
 
     // familyId를 통해 해당 날짜에 해당하는 오늘의 challenge 조회
     // 해당 가족 id를 가지고 있는 행운이 모두 조회
@@ -179,6 +180,52 @@ public class ChallengeServiceImpl implements ChallengeService {
             if (lucky.isRunning()) {
                 DateUtil dateUtil = DateUtil.getInstance();
                 return Math.toIntExact(dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.timestampToString(challengeDate))); // 현재 진행되어야할 challenge를 반환
+            }
+        }
+        return null;
+    }
+
+    // 해당 Lucky에 대한 가장 많이 조회된 챌린지 찾기
+    public Challenge findMostViewedChallenge(Lucky lucky) throws Exception {
+        Integer maxViews = 0;
+        Integer mostViewedChallengeNum = null;
+
+        // 모든 챌린지의 조회수를 총합하여 계산
+        Map<Integer, Integer> totalViewsByChallengeNum = new HashMap<>();
+
+        for (Map.Entry<Integer, Integer> entry : lucky.getChallengeViews().entrySet()) {
+            Integer challengeNum = entry.getKey();
+            Integer views = entry.getValue();
+            totalViewsByChallengeNum.merge(challengeNum, views, Integer::sum);
+            if (totalViewsByChallengeNum.get(challengeNum) > maxViews) {
+                maxViews = totalViewsByChallengeNum.get(challengeNum);
+                mostViewedChallengeNum = challengeNum;
+            }
+        }
+        if (mostViewedChallengeNum != null) {
+            Member member = memberService.findMemberByLoginId();
+            for (Challenge challenge : challengeRepository.findAll()) {
+                if (challenge.getChallengeNum().equals(mostViewedChallengeNum)) {
+                    // Check if the challenge type is GROUP_CHILD or GROUP_PARENT
+                    if (challenge.getChallengeType() == ChallengeType.GROUP_CHILD) {
+                        // Retrieve the logged in member's role
+                        String memberRole = member.getRole();
+                        // Only return the challenge if the member's role is "아들" or "딸"
+                        if (memberRole.equals("아들") || memberRole.equals("딸")) {
+                            return challenge;
+                        }
+                    } else if (challenge.getChallengeType() == ChallengeType.GROUP_PARENT) {
+                        // Retrieve the logged in member's role
+                        String memberRole = member.getRole();
+                        // Only return the challenge if the member's role is "엄마" or "아빠"
+                        if (memberRole.equals("엄마") || memberRole.equals("아빠")) {
+                            return challenge;
+                        }
+                    } else {
+                        // For other challenge types, return the challenge directly
+                        return challenge;
+                    }
+                }
             }
         }
         return null;

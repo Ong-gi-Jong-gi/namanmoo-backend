@@ -40,8 +40,6 @@ public class AnswerServiceImpl implements AnswerService {
     private final ChallengeService challengeService;
     private final MemberService memberService;
 
-
-
     // 답변 생성칸 만들기
     @Override
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
@@ -281,5 +279,57 @@ public class AnswerServiceImpl implements AnswerService {
                 .collect(Collectors.toList());
     }
 
+//    public long calculateFastestResponseTime(List<Answer> answers) {
+//        if (answers == null || answers.isEmpty()) {
+//            return 0;
+//        }
+//
+//        String earliestCreateDate = answers.get(0).getCreateDate();
+//        String latestCreateDate = answers.get(0).getCreateDate();
+//
+//        for (Answer answer : answers) {
+//            String createDate = answer.getCreateDate();
+//            if (createDate.compareTo(earliestCreateDate) < 0) {
+//                earliestCreateDate = createDate;
+//            }
+//            if (createDate.compareTo(latestCreateDate) > 0) {
+//                latestCreateDate = createDate;
+//            }
+//        }
+//
+//        return DateUtil.getInstance().getTimeDifference(earliestCreateDate, latestCreateDate);
+//    }
 
+//
+//    @Override
+//    @Transactional(readOnly = true)
+//    public Challenge findFastestAnsweredChallenge(Lucky lucky) {
+//        // Lucky의 startDate를 timestamp로 변환
+//        Long startDateTimestamp = DateUtil.getInstance().stringToTimestamp(lucky.getChallengeStartDate(), DateUtil.FORMAT_4);
+//
+//        // endDate를 계산하여 timestamp로 변환
+//        Long endDateTimestamp = DateUtil.getInstance().stringToTimestamp(
+//                DateUtil.getInstance().addDaysToStringDate(
+//                        DateUtil.getInstance().timestampToString(startDateTimestamp), lucky.getLifetime().getDays()), DateUtil.FORMAT_4);
+//
+//        // Lucky의 가족 구성원들의 답변을 조회
+//        List<Answer> answers = answerRepository.findByMemberFamilyIdAndCreateDateBetween(
+//                lucky.getFamily().getFamilyId(),
+//                DateUtil.getInstance().timestampToString(startDateTimestamp),
+//                DateUtil.getInstance().timestampToString(endDateTimestamp));
+//
+//        Challenge fastestChallenge = null;
+//        long shortestTime = Long.MAX_VALUE;
+//
+//        // 모든 답변 중에서 가장 빨리 답변한 챌린지를 찾음
+//        for (Answer answer : answers) {
+//            long timeToAnswer = DateUtil.getInstance().getTimeDifference(answer.getCreateDate(), answer.getModifiedDate());
+//            if (timeToAnswer < shortestTime) {
+//                shortestTime = timeToAnswer;
+//                fastestChallenge = answer.getChallenge();
+//            }
+//        }
+//
+//        return fastestChallenge;
+//    }
 }

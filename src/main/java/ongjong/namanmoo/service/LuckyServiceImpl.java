@@ -8,6 +8,7 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.dto.lucky.LuckyListDto;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
+import ongjong.namanmoo.repository.AnswerRepository;
 import ongjong.namanmoo.repository.FamilyRepository;
 import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
@@ -197,7 +198,10 @@ public class LuckyServiceImpl implements LuckyService{
                 .orElseThrow(() -> new RuntimeException("Lucky not found with id: " + luckyId));
 
         Long familyId = lucky.getFamily().getFamilyId();
-        int startChallengeNum = challengeService.findStartChallengeNum(familyId);
+        int startChallengeNum = luckyRepository.findByFamilyFamilyId(familyId).stream()
+                .filter(l -> !l.isRunning())
+                .mapToInt(l -> l.getLifetime().getDays())
+                .sum();
         int endChallengeNum = startChallengeNum + lucky.getLifetime().getDays();
 
         // 주어진 챌린지 번호가 해당 Lucky의 범위 내에 있는지 확인

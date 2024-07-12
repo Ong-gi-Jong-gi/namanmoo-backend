@@ -45,4 +45,7 @@ public interface AnswerService {
 
     // 챌린지 상세조회 중복요소 매핑
     ChallengeDetailsDto getChallengeDetails(Challenge challenge, Member member) throws Exception;
+
+
+//    long calculateFastestResponseTime(List<Answer> answers);
 }

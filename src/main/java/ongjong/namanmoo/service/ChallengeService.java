@@ -1,5 +1,6 @@
 package ongjong.namanmoo.service;
 
+import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.challenge.Challenge;
 
@@ -24,4 +25,7 @@ public interface ChallengeService {
 
     // 현재 진행하고 있는 챌린지를 행운이의 챌린지 길이만큼 가져오기
     List<Challenge> findRunningChallenges() throws Exception;
+
+    Challenge findMostViewedChallenge(Lucky lucky) throws Exception;
+
 }
