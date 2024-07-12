@@ -6,7 +6,7 @@ import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.dto.lucky.LuckyListDto;
 import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
 import ongjong.namanmoo.dto.recapMember.MemberRankingListDto;
-import ongjong.namanmoo.response.ApiResponse;
+import ongjong.namanmoo.dto.ApiResponse;
 import ongjong.namanmoo.service.AnswerService;
 import ongjong.namanmoo.service.LuckyService;
 import org.springframework.http.ResponseEntity;

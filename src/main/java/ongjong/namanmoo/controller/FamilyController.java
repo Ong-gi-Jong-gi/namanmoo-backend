@@ -3,8 +3,8 @@ package ongjong.namanmoo.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
+import ongjong.namanmoo.dto.ApiResponse;
 import ongjong.namanmoo.dto.family.*;
-import ongjong.namanmoo.response.*;
 import ongjong.namanmoo.service.FamilyService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -68,5 +68,13 @@ public class FamilyController {
                 familyInfoResponse
         );
         return ResponseEntity.ok(response);
+    }
+
+    // 가족 코드 조회
+    @GetMapping("/code")
+    public ApiResponse<CreateFamilyResponse> getMyFamilyCode() {
+        CreateFamilyResponse inviteCode = new CreateFamilyResponse(familyService.getInviteCode());
+        return new ApiResponse<>("200", "Get InviteCode Success", inviteCode);
+
     }
 }

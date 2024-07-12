@@ -4,6 +4,7 @@ package ongjong.namanmoo.service;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.dto.family.FamilyMemberDto;
 import ongjong.namanmoo.dto.family.FamilyInviteResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -14,6 +15,9 @@ public interface FamilyService {
 
     // 내 가족 정보 확인
     List<FamilyMemberDto> getFamilyMembersInfo();
+
+    // 내 가족 코드 확인
+    String getInviteCode();
 
     // 초대 코드로 가족 정보 확인
     FamilyInviteResponse getFamilyInfoByInviteCode(String inviteCode);

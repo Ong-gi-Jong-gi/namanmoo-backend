@@ -3,7 +3,6 @@ package ongjong.namanmoo.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
@@ -13,7 +12,7 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.answer.ModifyAnswerDto;
-import ongjong.namanmoo.response.ApiResponse;
+import ongjong.namanmoo.dto.ApiResponse;
 import ongjong.namanmoo.service.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
