@@ -323,21 +323,4 @@ public class ChallengeController {
         return new ApiResponse<>("success", "Challenge retrieved successfully",voiceChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
     }
 
-    @Data
-    public static class SaveChallengeRequest {
-        private Long challengeDate;
-    }
-
-    @Data
-    public static class SaveAnswerRequest{
-        private Long challengeId;
-        private String answerContent;
-    }
-
-    @Data
-    public static class PhotoAnswerRequest {
-        private Long challengeId;
-        private MultipartFile answer;
-    }
-
 }

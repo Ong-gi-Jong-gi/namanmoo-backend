@@ -17,11 +17,11 @@ public class Answer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long answerId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "challenge_id")
     private Challenge challenge;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 

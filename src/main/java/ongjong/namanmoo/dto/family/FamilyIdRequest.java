@@ -1,10 +1,10 @@
-package ongjong.namanmoo.response.family;
+package ongjong.namanmoo.dto.family;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class JoinFamilyResponse {
+public class FamilyIdRequest {
     private String familyId;
 }
