@@ -3,6 +3,7 @@ package ongjong.namanmoo.service;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
+import ongjong.namanmoo.dto.challenge.CurrentChallengeDto;
 import ongjong.namanmoo.dto.challenge.GroupChallengeDto;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +18,7 @@ public interface ChallengeService {
     Challenge findChallengeById(Long id);
 
     // 회원 아이디로 오늘의 챌린지 조회
-    List<Challenge> findChallengesByMemberId(Long challengeDate, Member member) throws Exception;
+    CurrentChallengeDto findChallengesByMemberId(Long challengeDate, Member member) throws Exception;
 
     // 오늘의 챌린지 조회
     Challenge findOneInCurrentChallenges(List<Challenge> challenges) throws Exception;

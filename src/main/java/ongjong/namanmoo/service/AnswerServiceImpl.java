@@ -9,6 +9,7 @@ import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.dto.challenge.ChallengeDetailsDto;
 import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
+import ongjong.namanmoo.dto.recapMember.MemberPhotosAnswerDto;
 import ongjong.namanmoo.dto.recapMember.MemberYouthAnswerDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
@@ -19,10 +20,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static ongjong.namanmoo.domain.answer.AnswerType.PHOTO;
 
 @Slf4j
 @Service
@@ -99,7 +100,7 @@ public class AnswerServiceImpl implements AnswerService {
                     // FaceTimeAnswer의 ID를 Answer의 answerContent에 저장
                     answer.setAnswerContent(String.valueOf(faceTimeAnswer.getFaceTimeAnswerId()));
                 } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
-                    answer.setAnswerType(AnswerType.PHOTO);
+                    answer.setAnswerType(PHOTO);
                     answer.setCreateDate(strChallengeDate);
                 } else if (challenge.getChallengeType()== ChallengeType.VOICE) {
                     answer.setAnswerType(AnswerType.VOICE);
@@ -281,6 +282,57 @@ public class AnswerServiceImpl implements AnswerService {
             memberAnswerDtoList.add(dto);
         }
         return memberAnswerDtoList;
+    }
+
+    // 각 멤버의 photo 타입의 질문에 대한 사진을 랜덤으로 반환
+    @Override
+    @Transactional(readOnly = true)
+    public MemberPhotosAnswerDto getPhotoByMember(List<Member> members) throws Exception {
+        List<Answer> memberAnswerList = new ArrayList<>();
+        List<String> otherPhotos = new ArrayList<>();
+
+        // 1. Challenge 19 가져오기
+        Challenge challenge19 = challengeRepository.findByChallengeNum(9)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new Exception("Challenge 19 not found"));
+
+        // 2. 멤버들의 Challenge 19에 대한 답변 가져오기
+        for (Member member : members) {
+            Answer challenge19Answer = answerRepository.findByChallengeAndMember(challenge19, member)
+                    .orElseThrow(() -> new Exception("Answer for Challenge 19 not found"));
+            memberAnswerList.add(challenge19Answer);
+        }
+
+        // 3. memberAnswerList에서 랜덤하게 하나의 answer를 선택하여 familyPhoto로 설정
+        Random random = new Random();
+        Answer familyPhotoAnswer = memberAnswerList.get(random.nextInt(memberAnswerList.size()));
+        String familyPhoto = familyPhotoAnswer.getAnswerContent();
+
+        // 4. type이 photo이고 challengenum이 19번이 아닌 멤버들의 answer 중에서 모든 사진 URL을 담은 리스트 생성
+        List<String> allOtherPhotos = new ArrayList<>();
+        for (Member member : members) {
+            int challenge_num = 1;
+            for (Challenge challenge : challengeRepository.findByChallengeNum(challenge_num)) {
+                Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge,member);
+                if (answer.get().getAnswerType() == PHOTO){
+                    allOtherPhotos.add(answer.get().getAnswerContent());
+                }
+                challenge_num++;
+            }
+
+        }
+
+        int numPhotosToAdd = Math.min(9, allOtherPhotos.size());
+        Set<Integer> chosenIndices = new HashSet<>();
+        while (chosenIndices.size() < numPhotosToAdd) {
+            int randomIndex = random.nextInt(allOtherPhotos.size());
+            if (chosenIndices.add(randomIndex)) {
+                otherPhotos.add(allOtherPhotos.get(randomIndex));
+            }
+        }
+
+        return new MemberPhotosAnswerDto(familyPhoto,otherPhotos);
     }
 
 

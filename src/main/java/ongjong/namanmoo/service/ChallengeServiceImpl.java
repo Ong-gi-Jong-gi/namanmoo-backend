@@ -10,6 +10,7 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.dto.answer.AnswerDto;
+import ongjong.namanmoo.dto.challenge.CurrentChallengeDto;
 import ongjong.namanmoo.dto.challenge.GroupChallengeDto;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
@@ -81,12 +82,12 @@ public class ChallengeServiceImpl implements ChallengeService {
     // 회원 아이디로 오늘의 챌린지 조회
     @Override
     @Transactional(readOnly = true)
-    public List<Challenge> findChallengesByMemberId(Long challengeDate, Member member) throws Exception{      // 회원 아이디로 회원 조회
+    public CurrentChallengeDto findChallengesByMemberId(Long challengeDate, Member member) throws Exception{      // 회원 아이디로 회원 조회
         Family family = member.getFamily();
 
         int currentFamilySize = memberRepository.countByFamilyId(family.getFamilyId());
         if (currentFamilySize != family.getMaxFamilySize()) {
-            return null;        // 현재 가족의수 가 max가족의 수와 같지 않을 겨우 오늘의 챌린지 조회 실패 -> null반환
+            return null; // 현재 가족의수 가 max가족의 수와 같지 않을 경우 오늘의 챌린지 조회 실패 -> null 반환
         }
 
         List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(family.getFamilyId());
@@ -97,12 +98,10 @@ public class ChallengeServiceImpl implements ChallengeService {
         boolean validLuckyExists = luckies.stream()
                 .anyMatch(Lucky::isRunning);
         if (!validLuckyExists) {
-            return null;        // 진행중인 챌린지 , lucky가 없을 경우
+            return null; // 진행중인 챌린지, lucky가 없을 경우
         }
 
-        // 그룹일 경우 대비해서 리스트로 (일반이면 1개, 그룹이면 2개)
-        List <Challenge> challenges = findCurrentChallenges(member.getFamily().getFamilyId(), challengeDate);     //familyId를 통해 오늘의 챌린지 조회
-        return challenges;
+        return findCurrentChallenges(member.getFamily().getFamilyId(), challengeDate);
     }
 
     // 오늘의 챌린지 조회
@@ -195,16 +194,31 @@ public class ChallengeServiceImpl implements ChallengeService {
         return new GroupChallengeDto(challenge.getChallengeNum().toString(), timeStamp, isComplete, parentChallenge, childrenChallenge);
     }
 
-
-
     // 오늘의 챌린지 반환 .그룹챌린지일 경우 같은 번호의 챌린지가 2개 이므로 리스트로 반환
     @Transactional(readOnly = true)
-    public List<Challenge> findCurrentChallenges(Long familyId, Long challengeDate) {
-        Integer number = findCurrentChallengeNum(familyId,challengeDate);
+    public CurrentChallengeDto findCurrentChallenges(Long familyId, Long challengeDate) throws Exception {
+        boolean isDone = false;
+        Integer number = findCurrentChallengeNum(familyId, challengeDate);
+        int runningLuckyLifetime = luckyService.findCurrentLuckyLifetime(familyId);
+
         if (number == null) {
-            return null;
+            return new CurrentChallengeDto(isDone, null);
         }
-        return challengeRepository.findByChallengeNum(number + luckyService.findStartChallengeNum(familyId));
+
+        if (number > runningLuckyLifetime) {
+            isDone = true; // 진행한 lucky의 챌린지를 모두 했을 경우
+        }
+
+        List<Challenge> challenges = challengeRepository.findByChallengeNum(number + luckyService.findStartChallengeNum(familyId));
+
+        if (challenges.isEmpty()) {
+            return new CurrentChallengeDto(isDone, null);
+        }
+
+        Challenge challenge = findOneInCurrentChallenges(challenges);       // 그룹 질문 구분하기
+        DateUtil dateUtil = DateUtil.getInstance();
+        CurrentChallengeDto.ChallengeDto challengeDto = new CurrentChallengeDto.ChallengeDto(challenge, number, dateUtil.timestampToString(challengeDate));
+        return new CurrentChallengeDto(isDone, challengeDto);
     }
 
     // 현재 진행중인 challenge 번호 조회

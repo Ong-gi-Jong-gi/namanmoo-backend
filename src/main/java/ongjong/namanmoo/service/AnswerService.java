@@ -7,6 +7,7 @@ import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.challenge.ChallengeDetailsDto;
 import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
+import ongjong.namanmoo.dto.recapMember.MemberPhotosAnswerDto;
 import ongjong.namanmoo.dto.recapMember.MemberYouthAnswerDto;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +48,8 @@ public interface AnswerService {
 
     // 각 member의 memberimg와 특정 번호의 챌린지 답변을 묶어 반환
     List<MemberYouthAnswerDto> getAnswerByMember(List<Member> members) throws Exception;
+
+    MemberPhotosAnswerDto getPhotoByMember(List<Member> members) throws Exception;
 
     // 챌린지 상세조회 중복요소 매핑
     ChallengeDetailsDto getChallengeDetails(Challenge challenge, Member member) throws Exception;

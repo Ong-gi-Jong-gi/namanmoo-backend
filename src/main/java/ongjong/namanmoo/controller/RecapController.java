@@ -6,6 +6,7 @@ import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.dto.lucky.LuckyListDto;
 import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
+import ongjong.namanmoo.dto.recapMember.MemberPhotosAnswerDto;
 import ongjong.namanmoo.dto.recapMember.MemberRankingListDto;
 import ongjong.namanmoo.dto.recapMember.MemberYouthAnswerDto;
 import ongjong.namanmoo.response.ApiResponse;
@@ -59,12 +60,13 @@ public class RecapController {
         return new ApiResponse<>("200", "Youth photos retrieved successfully", memberAnswerDtoList);
     }
 
-//    // recap 가족사진
-//    @GetMapping("/photos")
-//    public ApiResponse getPhotos(@RequestParam("luckyId") Long luckyId) throws Exception{
-//        List<Member> members = memberService.getMembersByLuckyId(luckyId);
-//
-//    }
+    // recap 가족사진
+    @GetMapping("/photos")
+    public ApiResponse getPhotos(@RequestParam("luckyId") Long luckyId) throws Exception{
+        List<Member> members = memberService.getMembersByLuckyId(luckyId);
+        MemberPhotosAnswerDto photosAnswerDto = answerService.getPhotoByMember(members);
+        return new ApiResponse<>("200", "Success", photosAnswerDto);
+    }
 
 
 }
