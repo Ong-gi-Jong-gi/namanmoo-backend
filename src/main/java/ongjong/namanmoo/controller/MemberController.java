@@ -28,7 +28,6 @@ import java.util.Optional;
 public class MemberController {
 
     private final MemberService memberService;
-    private final AwsS3Service awsS3Service;
 
     // 회원 가입
     @PostMapping("/signup")

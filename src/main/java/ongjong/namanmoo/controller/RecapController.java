@@ -38,8 +38,9 @@ public class RecapController {
     }
 
     // recap 랭킹
+    // facetime 테이블 지우면 정상적으로 작동
     @GetMapping("/ranking")
-    public ApiResponse getRanking(@RequestParam("luckyId") Long luckyId){
+    public ApiResponse<MemberRankingListDto> getRanking(@RequestParam("luckyId") Long luckyId){
         Lucky lucky = luckyService.getLucky(luckyId);
         Integer totalCount = lucky.getStatus();
         Integer luckyStatus = luckyService.calculateLuckyStatus(lucky);
@@ -52,7 +53,7 @@ public class RecapController {
     // challengeNum => 13: 나의 어렸을 때 장래희망
     // cahllengeNum => 28 : 자신의 어렸을 적 사진 ( 23 : 학생 때 졸업사진 , 9: 가장 마음에 드는 본인 사진)
     @GetMapping("/youth")
-    public ApiResponse getYouth(@RequestParam("luckyId") Long luckyId) throws Exception{
+    public ApiResponse<List<MemberYouthAnswerDto>> getYouth(@RequestParam("luckyId") Long luckyId) throws Exception{
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
         List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getAnswerByMember(members);
         return new ApiResponse<>("200", "Youth photos retrieved successfully", memberAnswerDtoList);

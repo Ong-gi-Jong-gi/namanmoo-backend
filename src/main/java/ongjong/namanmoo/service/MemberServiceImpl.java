@@ -116,6 +116,7 @@ public class MemberServiceImpl implements MemberService {
         return new MemberInfoDto(findMember);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Member findMemberByLoginId() throws Exception{
         return memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
