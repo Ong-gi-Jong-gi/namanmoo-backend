@@ -58,4 +58,12 @@ public class RecapController {
         return new ApiResponse<>("200", "Youth photos retrieved successfully", memberAnswerDtoList);
     }
 
+//    // recap 가족사진
+//    @GetMapping("/photos")
+//    public ApiResponse getPhotos(@RequestParam("luckyId") Long luckyId) throws Exception{
+//        List<Member> members = memberService.getMembersByLuckyId(luckyId);
+//
+//    }
+
+
 }

@@ -39,7 +39,11 @@ public class ChallengeService {
     @Transactional(readOnly = true)
     public List<Challenge> findCurrentChallenges(Long familyId, Long challengeDate) {       // 오늘의 챌린지 반환 .그룹챌린지일 경우 같은 번호의 챌린지가 2개 이므로 리스트로 반환
         Integer number = findCurrentChallengeNum(familyId,challengeDate);
-        if (number == null) {
+        int runningLuckyLifetime = findCurrentLuckyLifetime(familyId);
+        if (number > runningLuckyLifetime) {        //TODO 오늘의 챌린지를 모두 수행했을 경우 처리
+            throw new IllegalArgumentException("Challenge number exceeds the maximum limit of 30");     // 진행한 lucky의 챌린지를 모두 했을 경우
+        }
+        else if (number == null) {
             return null;
         }
         return challengeRepository.findByChallengeNum(number + findStartChallengeNum(familyId));
@@ -104,7 +108,7 @@ public class ChallengeService {
 
         int currentFamilySize = memberRepository.countByFamilyId(family.getFamilyId());
         if (currentFamilySize != family.getMaxFamilySize()) {
-            return null;        // 현재 가족의수 가 max가족의 수와 같지 않을 겨우 오늘의 챌린지 조회 실패 -> null반환
+            return null;        // 현재 가족의수 가 max가족의 수와 같지 않을 경우 오늘의 챌린지 조회 실패 -> null반환
         }
 
         List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(family.getFamilyId());
@@ -117,9 +121,8 @@ public class ChallengeService {
         if (!validLuckyExists) {
             return null;        // 진행중인 챌린지 , lucky가 없을 경우
         }
-
-        List <Challenge> challenges = findCurrentChallenges(member.getFamily().getFamilyId(), challengeDate);     //familyId를 통해 오늘의 챌린지 조회
-        return challenges;
+        //familyId를 통해 오늘의 챌린지 조회
+        return findCurrentChallenges(member.getFamily().getFamilyId(), challengeDate);
     }
     // 오늘의 챌린지 조회
     @Transactional(readOnly = true)
@@ -188,13 +191,11 @@ public class ChallengeService {
 
     // 현재 진행하고 있는 챌린지를 행운이의 챌린지 길이만큼 가져오기
     @Transactional(readOnly = true)
-    public List<Challenge> findRunningChallenges(Long challengeDate) throws Exception {
+    public List<Challenge> findRunningChallenges() throws Exception {
         Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다")); // 로그인한 member
         Family family = member.getFamily();
 
         int startChallengeNum = findStartChallengeNum(family.getFamilyId());
-
-        // Calculating the total number of days for the currently running Lucky
         int runningLuckyLifetime = findCurrentLuckyLifetime(family.getFamilyId());
 
         return challengeRepository.findByChallengeNumBetween(startChallengeNum, startChallengeNum + runningLuckyLifetime);

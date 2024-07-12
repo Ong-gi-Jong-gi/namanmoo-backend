@@ -46,7 +46,7 @@ public class AnswerService {
         List<Member> members = memberRepository.findByFamilyFamilyId(familyId);
         Optional<Family> family  = familyRepository.findById(familyId);
         // 모든 챌린지를 조회
-        List<Challenge> challenges = challengeService.findRunningChallenges(challengeDate);
+        List<Challenge> challenges = challengeService.findRunningChallenges();
 
         // 가족이 다 방에 들어오지 않았을 경우 null 반환
         if (members.size() != family.get().getMaxFamilySize()) {
@@ -123,19 +123,6 @@ public class AnswerService {
         DateUtil dateUtil = DateUtil.getInstance();
         return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
     }
-
-    @Transactional(readOnly = true)
-    public Long getTimeStamp(String answerDate, String format) throws Exception{       //  "yyyy.MM.dd"형식의 문자열을 timeStamp로 바꾸기
-        if ((answerDate == null || answerDate.isEmpty()) || (format == null || format.isEmpty())) {
-            return null;
-        }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-        LocalDate date = LocalDate.parse(answerDate, formatter);
-        LocalDateTime dateTime = date.atStartOfDay(); // LocalDate를 LocalDateTime으로 변환 (00:00:00)
-        return Timestamp.valueOf(dateTime).getTime();
-    }
-
 
     @Transactional(readOnly = true)
     public List<Answer> findAnswerByChallenge(Challenge challenge){
@@ -251,12 +238,12 @@ public class AnswerService {
     public List<MemberYouthAnswerDto> getAnswerByMember(List<Member> members) throws Exception{
         List<MemberYouthAnswerDto> memberAnswerDtoList = new ArrayList<>();
 
-        Challenge challenge13 = challengeRepository.findByChallengeNum(1)
+        Challenge challenge13 = challengeRepository.findByChallengeNum(1)       // todo challengeNum 나중에 13으로 수정
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new Exception("Challenge 13 not found"));
 
-        Challenge challenge28 = challengeRepository.findByChallengeNum(2)
+        Challenge challenge28 = challengeRepository.findByChallengeNum(2)       // todo challengeNum 나중에 28로 수정
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new Exception("Challenge 28 not found"));
@@ -276,5 +263,12 @@ public class AnswerService {
         }
         return memberAnswerDtoList;
     }
+
+//    // 각 member의 photo챌린지에 대한 답변(사진)을 받아서 랜덤으로 묶어 반환
+//    @Transactional(readOnly = true)
+//    public List<MemberPhotosAnswerDto> getPhotoByMember(List<Member> members) throws Exception{
+//
+//    }
+
 
 }
