@@ -191,6 +191,7 @@ public class LuckyServiceImpl implements LuckyService{
     }
 
     // 챌린지 조회 시 조회수 증가 로직
+    @Override
     @Transactional
     public void increaseChallengeViews(Long luckyId, Integer challengeNum) {
         Lucky lucky = luckyRepository.findById(luckyId)
