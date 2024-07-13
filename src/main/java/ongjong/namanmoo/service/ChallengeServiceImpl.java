@@ -7,13 +7,18 @@ import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.*;
+import ongjong.namanmoo.dto.answer.AnswerDto;
+import ongjong.namanmoo.dto.challenge.GroupChallengeDto;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @Transactional
@@ -157,6 +162,37 @@ public class ChallengeServiceImpl implements ChallengeService {
         int runningLuckyLifetime = luckyService.findCurrentLuckyLifetime(family.getFamilyId());
 
         return challengeRepository.findByChallengeNumBetween(startChallengeNum, startChallengeNum + runningLuckyLifetime);
+    }
+
+    // groupChallenge 조회를 위한 dto  (부모와 자식의 challenge 질문 구분하기)
+    @Override
+    @Transactional(readOnly = true)
+    public GroupChallengeDto createGroupChallenge(Challenge challenge, Long timeStamp, boolean isComplete, List<Answer> answers) {
+        List<Answer> parentAnswerList = new ArrayList<>();
+        List<Answer> childAnswerList = new ArrayList<>();
+
+        for (Answer answer : answers) {
+            if (answer.getChallenge().getChallengeType() == ChallengeType.GROUP_PARENT) {
+                parentAnswerList.add(answer);
+            } else {
+                childAnswerList.add(answer);
+            }
+        }
+        List<AnswerDto> parentAnswerDtoList = parentAnswerList.stream()
+                .map(AnswerDto::new)
+                .collect(Collectors.toList());
+        GroupChallengeDto.NewChallengeDto parentChallenge = parentAnswerList.isEmpty() ?
+                new GroupChallengeDto.NewChallengeDto("No Parent Challenge", new ArrayList<>()) :
+                new GroupChallengeDto.NewChallengeDto(parentAnswerList.get(0).getChallenge().getChallengeTitle(), parentAnswerDtoList);
+
+        List<AnswerDto> childAnswerDtoList = childAnswerList.stream()
+                .map(AnswerDto::new)
+                .collect(Collectors.toList());
+        GroupChallengeDto.NewChallengeDto childrenChallenge = childAnswerList.isEmpty() ?
+                new GroupChallengeDto.NewChallengeDto("No Children Challenge", new ArrayList<>()) :
+                new GroupChallengeDto.NewChallengeDto(childAnswerList.get(0).getChallenge().getChallengeTitle(), childAnswerDtoList);
+
+        return new GroupChallengeDto(challenge.getChallengeNum().toString(), timeStamp, isComplete, parentChallenge, childrenChallenge);
     }
 
 

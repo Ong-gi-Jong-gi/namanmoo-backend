@@ -10,4 +10,5 @@ public class LuckyListDto {
     private Long startDate;
     private Long endDate;
     private Integer luckyStatus;
+    private boolean running;
 }

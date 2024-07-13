@@ -9,6 +9,7 @@ import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.dto.challenge.ChallengeDetailsDto;
 import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
+import ongjong.namanmoo.dto.recapMember.MemberYouthAnswerDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
@@ -248,6 +249,38 @@ public class AnswerServiceImpl implements AnswerService {
             memberCountList.add(new MemberAndCountDto(member, count));
         }
         return memberCountList;
+    }
+
+    // 각 member의 memberimg와 특정 번호의 챌린지 답변을 묶어 반환
+    @Override
+    @Transactional(readOnly = true)
+    public List<MemberYouthAnswerDto> getAnswerByMember(List<Member> members) throws Exception{
+        List<MemberYouthAnswerDto> memberAnswerDtoList = new ArrayList<>();
+
+        Challenge challenge13 = challengeRepository.findByChallengeNum(1)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new Exception("Challenge 13 not found"));
+
+        Challenge challenge28 = challengeRepository.findByChallengeNum(2)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new Exception("Challenge 28 not found"));
+
+        for (Member member : members) {
+            String memberImg = member.getMemberImage();
+            Answer challenge13Answer = answerRepository.findByChallengeAndMember(challenge13, member)
+                    .orElseThrow(() -> new Exception("Answer for Challenge 13 not found"));
+            Answer challenge28Answer = answerRepository.findByChallengeAndMember(challenge28, member)
+                    .orElseThrow(() -> new Exception("Answer for Challenge 28 not found"));
+
+            String photo = challenge13Answer.getAnswerContent();
+            String text = challenge28Answer.getAnswerContent();
+
+            MemberYouthAnswerDto dto = new MemberYouthAnswerDto(memberImg, photo, text);
+            memberAnswerDtoList.add(dto);
+        }
+        return memberAnswerDtoList;
     }
 
 

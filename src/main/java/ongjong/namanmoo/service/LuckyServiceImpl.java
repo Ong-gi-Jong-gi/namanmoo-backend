@@ -141,7 +141,7 @@ public class LuckyServiceImpl implements LuckyService{
             Integer luckyStatus = calculateLuckyStatus(lucky);
 
             // LuckyListDto 객체 생성하여 반환
-            return new LuckyListDto(lucky.getLuckyId().toString(), startDateTimestamp, endDateTimestamp, luckyStatus);
+            return new LuckyListDto(lucky.getLuckyId().toString(), startDateTimestamp, endDateTimestamp, luckyStatus, lucky.isRunning());
         }).collect(Collectors.toList());
     }
 
