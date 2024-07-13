@@ -6,7 +6,8 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.challenge.ChallengeDetailsDto;
-import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
+import ongjong.namanmoo.dto.recap.AppreciationDto;
+import ongjong.namanmoo.dto.recap.MemberAndCountDto;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +47,6 @@ public interface AnswerService {
     // 챌린지 상세조회 중복요소 매핑
     ChallengeDetailsDto getChallengeDetails(Challenge challenge, Member member) throws Exception;
 
+//    List<AppreciationDto> getAppreciations(Lucky lucky) throws Exception;
 
-//    long calculateFastestResponseTime(List<Answer> answers);
 }

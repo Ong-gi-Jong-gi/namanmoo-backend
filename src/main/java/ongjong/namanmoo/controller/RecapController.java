@@ -5,8 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.lucky.LuckyListDto;
-import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
-import ongjong.namanmoo.dto.recapMember.MemberRankingListDto;
+import ongjong.namanmoo.dto.recap.AppreciationDto;
+import ongjong.namanmoo.dto.recap.MemberAndCountDto;
+import ongjong.namanmoo.dto.recap.MemberRankingListDto;
 import ongjong.namanmoo.response.ApiResponse;
 import ongjong.namanmoo.service.AnswerService;
 import ongjong.namanmoo.service.ChallengeService;
@@ -75,5 +76,13 @@ public class RecapController {
 
         return new ApiResponse("200", "retrieved successfully", Arrays.asList(mostViewedData, fastestAnsweredData));
     }
+
+//    @GetMapping("/appreciations")
+//    public ApiResponse getAppreciations(@RequestParam("luckyId") Long luckyId) {
+//        Lucky lucky = luckyService.getLucky(luckyId);
+//        List<AppreciationDto> appreciationList = answerService.getAppreciations(lucky);
+//        return new ApiResponse<>("200", "Success", appreciationList);
+//    }
+
 
 }

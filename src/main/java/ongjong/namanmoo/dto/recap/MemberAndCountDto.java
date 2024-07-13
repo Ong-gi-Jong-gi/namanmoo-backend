@@ -1,8 +1,7 @@
-package ongjong.namanmoo.dto.recapMember;
+package ongjong.namanmoo.dto.recap;
 
 import lombok.Data;
 import ongjong.namanmoo.domain.Member;
-import ongjong.namanmoo.domain.answer.Answer;
 
 @Data
 public class MemberAndCountDto {
