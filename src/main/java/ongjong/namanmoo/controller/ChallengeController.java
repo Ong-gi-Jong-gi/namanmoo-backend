@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.dto.challenge.*;
-import ongjong.namanmoo.service.DateUtil;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
@@ -47,17 +46,14 @@ public class ChallengeController {
     }
 
     @GetMapping("/today")     // 오늘의 챌린지 조회
-    public ApiResponse<ChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
-        Member member = memberService.findMemberByLoginId();  // 로그인한 member
-        List<Challenge> challenges = challengeService.findChallengesByMemberId(challengeDate, member);
-        Challenge challenge = challengeService.findOneInCurrentChallenges(challenges);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge not found", null);
+    public ApiResponse<CurrentChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+        Member member = memberService.findMemberByLoginId(); // 로그인한 member
+        CurrentChallengeDto currentChallenge = challengeService.findChallengesByMemberId(challengeDate, member);
+
+        if (currentChallenge == null || currentChallenge.getChallengeInfo() == null) {
+            return new ApiResponse<>("404", "Challenge not found", currentChallenge);
         }
-        Integer currentNum  = challengeService.findCurrentNum(challengeDate);
-        DateUtil dateUtil = DateUtil.getInstance();
-        ChallengeDto challengeDto = new ChallengeDto(challenge, currentNum, dateUtil.timestampToString(challengeDate));
-        return new ApiResponse<>("200", "Success", challengeDto);
+        return new ApiResponse<>("200", "Success", currentChallenge);
     }
 
     @GetMapping("/list")        // 챌린지 리스트 조회 , 챌린지 리스트는 lucky가 여러개 일때를 고려하여 죽은 럭키 개수 * 30 +1 부터 챌린지가 보여져야한다.
@@ -117,7 +113,7 @@ public class ChallengeController {
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
         List<Answer> allAnswers = answerService.findAnswersByChallenges(challenge, member);     // 특정 그룹 챌린지에 매핑된 answer list 찾기
 
-        GroupChallengeDto groupChallengeDto = challengeService.createGroupChallenge(challenge, challengeDate, isComplete, allAnswers);
+        GroupChallengeDto groupChallengeDto = challengeService.filterChallengesByMemberRole(challenge, challengeDate, isComplete, allAnswers);
         return new ApiResponse<>("200", "Challenge retrieved successfully", groupChallengeDto);
     }
 

@@ -3,6 +3,7 @@ package ongjong.namanmoo.service;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
+import ongjong.namanmoo.dto.challenge.CurrentChallengeDto;
 import ongjong.namanmoo.dto.challenge.GroupChallengeDto;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,11 +14,15 @@ public interface ChallengeService {
     // 현재 진행하고 있는 행운이의 챌린지 리스트 가져오기
     List<Challenge> findChallenges(Long challengeDate) throws Exception;
 
+    // 멤버 역할에 맞지 않는 challenge는 리스트에서 제외
+    @Transactional(readOnly = true)
+    List<Challenge> groupChallengeExceptionRemove(List<Challenge> challengeList, Member member) throws Exception;
+
     // challenge id로 challenge 찾기
     Challenge findChallengeById(Long id);
 
     // 회원 아이디로 오늘의 챌린지 조회
-    List<Challenge> findChallengesByMemberId(Long challengeDate, Member member) throws Exception;
+    CurrentChallengeDto findChallengesByMemberId(Long challengeDate, Member member) throws Exception;
 
     // 오늘의 챌린지 조회
     Challenge findOneInCurrentChallenges(List<Challenge> challenges) throws Exception;
@@ -29,5 +34,5 @@ public interface ChallengeService {
     List<Challenge> findRunningChallenges() throws Exception;
 
     // groupChallenge 조회를 위한 dto  (부모와 자식의 challenge 질문 구분하기)
-    GroupChallengeDto createGroupChallenge(Challenge challenge, Long timeStamp, boolean isComplete, List<Answer> answers);
+    GroupChallengeDto filterChallengesByMemberRole(Challenge challenge, Long timeStamp, boolean isComplete, List<Answer> answers);
 }

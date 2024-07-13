@@ -38,4 +38,6 @@ public interface LuckyService {
 
     // 현재 실행 중인 Lucky 객체의 lifetime (챌린지 길이) 가져오기
     Integer findCurrentLuckyLifetime(Long familyId);
+
+    void luckyDeadOrAlive(String challengeDate) throws Exception;
 }

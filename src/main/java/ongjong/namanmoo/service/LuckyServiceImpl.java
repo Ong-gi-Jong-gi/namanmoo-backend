@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class LuckyServiceImpl implements LuckyService{
+public class LuckyServiceImpl implements LuckyService {
 
     private final LuckyRepository luckyRepository;
     private final MemberRepository memberRepository;
@@ -36,7 +36,7 @@ public class LuckyServiceImpl implements LuckyService{
 
     // 캐릭터 생성
     @Override
-    public boolean createLucky(Long familyId, Long challengeDate){
+    public boolean createLucky(Long familyId, Long challengeDate) {
         Optional<Family> familyOptional = familyRepository.findById(familyId);
 
         // Family가 존재하지 않으면 false 반환
@@ -47,11 +47,11 @@ public class LuckyServiceImpl implements LuckyService{
         List<Lucky> luckyList = luckyRepository.findByFamilyFamilyId(familyId);
         // 모든 lucky의 running이 false인지 확인
         boolean allNotRunning = luckyList.stream().noneMatch(Lucky::isRunning);
-       if (allNotRunning) {
+        if (allNotRunning) {
             Family family = familyOptional.get();
             Lucky lucky = new Lucky();
             lucky.setFamily(family);
-            lucky.setStatus(1);
+            lucky.setStatus(0);
             DateUtil dateUtil = DateUtil.getInstance();
             String currentDateStr = dateUtil.timestampToString(challengeDate);
             lucky.setChallengeStartDate(currentDateStr); // 문자열 형식으로 날짜 저장
@@ -66,7 +66,7 @@ public class LuckyServiceImpl implements LuckyService{
     // 사용자의 챌린지 참여여부 확인하여 행운이 상태 반환
     @Override
     @Transactional(readOnly = true)
-    public LuckyStatusDto getLuckyStatus(String challengeDate) throws IllegalArgumentException{
+    public LuckyStatusDto getLuckyStatus(String challengeDate) throws IllegalArgumentException {
         String loginId = SecurityUtil.getLoginLoginId();
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("No member found for login id: " + loginId));
@@ -148,7 +148,7 @@ public class LuckyServiceImpl implements LuckyService{
     // luckyId로 lucky 찾기
     @Override
     @Transactional(readOnly = true)
-    public Lucky getLucky(Long luckyId){
+    public Lucky getLucky(Long luckyId) {
         return luckyRepository.findById(luckyId).get();
     }
 
@@ -169,7 +169,7 @@ public class LuckyServiceImpl implements LuckyService{
     // 시작해야 하는 challenge 넘버 찾기
     @Override
     @Transactional(readOnly = true)
-    public Integer findStartChallengeNum(Long familyId){
+    public Integer findStartChallengeNum(Long familyId) {
         // luckies를 순회화면서 lucky의 lifetime의 합을 구하여 반환
         List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
 
@@ -189,5 +189,26 @@ public class LuckyServiceImpl implements LuckyService{
                 .findFirst()
                 .map(lucky -> lucky.getLifetime().getDays())
                 .orElse(0);
+    }
+
+    // 챌린지가 종료되었을 경우 running -> false로 저장
+    @Override
+    public void luckyDeadOrAlive(String challengeDate) throws Exception {
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
+        Long familyId = member.getFamily().getFamilyId();
+        int luckyLifetime = findCurrentLuckyLifetime(familyId);
+        List<Lucky> luckies = luckyRepository.findByFamilyFamilyId(familyId);
+
+        for (Lucky lucky : luckies) {
+            if (lucky.isRunning()) {
+                DateUtil dateUtil = DateUtil.getInstance();
+                // 현재 진행되어야할 challengenum를 반환
+                int currentChallengeNumber = Math.toIntExact(dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.timestampToString(Long.valueOf(challengeDate))));
+                if (luckyLifetime < currentChallengeNumber) {
+                    lucky.setRunning(false);
+                    luckyRepository.save(lucky);
+                }
+            }
+        }
     }
 }
