@@ -1,8 +1,9 @@
 package ongjong.namanmoo.dto.recap;
 
 import lombok.Data;
+
 @Data
-public class MemberYouthAnswerDto {
+public class MemberYouthAnswerDto implements MemberDto {
     private String userImg;
     private String photo;
     private String text;

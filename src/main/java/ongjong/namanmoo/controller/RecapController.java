@@ -92,7 +92,7 @@ public class RecapController {
     @GetMapping("/appreciations")
     public ApiResponse getAppreciations(@RequestParam("luckyId") Long luckyId) throws Exception {
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
-        List<MemberAppreciationDto> appreciationList = answerService.getAppreciateByMember(members, 27, 25);
+        List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(members, 27, 25);
         return new ApiResponse<>("200", "Success", appreciationList);
     }
 

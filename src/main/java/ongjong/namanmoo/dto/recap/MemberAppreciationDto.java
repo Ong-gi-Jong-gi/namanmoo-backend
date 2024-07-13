@@ -4,7 +4,7 @@ import lombok.Data;
 import ongjong.namanmoo.domain.Member;
 
 @Data
-public class MemberAppreciationDto {
+public class MemberAppreciationDto implements MemberDto {
     private String userId;
     private String nickname;
     private String userImg;

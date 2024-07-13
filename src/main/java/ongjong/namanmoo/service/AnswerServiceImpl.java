@@ -9,6 +9,7 @@ import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.dto.challenge.ChallengeDetailsDto;
 import ongjong.namanmoo.dto.recap.MemberAppreciationDto;
+import ongjong.namanmoo.dto.recap.MemberDto;
 import ongjong.namanmoo.dto.recap.MemberPhotosAnswerDto;
 import ongjong.namanmoo.dto.recap.MemberYouthAnswerDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
@@ -229,10 +230,11 @@ public class AnswerServiceImpl implements AnswerService {
     }
 
 
-    // 각 member의 memberImg와 특정 번호의 챌린지 답변을 묶어 반환
+    // 공통 로직을 처리하는 메서드
+    // 각 member의 정보와 특정 두 번호에 해당하는 두 챌린지 답변을 묶어 반환
     @Transactional(readOnly = true)
-    public List<MemberYouthAnswerDto> getYouthByMember(List<Member> members, int challengeNum1, int challengeNum2) throws Exception {
-        List<MemberYouthAnswerDto> memberAnswerDtoList = new ArrayList<>();
+    public List<MemberDto> getAnswersByMember(List<Member> members, int challengeNum1, int challengeNum2, Class<? extends MemberDto> dtoClass) throws Exception {
+        List<MemberDto> memberDtoList = new ArrayList<>();
         Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
         int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId()); // 이번 lucky에서 시작해야하는 challengeNum
 
@@ -247,7 +249,6 @@ public class AnswerServiceImpl implements AnswerService {
                 .orElseThrow(() -> new Exception("Challenge " + (startChallengeNum + challengeNum2) + " not found"));
 
         for (Member member : members) {
-            String memberImg = member.getMemberImage();
             Answer challenge1Answer = answerRepository.findByChallengeAndMember(challenge1, member)
                     .orElseThrow(() -> new Exception("Answer for Challenge " + (startChallengeNum + challengeNum1) + " not found"));
             Answer challenge2Answer = answerRepository.findByChallengeAndMember(challenge2, member)
@@ -256,42 +257,29 @@ public class AnswerServiceImpl implements AnswerService {
             String answer1 = challenge1Answer.getAnswerContent();
             String answer2 = challenge2Answer.getAnswerContent();
 
-            MemberYouthAnswerDto dto = new MemberYouthAnswerDto(memberImg, answer1, answer2);
-            memberAnswerDtoList.add(dto);
+            memberDtoList.add(createDto(dtoClass, member, answer1, answer2));
         }
-        return memberAnswerDtoList;
+        return memberDtoList;
     }
 
-    // 각 member의 정보와 특정 번호의 챌린지 답변을 묶어 반환
-    @Transactional(readOnly = true)
-    public List<MemberAppreciationDto> getAppreciateByMember(List<Member> members, int challengeNum1, int challengeNum2) throws Exception {
-        List<MemberAppreciationDto> memberAppreciationDtoList = new ArrayList<>();
-        Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
-        int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId()); // 이번 lucky에서 시작해야하는 challengeNum
-
-        Challenge challenge1 = challengeRepository.findByChallengeNum(startChallengeNum + challengeNum1)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new Exception("Challenge " + (startChallengeNum + challengeNum1) + " not found"));
-
-        Challenge challenge2 = challengeRepository.findByChallengeNum(startChallengeNum + challengeNum2)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new Exception("Challenge " + (startChallengeNum + challengeNum2) + " not found"));
-
-        for (Member member : members) {
-            Answer challenge1Answer = answerRepository.findByChallengeAndMember(challenge1, member)
-                    .orElseThrow(() -> new Exception("Answer for Challenge " + (startChallengeNum + challengeNum1) + " not found"));
-            Answer challenge2Answer = answerRepository.findByChallengeAndMember(challenge2, member)
-                    .orElseThrow(() -> new Exception("Answer for Challenge " + (startChallengeNum + challengeNum2) + " not found"));
-
-            String thanks = challenge1Answer.getAnswerContent();
-            String sorry = challenge2Answer.getAnswerContent();
-
-            MemberAppreciationDto dto = new MemberAppreciationDto(member, thanks, sorry);
-            memberAppreciationDtoList.add(dto);
+    // DTO 생성 로직을 처리하는 메서드
+    public MemberDto createDto(Class<? extends MemberDto> dtoClass, Member member, String answer1, String answer2) {
+        if (dtoClass == MemberAppreciationDto.class) {
+            return new MemberAppreciationDto(member, answer1, answer2);
+        } else if (dtoClass == MemberYouthAnswerDto.class) {
+            return new MemberYouthAnswerDto(member.getMemberImage(), answer1, answer2);
         }
-        return memberAppreciationDtoList;
+        throw new IllegalArgumentException("Unsupported DTO class: " + dtoClass.getName());
+    }
+
+    @Transactional(readOnly = true)
+    public List<MemberYouthAnswerDto> getYouthByMember(List<Member> members, int challengeNum1, int challengeNum2) throws Exception {
+        return (List<MemberYouthAnswerDto>) (List<?>) getAnswersByMember(members, challengeNum1, challengeNum2, MemberYouthAnswerDto.class);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MemberAppreciationDto> getAppreciationByMember(List<Member> members, int challengeNum1, int challengeNum2) throws Exception {
+        return (List<MemberAppreciationDto>) (List<?>) getAnswersByMember(members, challengeNum1, challengeNum2, MemberAppreciationDto.class);
     }
 
     // 각 멤버의 photo 타입의 질문에 대한 사진을 랜덤으로 반환
