@@ -182,7 +182,7 @@ public class AnswerServiceImpl implements AnswerService {
         Member member = memberService.findMemberByLoginId();
         Long familyId = member.getFamily().getFamilyId();
         Lucky lucky = luckyService.findCurrentLucky(familyId);
-
+        
         if (answer.getAnswerContent() == null){
             answer.setBubbleVisible(true);
             lucky.setStatus(lucky.getStatus()+1);
@@ -273,7 +273,7 @@ public class AnswerServiceImpl implements AnswerService {
         List<String> otherPhotos = new ArrayList<>();
 
         Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
-        int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId());        // 이번 lucky에서 시작해야하는 challengnum
+        int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId());
 
         // 1. Challenge 19 가져오기
         Challenge challenge19 = challengeRepository.findByChallengeNum(startChallengeNum+9)
