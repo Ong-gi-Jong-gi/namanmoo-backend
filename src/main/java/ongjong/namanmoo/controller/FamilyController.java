@@ -1,16 +1,10 @@
 package ongjong.namanmoo.controller;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
-import ongjong.namanmoo.domain.MemberRole;
-import ongjong.namanmoo.dto.family.FamilyMemberDto;
-import ongjong.namanmoo.response.*;
-import ongjong.namanmoo.response.family.CreateFamilyResponse;
-import ongjong.namanmoo.response.family.FamilyInfoResponse;
-import ongjong.namanmoo.response.family.FamilyInviteResponse;
-import ongjong.namanmoo.response.family.JoinFamilyResponse;
+import ongjong.namanmoo.dto.ApiResponse;
+import ongjong.namanmoo.dto.family.*;
 import ongjong.namanmoo.service.FamilyService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -76,21 +70,11 @@ public class FamilyController {
         return ResponseEntity.ok(response);
     }
 
-    @Getter
-    public static class CreateFamilyRequest {
-        private int familySize;
-        private String familyName;
-        private String ownerRole;
-    }
+    // 가족 코드 조회
+    @GetMapping("/code")
+    public ApiResponse<CreateFamilyResponse> getMyFamilyCode() {
+        CreateFamilyResponse inviteCode = new CreateFamilyResponse(familyService.getInviteCode());
+        return new ApiResponse<>("200", "Get InviteCode Success", inviteCode);
 
-    @Getter
-    public static class JoinFamilyRequest {
-        private Long familyId;
-        private String role;
-    }
-
-    @Getter
-    public static class FamilyIdRequest {
-        private String familyId;
     }
 }

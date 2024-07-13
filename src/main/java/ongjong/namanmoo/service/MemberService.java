@@ -35,7 +35,6 @@ public interface MemberService {
 
     MemberInfoDto getMyInfo() throws Exception;
 
-    @Transactional(readOnly = true)
     Member findMemberByLoginId() throws Exception;
 
     List<MemberAndCountDto> getMemberAndCount(Lucky lucky);

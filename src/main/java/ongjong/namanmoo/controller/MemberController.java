@@ -8,10 +8,8 @@ import ongjong.namanmoo.dto.member.MemberInfoDto;
 import ongjong.namanmoo.dto.member.MemberSignUpDto;
 import ongjong.namanmoo.dto.member.MemberUpdateDto;
 import ongjong.namanmoo.dto.member.UpdatePasswordDto;
-import ongjong.namanmoo.response.ApiResponse;
-import ongjong.namanmoo.service.AwsS3Service;
+import ongjong.namanmoo.dto.ApiResponse;
 import ongjong.namanmoo.service.MemberService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +26,6 @@ import java.util.Optional;
 public class MemberController {
 
     private final MemberService memberService;
-    private final AwsS3Service awsS3Service;
 
     // 회원 가입
     @PostMapping("/signup")
@@ -59,7 +56,7 @@ public class MemberController {
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<MemberInfoDto> updateBasicInfo(@RequestPart("userInfo") MemberUpdateDto memberUpdateDto,
-                                                      @RequestPart("userImg") Optional<MultipartFile> userImg) throws Exception {
+                                                      @RequestPart(value = "userImg", required = false) Optional<MultipartFile> userImg) throws Exception {
         memberService.update(memberUpdateDto, userImg);
         MemberInfoDto info = memberService.getMyInfo();
         return new ApiResponse<>("200", "Update User Info Success", info);

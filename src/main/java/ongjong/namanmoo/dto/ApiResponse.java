@@ -1,4 +1,4 @@
-package ongjong.namanmoo.response;
+package ongjong.namanmoo.dto;
 
 import lombok.Getter;
 

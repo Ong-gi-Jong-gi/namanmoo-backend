@@ -1,4 +1,4 @@
-package ongjong.namanmoo.response.family;
+package ongjong.namanmoo.dto.family;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
