@@ -52,15 +52,21 @@ public class ChallengeServiceImpl implements ChallengeService {
             return null;
         }
 
-        log.info("number: {}",number);
         List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum(family.getFamilyId()), number);
 
         // 멤버 역할에 맞지 않는 challenge는 리스트에서 제외
+        return groupChallengeExceptionRemove(challengeList,member);
+    }
+
+    // 멤버 역할에 맞지 않는 challenge는 리스트에서 제외
+    @Override
+    @Transactional(readOnly = true)
+    public List<Challenge> groupChallengeExceptionRemove(List<Challenge> challengeList, Member member) throws Exception{
         Iterator<Challenge> iterator = challengeList.iterator();        // iterator를 사용 -> challengelist를 순회하면서 조건에 맞지 않는 챌린지 제거
         while (iterator.hasNext()){
             Challenge challenge = iterator.next();
             if(challenge.getChallengeType() == ChallengeType.GROUP_PARENT){
-                if (member.getRole().equals("아들") || member.getRole().equals("딸")){         //TODO: 현재 문자열 비교를 하고 있는데 ROLE을 enum으로 바꿔서 비교하는게 유지보수성이 좋다.
+                if (member.getRole().equals("아들") || member.getRole().equals("딸")){
                     iterator.remove();
                 }
             }
@@ -169,7 +175,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     // groupChallenge 조회를 위한 dto  (부모와 자식의 challenge 질문 구분하기)
     @Override
     @Transactional(readOnly = true)
-    public GroupChallengeDto createGroupChallenge(Challenge challenge, Long timeStamp, boolean isComplete, List<Answer> answers) {
+    public GroupChallengeDto filterChallengesByMemberRole(Challenge challenge, Long timeStamp, boolean isComplete, List<Answer> answers) {
         List<Answer> parentAnswerList = new ArrayList<>();
         List<Answer> childAnswerList = new ArrayList<>();
 

@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.dto.challenge.*;
-import ongjong.namanmoo.service.DateUtil;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
@@ -115,7 +114,7 @@ public class ChallengeController {
         boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
         List<Answer> allAnswers = answerService.findAnswersByChallenges(challenge, member);     // 특정 그룹 챌린지에 매핑된 answer list 찾기
 
-        GroupChallengeDto groupChallengeDto = challengeService.createGroupChallenge(challenge, challengeDate, isComplete, allAnswers);
+        GroupChallengeDto groupChallengeDto = challengeService.filterChallengesByMemberRole(challenge, challengeDate, isComplete, allAnswers);
         return new ApiResponse<>("200", "Challenge retrieved successfully", groupChallengeDto);
     }
 
