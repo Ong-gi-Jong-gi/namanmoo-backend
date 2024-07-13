@@ -293,8 +293,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         long fastestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수
         List<Answer> answers = answerRepository.findByChallenge(challenge);
 
-        SimpleDateFormat format4 = new SimpleDateFormat(DateUtil.FORMAT_4);
-        SimpleDateFormat format9 = new SimpleDateFormat(DateUtil.FORMAT_9);
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 
         for (Member member : lucky.getFamily().getMembers()) {
             long latestResponseTimeForMember = Long.MIN_VALUE; // 가족 구성원의 가장 늦은 응답시간을 저장할 변수
@@ -302,19 +301,16 @@ public class ChallengeServiceImpl implements ChallengeService {
             for (Answer answer : answers) {
                 if (answer.getMember().equals(member)) {
                     try {
-                        String createDate = answer.getCreateDate();
                         String modifiedDate = answer.getModifiedDate();
 
-                        if (createDate == null || modifiedDate == null) {
+                        if (modifiedDate == null) {
                             log.warn("답변 ID: " + answer.getAnswerId() + "에서 Null 타임스탬프를 찾았습니다.");
                             continue;
                         }
 
-                        Date createTime = format4.parse(createDate);
-                        Date modifiedTime = format9.parse(modifiedDate);
-                        log.info("답변 수정 시간: " + modifiedTime.getTime() + ", 답변 생성 시간: " + createTime.getTime());
+                        Date modifiedTime = timeFormat.parse(modifiedDate.split(" ")[1]); // 시간 부분만 파싱
+                        long responseTime = modifiedTime.getTime();
 
-                        long responseTime = modifiedTime.getTime() - createTime.getTime();
                         log.info("회원 ID: " + member.getMemberId() + ", 응답 시간: " + responseTime);
 
                         if (responseTime > latestResponseTimeForMember) {
@@ -334,6 +330,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         if (fastestTime == Long.MIN_VALUE) {
             return Long.MAX_VALUE;
         }
+
         long totalSeconds = fastestTime / 1000;
         long totalMinutes = totalSeconds / 60;
         long totalHours = totalMinutes / 60;
