@@ -12,9 +12,10 @@ import ongjong.namanmoo.dto.answer.AnswerDto;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
 @Data
 @Slf4j
-@JsonPropertyOrder({ "challengeNumber", "challengeDate", "isComplete", "challengeTitle", "answerList" })
+@JsonPropertyOrder({ "challengeNumber", "challengeDate", "isComplete", "parentChallenge", "childrenChallenge" })
 public class GroupChallengeDto {
     private String challengeNumber;
     private Long challengeDate;
@@ -23,52 +24,56 @@ public class GroupChallengeDto {
     private NewChallengeDto parentChallenge;
     private NewChallengeDto childrenChallenge;
 
-    public GroupChallengeDto(Challenge challenge , Long timeStamp, boolean isComplete, List<Answer> answers) {
-        this.challengeNumber = challenge.getChallengeNum().toString();
-        this.challengeDate = timeStamp;
+    public GroupChallengeDto(String challengeNumber, Long challengeDate, boolean isComplete,
+                             NewChallengeDto parentChallenge, NewChallengeDto childrenChallenge) {
+        this.challengeNumber = challengeNumber;
+        this.challengeDate = challengeDate;
         this.isComplete = isComplete;
-        List<Answer> parentAnswerList = new ArrayList<>();      // 부모 answer 리스트
-        List<Answer> childAnswerList = new ArrayList<>();       // 자식 answer 리스트
-
-        for (Answer answer : answers) {
-            if (answer.getChallenge().getChallengeType() == ChallengeType.GROUP_PARENT) {
-                parentAnswerList.add(answer);
-            } else {
-                childAnswerList.add(answer);
-            }
-        }
-
-        List<AnswerDto> parentAnswerDtoList = parentAnswerList.stream()
-                .map(AnswerDto::new)
-                .collect(Collectors.toList());
-        if (!parentAnswerList.isEmpty()) {
-            this.parentChallenge = new NewChallengeDto(parentAnswerList.get(0).getChallenge().getChallengeTitle(), parentAnswerDtoList);
-        } else {
-            this.parentChallenge = new NewChallengeDto("No Parent Challenge", new ArrayList<>());
-        }
-
-        List<AnswerDto> childAnswerDtoList = childAnswerList.stream()
-                .map(AnswerDto::new)
-                .collect(Collectors.toList());
-        if (!childAnswerList.isEmpty()) {
-            this.childrenChallenge = new NewChallengeDto(childAnswerList.get(0).getChallenge().getChallengeTitle(), childAnswerDtoList);
-        } else {
-            this.childrenChallenge = new NewChallengeDto("No Children Challenge", new ArrayList<>());
-        }
+        this.parentChallenge = parentChallenge;
+        this.childrenChallenge = childrenChallenge;
     }
 
     @Data
     @JsonPropertyOrder({"challengeTitle", "answerList"})
-    private static class NewChallengeDto {
+    public static class NewChallengeDto {
         @JsonProperty("challengeTitle")
         private String challengeTitle;
-
         @JsonProperty("answerList")
         private List<AnswerDto> answerList;
 
-        NewChallengeDto(String challengeTitle, List<AnswerDto> answerList) {
+        public NewChallengeDto(String challengeTitle, List<AnswerDto> answerList) {
             this.challengeTitle = challengeTitle;
             this.answerList = answerList;
         }
     }
+
+
+//    public static GroupChallengeDto from(Challenge challenge, Long timeStamp, boolean isComplete, List<Answer> answers) {
+//        List<Answer> parentAnswerList = new ArrayList<>();
+//        List<Answer> childAnswerList = new ArrayList<>();
+//
+//        for (Answer answer : answers) {
+//            if (answer.getChallenge().getChallengeType() == ChallengeType.GROUP_PARENT) {
+//                parentAnswerList.add(answer);
+//            } else {
+//                childAnswerList.add(answer);
+//            }
+//        }
+//
+//        List<AnswerDto> parentAnswerDtoList = parentAnswerList.stream()
+//                .map(AnswerDto::new)
+//                .collect(Collectors.toList());
+//        NewChallengeDto parentChallenge = parentAnswerList.isEmpty() ?
+//                new NewChallengeDto("No Parent Challenge", new ArrayList<>()) :
+//                new NewChallengeDto(parentAnswerList.get(0).getChallenge().getChallengeTitle(), parentAnswerDtoList);
+//
+//        List<AnswerDto> childAnswerDtoList = childAnswerList.stream()
+//                .map(AnswerDto::new)
+//                .collect(Collectors.toList());
+//        NewChallengeDto childrenChallenge = childAnswerList.isEmpty() ?
+//                new NewChallengeDto("No Children Challenge", new ArrayList<>()) :
+//                new NewChallengeDto(childAnswerList.get(0).getChallenge().getChallengeTitle(), childAnswerDtoList);
+//
+//        return new GroupChallengeDto(challenge.getChallengeNum().toString(), timeStamp, isComplete, parentChallenge, childrenChallenge);
+//    }
 }

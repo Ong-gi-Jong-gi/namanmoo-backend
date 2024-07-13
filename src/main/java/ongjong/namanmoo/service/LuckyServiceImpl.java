@@ -51,7 +51,7 @@ public class LuckyServiceImpl implements LuckyService{
             Family family = familyOptional.get();
             Lucky lucky = new Lucky();
             lucky.setFamily(family);
-            lucky.setStatus(1);
+            lucky.setStatus(0);
             DateUtil dateUtil = DateUtil.getInstance();
             String currentDateStr = dateUtil.timestampToString(challengeDate);
             lucky.setChallengeStartDate(currentDateStr); // 문자열 형식으로 날짜 저장
@@ -216,5 +216,22 @@ public class LuckyServiceImpl implements LuckyService{
 
         luckyRepository.save(lucky); // 변경된 Lucky 엔티티 저장
     }
+
+//    @Override
+//    public boolean luckyDeadOrAlive(String challengeDate) throws Exception {
+//        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
+//        Family family =
+//
+//
+//        int currentLuckyLifetime = findCurrentLuckyLifetime(member.getFamily().getFamilyId());
+//        Integer number = challengeService.findCurrentNum(Long.parseLong(challengeDate));
+//        if(currentLuckyLifetime < number){
+//            Lucky lucky = findCurrentLucky(member.getFamily().getFamilyId());
+//            lucky.setRunning(false);
+//            luckyRepository.save(lucky);
+//            return true;
+//        }
+//        return false;
+//    }
 
 }

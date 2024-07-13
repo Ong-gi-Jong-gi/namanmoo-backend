@@ -3,13 +3,11 @@ package ongjong.namanmoo.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.dto.challenge.*;
-import ongjong.namanmoo.service.DateUtil;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
@@ -19,11 +17,10 @@ import ongjong.namanmoo.service.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 @Slf4j
 @RestController
@@ -49,17 +46,14 @@ public class ChallengeController {
     }
 
     @GetMapping("/today")     // 오늘의 챌린지 조회
-    public ApiResponse<ChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
-        Member member = memberService.findMemberByLoginId();  // 로그인한 member
-        List<Challenge> challenges = challengeService.findChallengesByMemberId(challengeDate, member);
-        Challenge challenge = challengeService.findOneInCurrentChallenges(challenges);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge not found", null);
+    public ApiResponse<CurrentChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+        Member member = memberService.findMemberByLoginId(); // 로그인한 member
+        CurrentChallengeDto currentChallenge = challengeService.findChallengesByMemberId(challengeDate, member);
+
+        if (currentChallenge == null || currentChallenge.getChallengeInfo() == null) {
+            return new ApiResponse<>("404", "Challenge not found", currentChallenge);
         }
-        Integer currentNum  = challengeService.findCurrentNum(challengeDate);
-        DateUtil dateUtil = DateUtil.getInstance();
-        ChallengeDto challengeDto = new ChallengeDto(challenge, currentNum, dateUtil.timestampToString(challengeDate));
-        return new ApiResponse<>("200", "Success", challengeDto);
+        return new ApiResponse<>("200", "Success", currentChallenge);
     }
 
     @GetMapping("/list")        // 챌린지 리스트 조회 , 챌린지 리스트는 lucky가 여러개 일때를 고려하여 죽은 럭키 개수 * 30 +1 부터 챌린지가 보여져야한다.
@@ -115,7 +109,7 @@ public class ChallengeController {
     public ApiResponse<GroupChallengeDto> getGroupChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
         Challenge challenge = challengeService.findChallengeById(challengeId);
         if (challenge == null) {
-            return new ApiResponse<>("failure", "Challenge not found for the provided challengeId", null);
+            return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
         }
 
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
@@ -127,8 +121,9 @@ public class ChallengeController {
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
         luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
 
-        GroupChallengeDto groupChallengeDto = new GroupChallengeDto(challenge, challengeDate, isComplete, allAnswers);
-        return new ApiResponse<>("success", "Challenge retrieved successfully", groupChallengeDto);
+        GroupChallengeDto groupChallengeDto = challengeService.getGroupChallenge(challenge, challengeDate, isComplete, allAnswers);
+        return new ApiResponse<>("200", "Challenge retrieved successfully", groupChallengeDto);
+
     }
 
     // 그룹 챌린지 답변 수정
@@ -158,7 +153,8 @@ public class ChallengeController {
         luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
 
         PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, details.isComplete(), details.getChallengeDate(), details.getAnswers());
-        return new ApiResponse<>("success", "Challenge retrieved successfully",photoChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
+        return new ApiResponse<>("200", "Challenge retrieved successfully",photoChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
+
     }
 
     // 사진 챌린지 수정
@@ -309,7 +305,7 @@ public class ChallengeController {
         luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
 
         VoiceChallengeDto voiceChallengeDto = new VoiceChallengeDto(challenge, details.isComplete(), details.getChallengeDate(), details.getAnswers());
-        return new ApiResponse<>("success", "Challenge retrieved successfully",voiceChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
+        return new ApiResponse<>("200", "Challenge retrieved successfully",voiceChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
     }
 
 }

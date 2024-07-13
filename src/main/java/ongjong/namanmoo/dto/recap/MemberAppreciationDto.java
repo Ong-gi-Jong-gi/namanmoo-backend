@@ -4,7 +4,7 @@ import lombok.Data;
 import ongjong.namanmoo.domain.Member;
 
 @Data
-public class AppreciationDto {
+public class MemberAppreciationDto {
     private String userId;
     private String nickname;
     private String userImg;
@@ -12,7 +12,7 @@ public class AppreciationDto {
     private String thanks;
     private String sorry;
 
-    public AppreciationDto(Member member, String thanks, String sorry) {
+    public MemberAppreciationDto(Member member, String thanks, String sorry) {
         this.userId = member.getLoginId();
         this.nickname = member.getNickname();
         this.userImg = member.getMemberImage();
