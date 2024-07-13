@@ -41,4 +41,5 @@ public interface LuckyService {
 
     // 해당 Lucky에 해당하는 챌린지 조회수 늘리기
     void increaseChallengeViews(Long luckyId, Integer challengeNum);
+
 }

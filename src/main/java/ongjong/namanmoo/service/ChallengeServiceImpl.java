@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Slf4j
@@ -28,6 +30,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     private final LuckyService luckyService;
     private final MemberRepository memberRepository;
     private final MemberService memberService;
+    private final AnswerRepository answerRepository;
 
     // familyId를 통해 해당 날짜에 해당하는 오늘의 challenge 조회
     // 해당 가족 id를 가지고 있는 행운이 모두 조회
@@ -186,6 +189,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     // 해당 Lucky에 대한 가장 많이 조회된 챌린지 찾기
+    @Override
     public Challenge findMostViewedChallenge(Lucky lucky) throws Exception {
         Integer maxViews = 0;
         Integer mostViewedChallengeNum = null;
@@ -230,4 +234,115 @@ public class ChallengeServiceImpl implements ChallengeService {
         }
         return null;
     }
+
+    @Override
+    public Challenge findFastestAnsweredChallenge(Lucky lucky) throws Exception {
+        List<Challenge> challenges = findRunningChallenges(); // 해당 Lucky의 모든 챌린지 가져오기
+        Challenge fastestChallenge = null;
+        long shortestTime = Long.MAX_VALUE;
+
+        for (Challenge challenge : challenges) {
+            if (challenge.getChallengeType() == ChallengeType.GROUP_CHILD || challenge.getChallengeType() == ChallengeType.GROUP_PARENT) { // GROUP 챌린지일 때
+                // 같은 challengeNum을 가지는 모든 챌린지 조회
+                List<Challenge> relatedChallenges = challengeRepository.findByChallengeNum(challenge.getChallengeNum());
+                log.info("그룹 챌린지 사이즈 " + relatedChallenges.size());
+
+                int checkSize = 0;
+                for (Challenge groupChallenge : relatedChallenges) {
+                    List<Answer> groupAnswers = answerRepository.findByChallenge(groupChallenge);
+                    checkSize += groupAnswers.size();
+                }
+                if (checkSize != lucky.getFamily().getMembers().size()) {
+                    continue;
+                }
+
+                // 각 챌린지에 대해 답변 확인
+                for (Challenge relatedChallenge : relatedChallenges) {
+                    List<Answer> answers = answerRepository.findByChallenge(relatedChallenge);
+                    log.info("Challenge ID: " + relatedChallenge.getChallengeId() + ", Answer count: " + answers.size());
+
+                    long timeToAnswer = calculateFastestResponseTime(lucky, relatedChallenge); // 챌린지별 가장 늦은 응답 시간 계산
+                    log.info("Challenge ID: " + relatedChallenge.getChallengeId() + ", Time to answer: " + timeToAnswer);
+                    if (timeToAnswer < shortestTime) {
+                        shortestTime = timeToAnswer;
+                        fastestChallenge = relatedChallenge;
+                    }
+                }
+            } else { // 그룹이 아닌 모든 챌린지
+                // 해당 챌린지에 대한 모든 답변 가져오기
+                List<Answer> answers = answerRepository.findByChallenge(challenge);
+                log.info("Challenge ID: " + challenge.getChallengeId() + ", Answer count: " + answers.size());
+
+                // 모든 가족 구성원이 답변했는지 확인
+                if (answers.size() == lucky.getFamily().getMembers().size()) {
+                    long timeToAnswer = calculateFastestResponseTime(lucky, challenge); // 챌린지별 가장 늦은 응답 시간 계산
+                    log.info("Challenge ID: " + challenge.getChallengeId() + ", Time to answer: " + timeToAnswer);
+                    if (timeToAnswer < shortestTime) {
+                        shortestTime = timeToAnswer;
+                        fastestChallenge = challenge;
+                    }
+                }
+            }
+        }
+        log.info("Fastest Challenge ID: " + (fastestChallenge != null ? fastestChallenge.getChallengeId() : "None"));
+        return fastestChallenge;
+    }
+
+    @Override
+    public long calculateFastestResponseTime(Lucky lucky, Challenge challenge) throws Exception {
+        long fastestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수
+        List<Answer> answers = answerRepository.findByChallenge(challenge);
+
+        SimpleDateFormat format4 = new SimpleDateFormat(DateUtil.FORMAT_4);
+        SimpleDateFormat format9 = new SimpleDateFormat(DateUtil.FORMAT_9);
+
+        for (Member member : lucky.getFamily().getMembers()) {
+            long latestResponseTimeForMember = Long.MIN_VALUE; // 가족 구성원의 가장 늦은 응답시간을 저장할 변수
+
+            for (Answer answer : answers) {
+                if (answer.getMember().equals(member)) {
+                    try {
+                        String createDate = answer.getCreateDate();
+                        String modifiedDate = answer.getModifiedDate();
+
+                        if (createDate == null || modifiedDate == null) {
+                            log.warn("답변 ID: " + answer.getAnswerId() + "에서 Null 타임스탬프를 찾았습니다.");
+                            continue;
+                        }
+
+                        Date createTime = format4.parse(createDate);
+                        Date modifiedTime = format9.parse(modifiedDate);
+                        log.info("답변 수정 시간: " + modifiedTime.getTime() + ", 답변 생성 시간: " + createTime.getTime());
+
+                        long responseTime = modifiedTime.getTime() - createTime.getTime();
+                        log.info("회원 ID: " + member.getMemberId() + ", 응답 시간: " + responseTime);
+
+                        if (responseTime > latestResponseTimeForMember) {
+                            latestResponseTimeForMember = responseTime;
+                        }
+                    } catch (ParseException e) {
+                        log.error("답변 ID: " + answer.getAnswerId() + "의 날짜 파싱 에러", e);
+                    }
+                }
+            }
+
+            if (latestResponseTimeForMember != Long.MIN_VALUE && latestResponseTimeForMember > fastestTime) {
+                fastestTime = latestResponseTimeForMember;
+            }
+        }
+
+        if (fastestTime == Long.MIN_VALUE) {
+            return Long.MAX_VALUE;
+        }
+        long totalSeconds = fastestTime / 1000;
+        long totalMinutes = totalSeconds / 60;
+        long totalHours = totalMinutes / 60;
+        long days = totalHours / 24;
+        long seconds = totalSeconds % 60;
+        long minutes = totalMinutes % 60;
+        long hours = totalHours % 24;
+        log.info("가장 늦은 응답 시간: " + days + "일 " + hours + "시간 " + minutes + "분 " + seconds + "초");
+        return fastestTime;
+    }
+
 }

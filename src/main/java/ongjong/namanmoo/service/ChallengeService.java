@@ -28,4 +28,8 @@ public interface ChallengeService {
 
     Challenge findMostViewedChallenge(Lucky lucky) throws Exception;
 
+    Challenge findFastestAnsweredChallenge(Lucky lucky) throws Exception;
+
+    long calculateFastestResponseTime(Lucky lucky, Challenge challenge) throws Exception ;
+
 }

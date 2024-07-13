@@ -59,20 +59,22 @@ public class RecapController {
         Map<String, Object> mostViewedData = new HashMap<>();
         mostViewedData.put("topic", "가장 조회수가 많은 질문");
         mostViewedData.put("topicResult", mostViewedChallenge != null ? lucky.getChallengeViews().get(mostViewedChallenge.getChallengeNum()) : 0);
-        mostViewedData.put("challengeTitle", mostViewedChallenge != null ? mostViewedChallenge.getChallengeTitle() : null);
-        mostViewedData.put("challengeId", mostViewedChallenge != null ? mostViewedChallenge.getChallengeId() : null);
-        mostViewedData.put("challengeType", mostViewedChallenge != null ? mostViewedChallenge.getChallengeType() : null);
+        mostViewedData.put("challengeId", mostViewedChallenge != null ? mostViewedChallenge.getChallengeId() : "");
+        mostViewedData.put("challengeType", mostViewedChallenge != null ? mostViewedChallenge.getChallengeType() : "");
+        mostViewedData.put("challengeNumber", mostViewedChallenge != null ? mostViewedChallenge.getChallengeNum() : "");
+        mostViewedData.put("challengeTitle", mostViewedChallenge != null ? mostViewedChallenge.getChallengeTitle() : "");
 
-//        // 모두가 가장 빨리 답한 챌린지
-//        Challenge fastestAnsweredChallenge = challengeService.findFastestAnsweredChallenge(lucky);
-//        Map<String, Object> fastestAnsweredData = new HashMap<>();
-//        fastestAnsweredData.put("topic", "모두가 가장 빨리 답한 질문");
-//        fastestAnsweredData.put("topicResult", fastestAnsweredChallenge != null ? answerService.calculateFastestResponseTime(fastestAnsweredChallenge.getAnswers()) : 0);
-//        fastestAnsweredData.put("challengeTitle", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeTitle() : null);
-//        fastestAnsweredData.put("challengeId", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeId() : null);
-//        fastestAnsweredData.put("challengeType", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeType() : null);
-//
-//        return new ApiResponse("200", "retrieved successfully", Arrays.asList(mostViewedData, fastestAnsweredData));
-        return new ApiResponse("200", "retrieved successfully", mostViewedData);
+        // 모두가 가장 빨리 답한 챌린지
+        Challenge fastestAnsweredChallenge = challengeService.findFastestAnsweredChallenge(lucky);
+        Map<String, Object> fastestAnsweredData = new HashMap<>();
+        fastestAnsweredData.put("topic", "모두가 가장 빨리 답한 질문");
+        fastestAnsweredData.put("topicResult", fastestAnsweredChallenge != null ? challengeService.calculateFastestResponseTime(lucky, fastestAnsweredChallenge) : 0);
+        fastestAnsweredData.put("challengeId", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeId() : "");
+        fastestAnsweredData.put("challengeType", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeType() : "");
+        fastestAnsweredData.put("challengeNumber", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeNum() : "");
+        fastestAnsweredData.put("challengeTitle", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeTitle() : "");
+
+        return new ApiResponse("200", "retrieved successfully", Arrays.asList(mostViewedData, fastestAnsweredData));
     }
+
 }
