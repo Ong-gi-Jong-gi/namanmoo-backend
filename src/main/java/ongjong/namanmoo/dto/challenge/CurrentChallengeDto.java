@@ -6,25 +6,25 @@ import lombok.Data;
 import ongjong.namanmoo.domain.challenge.Challenge;
 
 @Data
-@JsonPropertyOrder({ "isDone", "challengeDto" })
+@JsonPropertyOrder({ "isDone", "challengeInfo" })
 public class CurrentChallengeDto {
     @JsonProperty("isDone")
     private boolean isDone;
-    private ChallengeDto challengeDto;
+    private ChallengeInfo challengeInfo;
 
-    public CurrentChallengeDto(boolean isDone, ChallengeDto challengeDto) {
+    public CurrentChallengeDto(boolean isDone, ChallengeInfo challengeInfo) {
         this.isDone = isDone;
-        this.challengeDto = challengeDto;
+        this.challengeInfo = challengeInfo;
     }
     @Data
-    public static class ChallengeDto {
+    public static class ChallengeInfo {
         private String challengeId;
         private String challengeNumber;
         private String challengeTitle;
         private String challengeType;
         private String challengeDate;
 
-        public ChallengeDto(Challenge challenge, Integer currentNum, String challengeDate) {
+        public ChallengeInfo(Challenge challenge, Integer currentNum, String challengeDate) {
             this.challengeId = challenge.getChallengeId().toString();
             this.challengeNumber = currentNum.toString();
             this.challengeTitle = challenge.getChallengeTitle();

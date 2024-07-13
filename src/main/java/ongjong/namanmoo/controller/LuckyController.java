@@ -19,8 +19,9 @@ public class LuckyController {
     private final AnswerService answerService;
 
     @GetMapping
-    public ApiResponse<LuckyStatusDto> getLuckyStatus(@RequestParam("challengeDate") String challengeDate) {
+    public ApiResponse<LuckyStatusDto> getLuckyStatus(@RequestParam("challengeDate") String challengeDate) throws Exception {
         LuckyStatusDto luckyStatusDto = luckyService.getLuckyStatus(challengeDate);
+        luckyService.luckyDeadOrAlive(challengeDate);
         return new ApiResponse<>("200", "Success", luckyStatusDto);
     }
 

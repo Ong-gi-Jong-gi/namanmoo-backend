@@ -33,6 +33,7 @@ public class LuckyServiceImpl implements LuckyService{
     private final MemberRepository memberRepository;
     private final FamilyRepository familyRepository;
     private final AnswerRepository answerRepository;
+    private final ChallengeService challengeService;
 
     // 캐릭터 생성
     @Override
@@ -190,4 +191,21 @@ public class LuckyServiceImpl implements LuckyService{
                 .map(lucky -> lucky.getLifetime().getDays())
                 .orElse(0);
     }
+
+//    @Override
+//    public boolean luckyDeadOrAlive(String challengeDate) throws Exception {
+//        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
+//        Family family =
+//
+//
+//        int currentLuckyLifetime = findCurrentLuckyLifetime(member.getFamily().getFamilyId());
+//        Integer number = challengeService.findCurrentNum(Long.parseLong(challengeDate));
+//        if(currentLuckyLifetime < number){
+//            Lucky lucky = findCurrentLucky(member.getFamily().getFamilyId());
+//            lucky.setRunning(false);
+//            luckyRepository.save(lucky);
+//            return true;
+//        }
+//        return false;
+//    }
 }

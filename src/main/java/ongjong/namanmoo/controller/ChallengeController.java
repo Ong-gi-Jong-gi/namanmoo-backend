@@ -52,7 +52,7 @@ public class ChallengeController {
         Member member = memberService.findMemberByLoginId(); // 로그인한 member
         CurrentChallengeDto currentChallenge = challengeService.findChallengesByMemberId(challengeDate, member);
 
-        if (currentChallenge == null || currentChallenge.getChallengeDto() == null) {
+        if (currentChallenge == null || currentChallenge.getChallengeInfo() == null) {
             return new ApiResponse<>("404", "Challenge not found", currentChallenge);
         }
         return new ApiResponse<>("200", "Success", currentChallenge);

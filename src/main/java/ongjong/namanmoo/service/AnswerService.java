@@ -43,9 +43,6 @@ public interface AnswerService {
     // 챌린지와 멤버를 받아서 답변 리스트 반환
     List<Answer> findAnswersByChallenges(Challenge challenge, Member member);
 
-    // member 정보와 각 member에 대한 답변 입력 횟수 반환
-    List<MemberAndCountDto> getMemberAndCount(Lucky lucky);
-
     // 각 member의 memberimg와 특정 번호의 챌린지 답변을 묶어 반환
     List<MemberYouthAnswerDto> getAnswerByMember(List<Member> members) throws Exception;
 

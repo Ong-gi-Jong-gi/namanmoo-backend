@@ -230,40 +230,21 @@ public class AnswerServiceImpl implements AnswerService {
                 .collect(Collectors.toList());
     }
 
-    // member 정보와 각 member에 대한 답변 입력 횟수 반환
-    @Override
-    @Transactional(readOnly = true)
-    public List<MemberAndCountDto> getMemberAndCount(Lucky lucky) {
-        String startDate = lucky.getChallengeStartDate();
-        Long familyId = lucky.getFamily().getFamilyId();
-        List<Member> memberList = memberRepository.findByFamilyFamilyId(familyId);
-        List<MemberAndCountDto> memberCountList = new ArrayList<>();
-        for (Member member : memberList) {
-            int count = 0;
-            String currentDate = startDate;
-            for (int i = 0; i < lucky.getLifetime().getDays(); i++) {
-                if (answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, currentDate)) {
-                    count++;
-                }
-                currentDate = DateUtil.getInstance().addDaysToStringDate(currentDate, 1);
-            }
-            memberCountList.add(new MemberAndCountDto(member, count));
-        }
-        return memberCountList;
-    }
 
     // 각 member의 memberimg와 특정 번호의 챌린지 답변을 묶어 반환
     @Override
     @Transactional(readOnly = true)
     public List<MemberYouthAnswerDto> getAnswerByMember(List<Member> members) throws Exception{
         List<MemberYouthAnswerDto> memberAnswerDtoList = new ArrayList<>();
+        Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
+        int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId());        // 이번 lucky에서 시작해야하는 challengnum
 
-        Challenge challenge13 = challengeRepository.findByChallengeNum(1)
+        Challenge challenge13 = challengeRepository.findByChallengeNum(startChallengeNum+9)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new Exception("Challenge 13 not found"));
 
-        Challenge challenge28 = challengeRepository.findByChallengeNum(2)
+        Challenge challenge28 = challengeRepository.findByChallengeNum(startChallengeNum+2)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new Exception("Challenge 28 not found"));
@@ -291,8 +272,11 @@ public class AnswerServiceImpl implements AnswerService {
         List<Answer> memberAnswerList = new ArrayList<>();
         List<String> otherPhotos = new ArrayList<>();
 
+        Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
+        int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId());        // 이번 lucky에서 시작해야하는 challengnum
+
         // 1. Challenge 19 가져오기
-        Challenge challenge19 = challengeRepository.findByChallengeNum(9)
+        Challenge challenge19 = challengeRepository.findByChallengeNum(startChallengeNum+9)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new Exception("Challenge 19 not found"));
@@ -301,9 +285,10 @@ public class AnswerServiceImpl implements AnswerService {
         for (Member member : members) {
             Answer challenge19Answer = answerRepository.findByChallengeAndMember(challenge19, member)
                     .orElseThrow(() -> new Exception("Answer for Challenge 19 not found"));
-            memberAnswerList.add(challenge19Answer);
+            if(challenge19Answer.getAnswerContent() != null){
+                memberAnswerList.add(challenge19Answer);
+            }
         }
-
         // 3. memberAnswerList에서 랜덤하게 하나의 answer를 선택하여 familyPhoto로 설정
         Random random = new Random();
         Answer familyPhotoAnswer = memberAnswerList.get(random.nextInt(memberAnswerList.size()));
@@ -312,17 +297,18 @@ public class AnswerServiceImpl implements AnswerService {
         // 4. type이 photo이고 challengenum이 19번이 아닌 멤버들의 answer 중에서 모든 사진 URL을 담은 리스트 생성
         List<String> allOtherPhotos = new ArrayList<>();
         for (Member member : members) {
-            int challenge_num = 1;
+            int challenge_num = startChallengeNum+1;
             for (Challenge challenge : challengeRepository.findByChallengeNum(challenge_num)) {
-                Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge,member);
-                if (answer.get().getAnswerType() == PHOTO){
-                    allOtherPhotos.add(answer.get().getAnswerContent());
+                if (challenge_num != startChallengeNum+9){      // 나중에 19로 수정
+                    Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge,member);
+                    if (answer.get().getAnswerType() == PHOTO && answer.get().getAnswerContent() != null){
+                        allOtherPhotos.add(answer.get().getAnswerContent());
+                    }
                 }
                 challenge_num++;
             }
-
         }
-
+        // 최대 9장의 사진을 랜덤으로 고른다.
         int numPhotosToAdd = Math.min(9, allOtherPhotos.size());
         Set<Integer> chosenIndices = new HashSet<>();
         while (chosenIndices.size() < numPhotosToAdd) {
