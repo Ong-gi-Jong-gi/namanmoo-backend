@@ -99,7 +99,7 @@ public class AnswerServiceImpl implements AnswerService {
                     // FaceTimeAnswer의 ID를 Answer의 answerContent에 저장
                     answer.setAnswerContent(String.valueOf(faceTimeAnswer.getFaceTimeAnswerId()));
                 } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
-                    answer.setAnswerType(PHOTO);
+                    answer.setAnswerType(AnswerType.PHOTO);
                     answer.setCreateDate(strChallengeDate);
                 } else if (challenge.getChallengeType()== ChallengeType.VOICE) {
                     answer.setAnswerType(AnswerType.VOICE);
@@ -357,7 +357,6 @@ public class AnswerServiceImpl implements AnswerService {
                 })
                 .collect(Collectors.toList());
     }
-
 
 
 }

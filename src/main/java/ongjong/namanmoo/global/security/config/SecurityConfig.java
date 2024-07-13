@@ -22,6 +22,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
@@ -48,6 +49,7 @@ public class SecurityConfig {
 //						.loginPage("/login")
 //						.defaultSuccessUrl("/home"))
                 .logout(logout -> logout
+                        .logoutUrl("/logout")
                         .logoutSuccessUrl("/login") // 로그아웃 성공 시 리다이렉트될 URL 설정
                         .invalidateHttpSession(true)) // HTTP 세션 무효화 설정
                 .sessionManagement(session -> session

@@ -5,8 +5,6 @@ import lombok.NoArgsConstructor;
 import lombok.Data;
 
 @Data
-//@AllArgsConstructor
-//@NoArgsConstructor
 public class SaveChallengeRequest {
     private Long challengeDate;
 }

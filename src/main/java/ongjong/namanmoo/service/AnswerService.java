@@ -6,6 +6,7 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.challenge.ChallengeDetailsDto;
+import ongjong.namanmoo.dto.challenge.GroupChallengeDto;
 import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
 import ongjong.namanmoo.dto.recapMember.MemberPhotosAnswerDto;
 import ongjong.namanmoo.dto.recapMember.MemberYouthAnswerDto;
