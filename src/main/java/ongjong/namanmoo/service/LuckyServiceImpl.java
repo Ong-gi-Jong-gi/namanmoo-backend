@@ -152,7 +152,6 @@ public class LuckyServiceImpl implements LuckyService{
         return luckyRepository.findById(luckyId).get();
     }
 
-
     // 현재 진행중인 lucky id 조회
     @Override
     @Transactional(readOnly = true)
@@ -216,4 +215,5 @@ public class LuckyServiceImpl implements LuckyService{
 
         luckyRepository.save(lucky); // 변경된 Lucky 엔티티 저장
     }
+
 }

@@ -48,7 +48,6 @@ public class RecapController {
         return new ApiResponse<>("success", "Ranking retrieved successfully", responseDto);
     }
 
-
     // 리캡 컨텐츠 조회 - 통계
     @GetMapping("/statistics")
     public ApiResponse getStatistics(@RequestParam("luckyId") Long luckyId) throws Exception {
