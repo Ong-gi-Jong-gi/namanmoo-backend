@@ -286,6 +286,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     @Override
     public Challenge findFastestAnsweredChallenge(Lucky lucky) throws Exception {
+        Family family = lucky.getFamily();
         List<Challenge> challenges = findRunningChallenges(); // 해당 Lucky의 모든 챌린지 가져오기
         Challenge fastestChallenge = null;
         long shortestTime = Long.MAX_VALUE;
@@ -298,7 +299,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
                 int checkSize = 0;
                 for (Challenge groupChallenge : relatedChallenges) {
-                    List<Answer> groupAnswers = answerRepository.findByChallenge(groupChallenge);
+                    List<Answer> groupAnswers = answerRepository.findByChallengeAndMemberFamily(groupChallenge, family);
                     checkSize += groupAnswers.size();
                 }
                 if (checkSize != lucky.getFamily().getMembers().size()) {
@@ -307,7 +308,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
                 // 각 챌린지에 대해 답변 확인
                 for (Challenge relatedChallenge : relatedChallenges) {
-                    List<Answer> answers = answerRepository.findByChallenge(relatedChallenge);
+                    List<Answer> answers = answerRepository.findByChallengeAndMemberFamily(relatedChallenge, family);
                     log.info("Challenge ID: " + relatedChallenge.getChallengeId() + ", Answer count: " + answers.size());
 
                     long timeToAnswer = calculateLatestResponseTime(lucky, relatedChallenge); // 챌린지별 가장 늦은 응답 시간 계산
@@ -319,7 +320,7 @@ public class ChallengeServiceImpl implements ChallengeService {
                 }
             } else { // 그룹이 아닌 모든 챌린지
                 // 해당 챌린지에 대한 모든 답변 가져오기
-                List<Answer> answers = answerRepository.findByChallenge(challenge);
+                List<Answer> answers = answerRepository.findByChallengeAndMemberFamily(challenge, family);
                 log.info("Challenge ID: " + challenge.getChallengeId() + ", Answer count: " + answers.size());
 
                 // 모든 가족 구성원이 답변했는지 확인
@@ -339,12 +340,13 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     @Override
     public long calculateLatestResponseTime(Lucky lucky, Challenge challenge) throws Exception {
+        Family family = lucky.getFamily();
         long latestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수
-        List<Answer> answers = answerRepository.findByChallenge(challenge);
+        List<Answer> answers = answerRepository.findByChallengeAndMemberFamily(challenge, family);
 
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 
-        for (Member member : lucky.getFamily().getMembers()) {
+        for (Member member : family.getMembers()) {
             long latestResponseTimeForMember = Long.MIN_VALUE; // 가족 구성원의 가장 늦은 응답시간을 저장할 변수
 
             for (Answer answer : answers) {
