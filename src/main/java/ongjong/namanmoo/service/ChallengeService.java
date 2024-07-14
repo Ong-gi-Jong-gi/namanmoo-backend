@@ -1,5 +1,6 @@
 package ongjong.namanmoo.service;
 
+import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
@@ -32,6 +33,12 @@ public interface ChallengeService {
 
     // 현재 진행하고 있는 챌린지를 행운이의 챌린지 길이만큼 가져오기
     List<Challenge> findRunningChallenges() throws Exception;
+
+    Challenge findMostViewedChallenge(Lucky lucky) throws Exception;
+
+    Challenge findFastestAnsweredChallenge(Lucky lucky) throws Exception;
+
+    long calculateLatestResponseTime(Lucky lucky, Challenge challenge) throws Exception ;
 
     // groupChallenge 조회를 위한 dto  (부모와 자식의 challenge 질문 구분하기)
     GroupChallengeDto filterChallengesByMemberRole(Challenge challenge, Long timeStamp, boolean isComplete, List<Answer> answers);

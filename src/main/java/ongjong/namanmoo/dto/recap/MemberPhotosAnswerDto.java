@@ -1,4 +1,4 @@
-package ongjong.namanmoo.dto.recapMember;
+package ongjong.namanmoo.dto.recap;
 
 import lombok.Data;
 
