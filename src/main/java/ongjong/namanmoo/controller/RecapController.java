@@ -85,18 +85,20 @@ public class RecapController {
     // recap 과거 사진
     // challengeNum => 13: 나의 어렸을 때 장래희망
     // cahllengeNum => 28 : 자신의 어렸을 적 사진 ( 23 : 학생 때 졸업사진 , 9: 가장 마음에 드는 본인 사진)
+    // TODO: 질문 데이터 set 수정 후, ChallengeNum 수정 필요
     @GetMapping("/youth")
     public ApiResponse<List<MemberYouthAnswerDto>> getYouth(@RequestParam("luckyId") Long luckyId) throws Exception{
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
-        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(members, 13, 28);
+        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(members, 1, 11);
         return new ApiResponse<>("200", "Youth photos retrieved successfully", memberAnswerDtoList);
     }
 
+    // TODO: 질문 데이터 set 수정 후, ChallengeNum 수정 필요
     // recap 미안한점 고마운점
     @GetMapping("/appreciations")
     public ApiResponse getAppreciations(@RequestParam("luckyId") Long luckyId) throws Exception {
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
-        List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(members, 27, 25);
+        List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(members, 2, 3);
         return new ApiResponse<>("200", "Success", appreciationList);
     }
 
