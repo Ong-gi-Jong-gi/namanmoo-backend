@@ -231,7 +231,7 @@ public class ChallengeController {
         String jsonAnswerContent = objectMapper.writeValueAsString(uploadedUrls);
 
         // Answer 업데이트
-        Answer answer = answerService.modifyAnswer(challengeId, jsonAnswerContent);
+        answerService.modifyAnswer(challengeId, jsonAnswerContent);
 
         return new ApiResponse<>("200", "Success", null);
     }

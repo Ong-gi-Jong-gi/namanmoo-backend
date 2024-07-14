@@ -3,7 +3,6 @@ package ongjong.namanmoo.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import ongjong.namanmoo.domain.answer.FaceTimeAnswer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,8 +36,8 @@ public class Lucky {
     @Enumerated(EnumType.STRING)
     private ChallengeLength lifetime = ChallengeLength.THIRTY_DAYS; // 행운이 기본 수명 ( 30일 단위 챌린지 )
 
-    @OneToMany(mappedBy = "lucky")
-    private List<FaceTimeAnswer> faceTimeAnswers;
+//    @OneToMany(mappedBy = "lucky")
+//    private List<FaceTimeAnswer> faceTimeAnswers;
 
 
     // 각 챌린지 번호에 대한 조회수 기록

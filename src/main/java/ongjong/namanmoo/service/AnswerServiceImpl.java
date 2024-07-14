@@ -34,7 +34,6 @@ public class AnswerServiceImpl implements AnswerService {
 
     private final AnswerRepository answerRepository;
     private final MemberRepository memberRepository;
-    private final FaceTimeAnswerRepository faceTimeAnswerRepository;
     private final LuckyRepository luckyRepository;
     private final FamilyRepository familyRepository;
     private final ChallengeRepository challengeRepository;
@@ -73,46 +72,42 @@ public class AnswerServiceImpl implements AnswerService {
                     }
                 }
 
-                Answer answer = new Answer(); // Answer 객체 생성
-                answer.setMember(member);
-                answer.setChallenge(challenge);
-                answer.setBubbleVisible(false);
-
-                if (challenge.getChallengeType()== ChallengeType.NORMAL) {
-                    answer.setAnswerType(AnswerType.NORMAL);
-                    answer.setCreateDate(strChallengeDate);
-                } else if (challenge.getChallengeType()== ChallengeType.GROUP_CHILD) {
-                    answer.setAnswerType(AnswerType.GROUP);
-                    answer.setCreateDate(strChallengeDate);
-                } else if (challenge.getChallengeType()== ChallengeType.GROUP_PARENT) {
-                    answer.setAnswerType(AnswerType.GROUP);
-                    answer.setCreateDate(strChallengeDate);
-                } else if (challenge.getChallengeType()== ChallengeType.FACETIME) {
-                    answer.setAnswerType(AnswerType.FACETIME);
-                    answer.setCreateDate(strChallengeDate);
-
-                    // FaceTimeC일 경우 FaceTimeAnswer 생성 및 저장
-                    FaceTimeAnswer faceTimeAnswer = new FaceTimeAnswer();
-                    faceTimeAnswer.setLucky(luckyService.findCurrentLucky(member.getFamily().getFamilyId()));
-                    faceTimeAnswerRepository.save(faceTimeAnswer);
-
-                    // FaceTimeAnswer의 ID를 Answer의 answerContent에 저장
-                    answer.setAnswerContent(String.valueOf(faceTimeAnswer.getFaceTimeAnswerId()));
-                } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
-                    answer.setAnswerType(AnswerType.PHOTO);
-                    answer.setCreateDate(strChallengeDate);
-                } else if (challenge.getChallengeType()== ChallengeType.VOICE) {
-                    answer.setAnswerType(AnswerType.VOICE);
-                    answer.setCreateDate(strChallengeDate);
-                }
+                Answer answer = getAnswer(member, challenge, strChallengeDate);
                 // challengeDate를 1일 증가
                 strChallengeDate = dateUtil.addDaysToStringDate(strChallengeDate,1);
                 // 생성된 Answer 저장
                 answerRepository.save(answer);
             }
         }
-
         return true;
+    }
+
+    private Answer getAnswer(Member member, Challenge challenge, String strChallengeDate) {
+        Answer answer = new Answer(); // Answer 객체 생성
+        answer.setMember(member);
+        answer.setChallenge(challenge);
+        answer.setBubbleVisible(false);
+
+        if (challenge.getChallengeType()== ChallengeType.NORMAL) {
+            answer.setAnswerType(AnswerType.NORMAL);
+            answer.setCreateDate(strChallengeDate);
+        } else if (challenge.getChallengeType()== ChallengeType.GROUP_CHILD) {
+            answer.setAnswerType(AnswerType.GROUP);
+            answer.setCreateDate(strChallengeDate);
+        } else if (challenge.getChallengeType()== ChallengeType.GROUP_PARENT) {
+            answer.setAnswerType(AnswerType.GROUP);
+            answer.setCreateDate(strChallengeDate);
+        } else if (challenge.getChallengeType()== ChallengeType.FACETIME) {
+            answer.setAnswerType(AnswerType.FACETIME);
+            answer.setCreateDate(strChallengeDate);
+        } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
+            answer.setAnswerType(AnswerType.PHOTO);
+            answer.setCreateDate(strChallengeDate);
+        } else if (challenge.getChallengeType()== ChallengeType.VOICE) {
+            answer.setAnswerType(AnswerType.VOICE);
+            answer.setCreateDate(strChallengeDate);
+        }
+        return answer;
     }
 
     // challenge와 member로 answer찾기
@@ -343,6 +338,30 @@ public class AnswerServiceImpl implements AnswerService {
         return new MemberPhotosAnswerDto(familyPhoto,otherPhotos);
     }
 
+    // facetime에 대한 answerList를 반환
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getFacetimeAnswerList(Long luckyId){
+        Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
+        Family family = currentUser.get().getFamily();
+        List<Member> memberList = memberRepository.findByFamilyFamilyId(family.getFamilyId());
+        int number = luckyService.findCurrentLuckyLifetime(currentUser.get().getFamily().getFamilyId());
+        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum((currentUser.get().getFamily().getFamilyId())), number);
+
+        List<String> facetimeAnswerList = new ArrayList<>();
+        for (Challenge challenge : challengeList){
+            if(challenge.getChallengeType() == ChallengeType.FACETIME){
+                for(Member member : memberList){
+                    Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge,member);
+                    if(answer.get().getAnswerContent() != null){
+                        facetimeAnswerList.add(answer.get().getAnswerContent());
+                    }
+                }
+                return facetimeAnswerList;
+            }
+        }
+        return null;
+    }
 
     // 챌린지 상세조회 중복요소 매핑
     @Override
@@ -373,5 +392,7 @@ public class AnswerServiceImpl implements AnswerService {
                 })
                 .collect(Collectors.toList());
     }
+
+
 
 }

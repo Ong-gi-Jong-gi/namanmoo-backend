@@ -9,6 +9,7 @@ import ongjong.namanmoo.dto.recap.MemberDto;
 import ongjong.namanmoo.dto.recap.MemberPhotosAnswerDto;
 import ongjong.namanmoo.dto.recap.MemberYouthAnswerDto;
 import ongjong.namanmoo.dto.recap.MemberAppreciationDto;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +52,9 @@ public interface AnswerService {
     MemberDto createDto(Class<? extends MemberDto> dtoClass, Member member, String answer1, String answer2);
 
     MemberPhotosAnswerDto getPhotoByMember(List<Member> members) throws Exception;
+
+    // facetime에 대한 answerList를 반환
+    List<String> getFacetimeAnswerList(Long luckyId);
 
     // 챌린지 상세조회 중복요소 매핑
     ChallengeDetailsDto getChallengeDetails(Challenge challenge, Member member) throws Exception;
