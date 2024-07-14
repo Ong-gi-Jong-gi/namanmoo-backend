@@ -4,12 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
 import ongjong.namanmoo.dto.lucky.OffBubbleDto;
-import ongjong.namanmoo.response.ApiResponse;
+import ongjong.namanmoo.dto.ApiResponse;
 import ongjong.namanmoo.service.AnswerService;
 import ongjong.namanmoo.service.LuckyService;
 import org.springframework.web.bind.annotation.*;
-
-import java.sql.Timestamp;
 
 @RestController
 @RequestMapping("/lucky")

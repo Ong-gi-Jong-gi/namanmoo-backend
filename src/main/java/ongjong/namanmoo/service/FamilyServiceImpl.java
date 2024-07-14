@@ -77,6 +77,19 @@ public class FamilyServiceImpl implements FamilyService {
         return convertMembersToDto(members);
     }
 
+    // 내 가족 코드 확인
+    @Override
+    @Transactional(readOnly = true)
+    public String getInviteCode() {
+        String currentLoginId = SecurityUtil.getLoginLoginId();
+        Member currentUser = memberRepository.findByLoginId(currentLoginId)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found for loginId: " + currentLoginId));
+        Family family = currentUser.getFamily();
+        if (family == null)
+            return "null";
+        return family.getInviteCode();
+    }
+
 //    // 초대 URL 생성
 //    public String createInviteUrl(Family family) {
 //        String inviteCode = family.getInviteCode();

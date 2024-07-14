@@ -54,15 +54,21 @@ public class ChallengeServiceImpl implements ChallengeService {
             return null;
         }
 
-        log.info("number: {}",number);
         List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum(family.getFamilyId()), number);
 
         // 멤버 역할에 맞지 않는 challenge는 리스트에서 제외
+        return groupChallengeExceptionRemove(challengeList,member);
+    }
+
+    // 멤버 역할에 맞지 않는 challenge는 리스트에서 제외
+    @Override
+    @Transactional(readOnly = true)
+    public List<Challenge> groupChallengeExceptionRemove(List<Challenge> challengeList, Member member) throws Exception{
         Iterator<Challenge> iterator = challengeList.iterator();        // iterator를 사용 -> challengelist를 순회하면서 조건에 맞지 않는 챌린지 제거
         while (iterator.hasNext()){
             Challenge challenge = iterator.next();
             if(challenge.getChallengeType() == ChallengeType.GROUP_PARENT){
-                if (member.getRole().equals("아들") || member.getRole().equals("딸")){         //TODO: 현재 문자열 비교를 하고 있는데 ROLE을 enum으로 바꿔서 비교하는게 유지보수성이 좋다.
+                if (member.getRole().equals("아들") || member.getRole().equals("딸")){
                     iterator.remove();
                 }
             }
@@ -171,7 +177,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     // groupChallenge 조회를 위한 dto  (부모와 자식의 challenge 질문 구분하기)
     @Override
     @Transactional(readOnly = true)
-    public GroupChallengeDto getGroupChallenge(Challenge challenge, Long timeStamp, boolean isComplete, List<Answer> answers) {
+    public GroupChallengeDto filterChallengesByMemberRole(Challenge challenge, Long timeStamp, boolean isComplete, List<Answer> answers) {
         List<Answer> parentAnswerList = new ArrayList<>();
         List<Answer> childAnswerList = new ArrayList<>();
 
@@ -304,7 +310,7 @@ public class ChallengeServiceImpl implements ChallengeService {
                     List<Answer> answers = answerRepository.findByChallenge(relatedChallenge);
                     log.info("Challenge ID: " + relatedChallenge.getChallengeId() + ", Answer count: " + answers.size());
 
-                    long timeToAnswer = calculateFastestResponseTime(lucky, relatedChallenge); // 챌린지별 가장 늦은 응답 시간 계산
+                    long timeToAnswer = calculateLatestResponseTime(lucky, relatedChallenge); // 챌린지별 가장 늦은 응답 시간 계산
                     log.info("Challenge ID: " + relatedChallenge.getChallengeId() + ", Time to answer: " + timeToAnswer);
                     if (timeToAnswer < shortestTime) {
                         shortestTime = timeToAnswer;
@@ -318,7 +324,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
                 // 모든 가족 구성원이 답변했는지 확인
                 if (answers.size() == lucky.getFamily().getMembers().size()) {
-                    long timeToAnswer = calculateFastestResponseTime(lucky, challenge); // 챌린지별 가장 늦은 응답 시간 계산
+                    long timeToAnswer = calculateLatestResponseTime(lucky, challenge); // 챌린지별 가장 늦은 응답 시간 계산
                     log.info("Challenge ID: " + challenge.getChallengeId() + ", Time to answer: " + timeToAnswer);
                     if (timeToAnswer < shortestTime) {
                         shortestTime = timeToAnswer;
@@ -332,8 +338,8 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     @Override
-    public long calculateFastestResponseTime(Lucky lucky, Challenge challenge) throws Exception {
-        long fastestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수
+    public long calculateLatestResponseTime(Lucky lucky, Challenge challenge) throws Exception {
+        long latestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수
         List<Answer> answers = answerRepository.findByChallenge(challenge);
 
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
@@ -365,16 +371,16 @@ public class ChallengeServiceImpl implements ChallengeService {
                 }
             }
 
-            if (latestResponseTimeForMember != Long.MIN_VALUE && latestResponseTimeForMember > fastestTime) {
-                fastestTime = latestResponseTimeForMember;
+            if (latestResponseTimeForMember != Long.MIN_VALUE && latestResponseTimeForMember > latestTime) {
+                latestTime = latestResponseTimeForMember;
             }
         }
 
-        if (fastestTime == Long.MIN_VALUE) {
+        if (latestTime == Long.MIN_VALUE) {
             return Long.MAX_VALUE;
         }
 
-        long totalSeconds = fastestTime / 1000;
+        long totalSeconds = latestTime / 1000;
         long totalMinutes = totalSeconds / 60;
         long totalHours = totalMinutes / 60;
         long days = totalHours / 24;
@@ -382,7 +388,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         long minutes = totalMinutes % 60;
         long hours = totalHours % 24;
         log.info("가장 늦은 응답 시간: " + days + "일 " + hours + "시간 " + minutes + "분 " + seconds + "초");
-        return fastestTime;
+        return latestTime;
     }
 
 }

@@ -99,7 +99,7 @@ public class AnswerServiceImpl implements AnswerService {
                     // FaceTimeAnswer의 ID를 Answer의 answerContent에 저장
                     answer.setAnswerContent(String.valueOf(faceTimeAnswer.getFaceTimeAnswerId()));
                 } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
-                    answer.setAnswerType(PHOTO);
+                    answer.setAnswerType(AnswerType.PHOTO);
                     answer.setCreateDate(strChallengeDate);
                 } else if (challenge.getChallengeType()== ChallengeType.VOICE) {
                     answer.setAnswerType(AnswerType.VOICE);
@@ -290,10 +290,10 @@ public class AnswerServiceImpl implements AnswerService {
         List<String> otherPhotos = new ArrayList<>();
 
         Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
-        int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId());        // 이번 lucky에서 시작해야하는 challengnum
+        int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId());
 
         // 1. Challenge 19 가져오기
-        Challenge challenge19 = challengeRepository.findByChallengeNum(startChallengeNum+9)
+        Challenge challenge19 = challengeRepository.findByChallengeNum(startChallengeNum+19)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new Exception("Challenge 19 not found"));
@@ -313,18 +313,25 @@ public class AnswerServiceImpl implements AnswerService {
 
         // 4. type이 photo이고 challengenum이 19번이 아닌 멤버들의 answer 중에서 모든 사진 URL을 담은 리스트 생성
         List<String> allOtherPhotos = new ArrayList<>();
+        int number = luckyService.findCurrentLuckyLifetime(currentUser.get().getFamily().getFamilyId());
+        // 현재 진행한 challengeList
+        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum((currentUser.get().getFamily().getFamilyId())), number);
+
         for (Member member : members) {
-            int challenge_num = startChallengeNum+1;
-            for (Challenge challenge : challengeRepository.findByChallengeNum(challenge_num)) {
-                if (challenge_num != startChallengeNum+9){      // 나중에 19로 수정
+            // 그룹챌린지를 고려한 새로운 리스트 적용
+            List<Challenge> newChallengeList = challengeService.groupChallengeExceptionRemove(challengeList,member);
+            for (Challenge challenge : newChallengeList) {
+                if (challenge.getChallengeNum() != startChallengeNum+19){
                     Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge,member);
+                    log.info("content10 = {}",answer.get().getAnswerId());
                     if (answer.get().getAnswerType() == PHOTO && answer.get().getAnswerContent() != null){
                         allOtherPhotos.add(answer.get().getAnswerContent());
+                        log.info("content20 = {}",answer.get().getAnswerContent());
                     }
                 }
-                challenge_num++;
             }
         }
+
         // 최대 9장의 사진을 랜덤으로 고른다.
         int numPhotosToAdd = Math.min(9, allOtherPhotos.size());
         Set<Integer> chosenIndices = new HashSet<>();
