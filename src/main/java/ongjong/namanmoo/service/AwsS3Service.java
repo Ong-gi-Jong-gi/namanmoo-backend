@@ -66,16 +66,16 @@ public class AwsS3Service {
      * @throws IOException 파일 변환 또는 업로드 중 발생하는 예외
      */
     public String uploadFile(MultipartFile multipartFile) throws IOException {
-        log.debug("Converting MultipartFile to File...");
+        log.info("Converting MultipartFile to File...");
         File uploadFile = convertFile(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
 
         String fileType = determineFileType(multipartFile);
         String fileName = generateFileName(uploadFile, fileType);
 
-        log.debug("Uploading file to S3: {}", fileName);
+        log.info("Uploading file to S3: {}", fileName);
         String uploadFileUrl = uploadFileToS3(uploadFile, fileName);
-        log.debug("File uploaded to S3: {}", uploadFileUrl);
+        log.info("File uploaded to S3: {}", uploadFileUrl);
 
         removeNewFile(uploadFile);
         return uploadFileUrl;
