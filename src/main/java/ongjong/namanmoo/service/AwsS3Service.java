@@ -74,11 +74,11 @@ public class AwsS3Service {
         String fileName = generateFileName(uploadFile, fileType);
 
         log.debug("Uploading file to S3: {}", fileName);
-        String uploadImageUrl = uploadFileToS3(uploadFile, fileName);
-        log.debug("File uploaded to S3: {}", uploadImageUrl);
+        String uploadFileUrl = uploadFileToS3(uploadFile, fileName);
+        log.debug("File uploaded to S3: {}", uploadFileUrl);
 
         removeNewFile(uploadFile);
-        return uploadImageUrl;
+        return uploadFileUrl;
     }
 
     /**
@@ -95,6 +95,8 @@ public class AwsS3Service {
             return "audio";
         } else if (contentType != null && contentType.startsWith("video")) {
             return "video";
+        } else if (contentType != null && contentType.startsWith("application")){
+            return "application";
         }
         throw new IllegalArgumentException("Unsupported file type: " + contentType);
     }
@@ -124,7 +126,7 @@ public class AwsS3Service {
      * 업로드될 파일의 고유한 파일 이름을 생성하는 메소드.
      *
      * @param uploadFile 업로드할 파일
-     * @param fileType   파일 타입 (image/audio/video)
+     * @param fileType   파일 타입 (image/audio/video/application)
      * @return String 고유한 파일 이름
      */
     private String generateFileName(File uploadFile, String fileType) {
