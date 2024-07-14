@@ -5,10 +5,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ongjong.namanmoo.domain.Family;
-import ongjong.namanmoo.domain.Lucky;
+import ongjong.namanmoo.domain.*;
 import ongjong.namanmoo.dto.challenge.*;
-import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.answer.ModifyAnswerDto;
@@ -17,6 +15,7 @@ import ongjong.namanmoo.service.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +32,7 @@ public class ChallengeController {
     private final AnswerService answerService;
     private final FamilyService familyService;
     private final AwsS3Service awsS3Service;
+    private final SharedFileService sharedFileService;
 
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
@@ -212,53 +212,37 @@ public class ChallengeController {
     // 화상 통화 챌린지 결과 저장
     @PostMapping("/face")
     public ApiResponse<Map<String, String>> saveFaceTimeAnswer(
-    @RequestParam("challengeId") Long challengeId,
-    @RequestPart("answer") MultipartFile answerFile) throws Exception {
-        // challengeId RequestParam으로 변경해서 테스트
+            @RequestParam("challengeId") Long challengeId,
+            @RequestPart("answer") MultipartFile answerFile) throws Exception {
+
+        Challenge challenge = challengeService.findChallengeById(challengeId);
 
         if (answerFile == null || answerFile.isEmpty()) {
             return new ApiResponse<>("400", "Answer file is missing", null);
         }
 
-        // S3에 파일 업로드
-        String uploadImageUrl = awsS3Service.uploadFile(answerFile);
+        FileType fileType;
+        if (answerFile.getContentType().startsWith("image/")) {
+            fileType = FileType.IMAGE;
+            Map<String, String> response = sharedFileService.uploadImageFile(challenge.getChallengeNum(), answerFile, fileType);
+            return new ApiResponse<>("200", response.get("message"), response);
+        } else if (answerFile.getContentType().startsWith("video/")) {
+            fileType = FileType.VIDEO;
 
-        // Answer 업데이트
-        Answer answer = answerService.modifyAnswer(challengeId, uploadImageUrl);
+            // S3에 파일 업로드 및 URL 저장
+            String uploadedUrl = awsS3Service.uploadFile(answerFile);
 
-        // Map 형태로 답변 URL 반환
-        Map<String, String> responseData = new HashMap<>();
-        responseData.put("answer", uploadImageUrl);
+            // Answer 업데이트
+            Answer answer = answerService.modifyAnswer(challengeId, uploadedUrl);
+            Map<String, String> response = new HashMap<>();
 
-        return new ApiResponse<>("200", "Success", responseData);
+            response.put("url", uploadedUrl);
+            response.put("message", "Video uploaded successfully");
+            return new ApiResponse<>("200", response.get("message"), response);
+        } else {
+            return new ApiResponse<>("400", "Invalid file type: " + answerFile.getContentType(), null);
+        }
     }
-
-//    // 화상 통화 챌린지 결과 저장
-//    @PostMapping("/face")
-//    public ApiResponse<String> saveFaceTimeAnswer(
-//            @RequestParam("challengeId") Long challengeId,
-//            @RequestParam("answer") MultipartFile[] familyPhotos) throws Exception {
-//
-//        if (familyPhotos.length != 4) {
-//            return new ApiResponse<>("400", "Exactly 4 photos must be uploaded", null);
-//        }
-//
-//        // S3에 파일 업로드 및 URL 저장
-//        List<String> uploadedUrls = new ArrayList<>();
-//        for (MultipartFile photo : familyPhotos) {
-//            String uploadedUrl = awsS3Service.uploadFile(photo);
-//            uploadedUrls.add(uploadedUrl);
-//        }
-//
-//        // JSON 형식으로 변환
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        String jsonAnswerContent = objectMapper.writeValueAsString(uploadedUrls);
-//
-//        // Answer 업데이트
-//        Answer answer = answerService.modifyAnswer(challengeId, jsonAnswerContent);
-//
-//        return new ApiResponse<>("200", "Success", null);
-//    }
 
     // 화상 통화 챌린지 결과 조회
     @GetMapping("/face/result")

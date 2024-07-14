@@ -25,16 +25,13 @@ public class Answer {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    //    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private AnswerType answerType;      // enum 타입
 
     private boolean bubbleVisible;
 
-//    @Column(nullable = false)
     private String createDate;
 
-    //    @Column(nullable = false)
     private String modifiedDate;
 
     private String answerContent;
