@@ -340,28 +340,31 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     @Override
     public long calculateLatestResponseTime(Lucky lucky, Challenge challenge) throws Exception {
-        Family family = lucky.getFamily();
-        long latestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수
-        List<Answer> answers = answerRepository.findByChallengeAndMemberFamily(challenge, family);
+        long fastestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수
+        List<Answer> answers = answerRepository.findByChallenge(challenge);
 
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat format4 = new SimpleDateFormat(DateUtil.FORMAT_4);
+        SimpleDateFormat format9 = new SimpleDateFormat(DateUtil.FORMAT_9);
 
-        for (Member member : family.getMembers()) {
+        for (Member member : lucky.getFamily().getMembers()) {
             long latestResponseTimeForMember = Long.MIN_VALUE; // 가족 구성원의 가장 늦은 응답시간을 저장할 변수
 
             for (Answer answer : answers) {
                 if (answer.getMember().equals(member)) {
                     try {
+                        String createDate = answer.getCreateDate();
                         String modifiedDate = answer.getModifiedDate();
 
-                        if (modifiedDate == null) {
+                        if (createDate == null || modifiedDate == null) {
                             log.warn("답변 ID: " + answer.getAnswerId() + "에서 Null 타임스탬프를 찾았습니다.");
                             continue;
                         }
 
-                        Date modifiedTime = timeFormat.parse(modifiedDate.split(" ")[1]); // 시간 부분만 파싱
-                        long responseTime = modifiedTime.getTime();
+                        Date createTime = format4.parse(createDate);
+                        Date modifiedTime = format9.parse(modifiedDate);
+                        log.info("답변 수정 시간: " + modifiedTime.getTime() + ", 답변 생성 시간: " + createTime.getTime());
 
+                        long responseTime = Math.abs(modifiedTime.getTime() - createTime.getTime());
                         log.info("회원 ID: " + member.getMemberId() + ", 응답 시간: " + responseTime);
 
                         if (responseTime > latestResponseTimeForMember) {
@@ -373,16 +376,15 @@ public class ChallengeServiceImpl implements ChallengeService {
                 }
             }
 
-            if (latestResponseTimeForMember != Long.MIN_VALUE && latestResponseTimeForMember > latestTime) {
-                latestTime = latestResponseTimeForMember;
+            if (latestResponseTimeForMember != Long.MIN_VALUE && latestResponseTimeForMember > fastestTime) {
+                fastestTime = latestResponseTimeForMember;
             }
         }
 
-        if (latestTime == Long.MIN_VALUE) {
+        if (fastestTime == Long.MIN_VALUE) {
             return Long.MAX_VALUE;
         }
-
-        long totalSeconds = latestTime / 1000;
+        long totalSeconds = fastestTime / 1000;
         long totalMinutes = totalSeconds / 60;
         long totalHours = totalMinutes / 60;
         long days = totalHours / 24;
@@ -390,7 +392,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         long minutes = totalMinutes % 60;
         long hours = totalHours % 24;
         log.info("가장 늦은 응답 시간: " + days + "일 " + hours + "시간 " + minutes + "분 " + seconds + "초");
-        return latestTime;
+        return fastestTime;
     }
 
 }
