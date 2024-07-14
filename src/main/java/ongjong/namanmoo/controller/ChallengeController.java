@@ -224,7 +224,7 @@ public class ChallengeController {
         FileType fileType;
         if (answerFile.getContentType().startsWith("image/")) {
             fileType = FileType.IMAGE;
-            Map<String, String> response = sharedFileService.uploadImageFile(challenge.getChallengeNum(), answerFile, fileType);
+            Map<String, String> response = sharedFileService.uploadImageFile(challenge, answerFile, fileType);
             return new ApiResponse<>("200", response.get("message"), response);
         } else if (answerFile.getContentType().startsWith("video/")) {
             fileType = FileType.VIDEO;
