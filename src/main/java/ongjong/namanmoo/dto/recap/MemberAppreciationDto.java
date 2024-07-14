@@ -1,22 +1,23 @@
-package ongjong.namanmoo.dto.recapMember;
+package ongjong.namanmoo.dto.recap;
 
 import lombok.Data;
 import ongjong.namanmoo.domain.Member;
-import ongjong.namanmoo.domain.answer.Answer;
 
 @Data
-public class MemberAndCountDto {
+public class MemberAppreciationDto implements MemberDto {
     private String userId;
     private String nickname;
     private String userImg;
     private String role;
-    private int count;
+    private String thanks;
+    private String sorry;
 
-    public MemberAndCountDto(Member member, int count) {
+    public MemberAppreciationDto(Member member, String thanks, String sorry) {
         this.userId = member.getLoginId();
         this.nickname = member.getNickname();
         this.userImg = member.getMemberImage();
         this.role = member.getRole();
-        this.count = count;
+        this.thanks = thanks;
+        this.sorry = sorry;
     }
 }

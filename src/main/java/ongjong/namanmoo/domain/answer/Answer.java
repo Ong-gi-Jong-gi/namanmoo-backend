@@ -39,4 +39,3 @@ public class Answer {
 
     private String answerContent;
 }
-

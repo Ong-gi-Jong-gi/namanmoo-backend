@@ -19,7 +19,7 @@ public class LuckyController {
     @GetMapping
     public ApiResponse<LuckyStatusDto> getLuckyStatus(@RequestParam("challengeDate") String challengeDate) throws Exception {
         LuckyStatusDto luckyStatusDto = luckyService.getLuckyStatus(challengeDate);
-        luckyService.luckyDeadOrAlive(challengeDate);
+//        luckyService.luckyDeadOrAlive(challengeDate);
         return new ApiResponse<>("200", "Success", luckyStatusDto);
     }
 

@@ -191,6 +191,33 @@ public class LuckyServiceImpl implements LuckyService {
                 .orElse(0);
     }
 
+    // 챌린지 조회 시 조회수 증가 로직
+    @Override
+    @Transactional
+    public void increaseChallengeViews(Long luckyId, Integer challengeNum) {
+        Lucky lucky = luckyRepository.findById(luckyId)
+                .orElseThrow(() -> new RuntimeException("Lucky not found with id: " + luckyId));
+
+        Long familyId = lucky.getFamily().getFamilyId();
+        int startChallengeNum = luckyRepository.findByFamilyFamilyId(familyId).stream()
+                .filter(l -> !l.isRunning())
+                .mapToInt(l -> l.getLifetime().getDays())
+                .sum();
+        int endChallengeNum = startChallengeNum + lucky.getLifetime().getDays();
+
+        // 주어진 챌린지 번호가 해당 Lucky의 범위 내에 있는지 확인
+        if (challengeNum < startChallengeNum || challengeNum > endChallengeNum) {
+            throw new IllegalArgumentException(
+                    "Challenge number " + challengeNum + " is out of the current Lucky's range ("
+                            + startChallengeNum + " - " + endChallengeNum + ").");
+        }
+
+        // 조회수 증가
+        lucky.getChallengeViews().merge(challengeNum, 1, Integer::sum);
+
+        luckyRepository.save(lucky); // 변경된 Lucky 엔티티 저장
+    }
+
     // 챌린지가 종료되었을 경우 running -> false로 저장
     @Override
     public void luckyDeadOrAlive(String challengeDate) throws Exception {

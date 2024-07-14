@@ -1,16 +1,14 @@
 package ongjong.namanmoo.service;
 
 import ongjong.namanmoo.domain.Family;
-import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.challenge.ChallengeDetailsDto;
-import ongjong.namanmoo.dto.challenge.GroupChallengeDto;
-import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
-import ongjong.namanmoo.dto.recapMember.MemberPhotosAnswerDto;
-import ongjong.namanmoo.dto.recapMember.MemberYouthAnswerDto;
-import org.springframework.transaction.annotation.Transactional;
+import ongjong.namanmoo.dto.recap.MemberDto;
+import ongjong.namanmoo.dto.recap.MemberPhotosAnswerDto;
+import ongjong.namanmoo.dto.recap.MemberYouthAnswerDto;
+import ongjong.namanmoo.dto.recap.MemberAppreciationDto;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,11 +42,17 @@ public interface AnswerService {
     // 챌린지와 멤버를 받아서 답변 리스트 반환
     List<Answer> findAnswersByChallenges(Challenge challenge, Member member);
 
-    // 각 member의 memberimg와 특정 번호의 챌린지 답변을 묶어 반환
-    List<MemberYouthAnswerDto> getAnswerByMember(List<Member> members) throws Exception;
+    List<MemberDto> getAnswersByMember(List<Member> members, int challengeNum1, int challengeNum2, Class<? extends MemberDto> dtoClass) throws Exception;
+
+    List<MemberYouthAnswerDto> getYouthByMember(List<Member> members, int challengeNum1, int challengeNum2) throws Exception;
+
+    List<MemberAppreciationDto> getAppreciationByMember(List<Member> members, int challengeNum1, int challengeNum2) throws Exception;
+
+    MemberDto createDto(Class<? extends MemberDto> dtoClass, Member member, String answer1, String answer2);
 
     MemberPhotosAnswerDto getPhotoByMember(List<Member> members) throws Exception;
 
     // 챌린지 상세조회 중복요소 매핑
     ChallengeDetailsDto getChallengeDetails(Challenge challenge, Member member) throws Exception;
+
 }
