@@ -54,9 +54,18 @@ public class RecapController {
         return new ApiResponse<>("200", "Ranking retrieved successfully", responseDto);
     }
 
+    // recap 화상통화
+    @GetMapping("/face")
+    public ApiResponse<MemberFacetimeDto> getFacetime(@RequestParam("luckyId") Long luckyId){
+        List<String> answerList = answerService.getFacetimeAnswerList(luckyId);
+        MemberFacetimeDto facetimeAnswerList = new MemberFacetimeDto(answerList);
+        return new ApiResponse<>("200", "Ranking retrieved successfully", facetimeAnswerList);
+    }
+
+
     // 리캡 컨텐츠 조회 - 통계
     @GetMapping("/statistics")
-    public ApiResponse getStatistics(@RequestParam("luckyId") Long luckyId) throws Exception {
+    public ApiResponse<List<Map<String, Object>>> getStatistics(@RequestParam("luckyId") Long luckyId) throws Exception {
         Lucky lucky = luckyService.getLucky(luckyId);
 
         // 가장 조회수가 많은 챌린지
@@ -79,7 +88,7 @@ public class RecapController {
         fastestAnsweredData.put("challengeNumber", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeNum() : "");
         fastestAnsweredData.put("challengeTitle", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeTitle() : "");
 
-        return new ApiResponse("200", "retrieved successfully", Arrays.asList(mostViewedData, fastestAnsweredData));
+        return new ApiResponse<>("200", "retrieved successfully", Arrays.asList(mostViewedData, fastestAnsweredData));
     }
 
     // recap 과거 사진
@@ -94,15 +103,16 @@ public class RecapController {
 
     // recap 미안한점 고마운점
     @GetMapping("/appreciations")
-    public ApiResponse getAppreciations(@RequestParam("luckyId") Long luckyId) throws Exception {
+    public ApiResponse<List<MemberAppreciationDto>> getAppreciations(@RequestParam("luckyId") Long luckyId) throws Exception {
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
         List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(members, 27, 25);
         return new ApiResponse<>("200", "Success", appreciationList);
     }
 
+
     // recap 가족사진
     @GetMapping("/photos")
-    public ApiResponse getPhotos(@RequestParam("luckyId") Long luckyId) throws Exception{
+    public ApiResponse<MemberPhotosAnswerDto> getPhotos(@RequestParam("luckyId") Long luckyId) throws Exception{
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
         MemberPhotosAnswerDto photosAnswerDto = answerService.getPhotoByMember(members);
         return new ApiResponse<>("200", "Success", photosAnswerDto);
