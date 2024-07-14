@@ -323,10 +323,8 @@ public class AnswerServiceImpl implements AnswerService {
             for (Challenge challenge : newChallengeList) {
                 if (challenge.getChallengeNum() != startChallengeNum+19){
                     Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge,member);
-                    log.info("content10 = {}",answer.get().getAnswerId());
                     if (answer.get().getAnswerType() == PHOTO && answer.get().getAnswerContent() != null){
                         allOtherPhotos.add(answer.get().getAnswerContent());
-                        log.info("content20 = {}",answer.get().getAnswerContent());
                     }
                 }
             }
