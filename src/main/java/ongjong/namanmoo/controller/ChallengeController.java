@@ -211,30 +211,54 @@ public class ChallengeController {
 
     // 화상 통화 챌린지 결과 저장
     @PostMapping("/face")
-    public ApiResponse<String> saveFaceTimeAnswer(
-            @RequestParam("challengeId") Long challengeId,
-            @RequestParam("answer") MultipartFile[] familyPhotos) throws Exception {
+    public ApiResponse<Map<String, String>> saveFaceTimeAnswer(
+    @RequestParam("challengeId") Long challengeId,
+    @RequestPart("answer") MultipartFile answerFile) throws Exception {
+        // challengeId RequestParam으로 변경해서 테스트
 
-        if (familyPhotos.length != 4) {
-            return new ApiResponse<>("400", "Exactly 4 photos must be uploaded", null);
+        if (answerFile == null || answerFile.isEmpty()) {
+            return new ApiResponse<>("400", "Answer file is missing", null);
         }
 
-        // S3에 파일 업로드 및 URL 저장
-        List<String> uploadedUrls = new ArrayList<>();
-        for (MultipartFile photo : familyPhotos) {
-            String uploadedUrl = awsS3Service.uploadFile(photo);
-            uploadedUrls.add(uploadedUrl);
-        }
-
-        // JSON 형식으로 변환
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonAnswerContent = objectMapper.writeValueAsString(uploadedUrls);
+        // S3에 파일 업로드
+        String uploadImageUrl = awsS3Service.uploadFile(answerFile);
 
         // Answer 업데이트
-        Answer answer = answerService.modifyAnswer(challengeId, jsonAnswerContent);
+        Answer answer = answerService.modifyAnswer(challengeId, uploadImageUrl);
 
-        return new ApiResponse<>("200", "Success", null);
+        // Map 형태로 답변 URL 반환
+        Map<String, String> responseData = new HashMap<>();
+        responseData.put("answer", uploadImageUrl);
+
+        return new ApiResponse<>("200", "Success", responseData);
     }
+
+//    // 화상 통화 챌린지 결과 저장
+//    @PostMapping("/face")
+//    public ApiResponse<String> saveFaceTimeAnswer(
+//            @RequestParam("challengeId") Long challengeId,
+//            @RequestParam("answer") MultipartFile[] familyPhotos) throws Exception {
+//
+//        if (familyPhotos.length != 4) {
+//            return new ApiResponse<>("400", "Exactly 4 photos must be uploaded", null);
+//        }
+//
+//        // S3에 파일 업로드 및 URL 저장
+//        List<String> uploadedUrls = new ArrayList<>();
+//        for (MultipartFile photo : familyPhotos) {
+//            String uploadedUrl = awsS3Service.uploadFile(photo);
+//            uploadedUrls.add(uploadedUrl);
+//        }
+//
+//        // JSON 형식으로 변환
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        String jsonAnswerContent = objectMapper.writeValueAsString(uploadedUrls);
+//
+//        // Answer 업데이트
+//        Answer answer = answerService.modifyAnswer(challengeId, jsonAnswerContent);
+//
+//        return new ApiResponse<>("200", "Success", null);
+//    }
 
     // 화상 통화 챌린지 결과 조회
     @GetMapping("/face/result")
