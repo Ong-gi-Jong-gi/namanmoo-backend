@@ -71,7 +71,7 @@ public class RecapController {
         // 가장 조회수가 많은 챌린지
         Challenge mostViewedChallenge = challengeService.findMostViewedChallenge(lucky);
         Map<String, Object> mostViewedData = new HashMap<>();
-        mostViewedData.put("topic", "가장 조회수가 많은 질문");
+        mostViewedData.put("topic", "mostViewed");
         mostViewedData.put("topicResult", mostViewedChallenge != null ? lucky.getChallengeViews().get(mostViewedChallenge.getChallengeNum()) : 0);
         mostViewedData.put("challengeId", mostViewedChallenge != null ? mostViewedChallenge.getChallengeId() : "");
         mostViewedData.put("challengeType", mostViewedChallenge != null ? mostViewedChallenge.getChallengeType() : "");
@@ -81,7 +81,7 @@ public class RecapController {
         // 모두가 가장 빨리 답한 챌린지
         Challenge fastestAnsweredChallenge = challengeService.findFastestAnsweredChallenge(lucky);
         Map<String, Object> fastestAnsweredData = new HashMap<>();
-        fastestAnsweredData.put("topic", "모두가 가장 빨리 답한 질문");
+        fastestAnsweredData.put("topic", "fastestAnswered");
         fastestAnsweredData.put("topicResult", fastestAnsweredChallenge != null ? challengeService.calculateLatestResponseTime(lucky, fastestAnsweredChallenge) : 0);
         fastestAnsweredData.put("challengeId", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeId() : "");
         fastestAnsweredData.put("challengeType", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeType() : "");
@@ -94,18 +94,20 @@ public class RecapController {
     // recap 과거 사진
     // challengeNum => 13: 나의 어렸을 때 장래희망
     // cahllengeNum => 28 : 자신의 어렸을 적 사진 ( 23 : 학생 때 졸업사진 , 9: 가장 마음에 드는 본인 사진)
+    // TODO: 질문 데이터 set 수정 후, ChallengeNum 수정 필요
     @GetMapping("/youth")
     public ApiResponse<List<MemberYouthAnswerDto>> getYouth(@RequestParam("luckyId") Long luckyId) throws Exception{
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
-        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(members, 13, 28);
+        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(members, 1, 11);
         return new ApiResponse<>("200", "Youth photos retrieved successfully", memberAnswerDtoList);
     }
 
+    // TODO: 질문 데이터 set 수정 후, ChallengeNum 수정 필요
     // recap 미안한점 고마운점
     @GetMapping("/appreciations")
     public ApiResponse<List<MemberAppreciationDto>> getAppreciations(@RequestParam("luckyId") Long luckyId) throws Exception {
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
-        List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(members, 27, 25);
+        List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(members, 2, 3);
         return new ApiResponse<>("200", "Success", appreciationList);
     }
 
