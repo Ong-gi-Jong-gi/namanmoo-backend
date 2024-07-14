@@ -213,7 +213,7 @@ public class ChallengeController {
     @PostMapping("/face")
     public ApiResponse<String> saveFaceTimeAnswer(
             @RequestParam("challengeId") Long challengeId,
-            @RequestParam("familyPhotos") MultipartFile[] familyPhotos) throws Exception {
+            @RequestParam("answer") MultipartFile[] familyPhotos) throws Exception {
 
         if (familyPhotos.length != 4) {
             return new ApiResponse<>("400", "Exactly 4 photos must be uploaded", null);
