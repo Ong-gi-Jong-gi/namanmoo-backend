@@ -58,6 +58,9 @@ dependencies {
 
 	// thumbnailator for merging image
 	implementation 'net.coobird:thumbnailator:0.4.20'
+
+	//ffmpeg
+	implementation ('net.bramp.ffmpeg:ffmpeg:0.8.0')
 }
 
 tasks.named('test') {

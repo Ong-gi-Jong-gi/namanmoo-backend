@@ -62,7 +62,6 @@ public class RecapController {
         return new ApiResponse<>("200", "Ranking retrieved successfully", facetimeAnswerList);
     }
 
-
     // 리캡 컨텐츠 조회 - 통계
     @GetMapping("/statistics")
     public ApiResponse<List<Map<String, Object>>> getStatistics(@RequestParam("luckyId") Long luckyId) throws Exception {
@@ -98,7 +97,7 @@ public class RecapController {
     @GetMapping("/youth")
     public ApiResponse<List<MemberYouthAnswerDto>> getYouth(@RequestParam("luckyId") Long luckyId) throws Exception{
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
-        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(members, 1, 11);
+        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(members, 1, 9);
         return new ApiResponse<>("200", "Youth photos retrieved successfully", memberAnswerDtoList);
     }
 
