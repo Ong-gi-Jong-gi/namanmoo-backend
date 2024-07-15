@@ -1,8 +1,6 @@
 package ongjong.namanmoo.controller;
 
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.*;
@@ -19,8 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -274,7 +270,7 @@ public class ChallengeController {
         }
 
         // 응답 데이터 생성
-        Map<String, BufferedImage> results = sharedFileService.getChallengeResults(challenge.getChallengeNum(), lucky.get().getLuckyId());
+        Map<String, BufferedImage> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), lucky.get().getLuckyId());
 
         Map<String, String> encodedResults = new HashMap<>();
         for (Map.Entry<String, BufferedImage> entry : results.entrySet()) {

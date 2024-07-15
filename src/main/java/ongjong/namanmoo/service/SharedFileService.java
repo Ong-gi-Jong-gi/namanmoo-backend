@@ -1,29 +1,46 @@
 package ongjong.namanmoo.service;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
 import ongjong.namanmoo.domain.*;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.repository.SharedFileRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class SharedFileService {
 
-    private final SharedFileRepository sharedFileRepository;
-    private final AwsS3Service awsS3Service;
-    private final LuckyRepository luckyRepository;
-    private final MemberService memberService;
+    @Autowired
+    private MemberService memberService;
+    @Autowired
+    private AwsS3Service awsS3Service;
+    @Autowired
+    private LuckyRepository luckyRepository;
+    @Autowired
+    private SharedFileRepository sharedFileRepository;
+
+    private final String bucket;
+
+    public SharedFileService(@Value("${cloud.aws.s3.bucket}") String bucket) {
+        this.bucket = bucket;
+    }
 
     public Map<String, String> uploadImageFile(Challenge challenge, MultipartFile photo, FileType fileType) throws Exception {
         Map<String, String> response = new HashMap<>();
@@ -50,22 +67,17 @@ public class SharedFileService {
         sharedFile.setLucky(lucky); // Lucky 엔티티 설정
         sharedFileRepository.save(sharedFile);
 
+        // 그룹별 4개의 이미지가 모였는지 확인 및 병합
+        checkAndMergeImages(challenge.getChallengeNum(), lucky);
+
         response.put("url", uploadedUrl);
         response.put("message", "Photo uploaded successfully");
 
         return response;
     }
 
-    public Map<String, BufferedImage> getChallengeResults(int challengeNum, Long luckyId) throws IOException {
-        Lucky lucky = luckyRepository.getLuckyByLuckyId(luckyId);
+    private void checkAndMergeImages(int challengeNum, Lucky lucky) throws IOException {
         List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
-
-        if (sharedFiles.isEmpty()) {
-            System.out.println("No files found for the given challengeNum and luckyId");
-            return Collections.emptyMap();
-        } else {
-            System.out.println("Found " + sharedFiles.size() + " files.");
-        }
 
         // 파일 이름의 숫자를 기준으로 그룹화
         Map<String, List<SharedFile>> groupedFiles = new HashMap<>();
@@ -73,32 +85,72 @@ public class SharedFileService {
 
         for (SharedFile sharedFile : sharedFiles) {
             String fileName = sharedFile.getFileName();
-            System.out.println("Processing file: " + fileName);
             Matcher matcher = pattern.matcher(fileName);
 
             if (matcher.find()) {
                 String group = matcher.group(1);
                 groupedFiles.computeIfAbsent(group, k -> new ArrayList<>()).add(sharedFile);
-                System.out.println("Matched group: " + group);
-            } else {
-                System.out.println("No match found for file: " + fileName);
             }
         }
-
-        Map<String, BufferedImage> mergedImages = new HashMap<>();
 
         for (Map.Entry<String, List<SharedFile>> entry : groupedFiles.entrySet()) {
-            List<File> imageFiles = entry.getValue().stream()
-                    .map(sharedFile -> new File(sharedFile.getFileName()))
+            List<URL> imageUrls = entry.getValue().stream()
+                    .map(sharedFile -> {
+                        try {
+                            return new URL(sharedFile.getFileName());
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
                     .collect(Collectors.toList());
 
-            if (imageFiles.size() == 4) {
-                BufferedImage mergedImage = ImageMerger.mergeImages(imageFiles);
-                mergedImages.put(entry.getKey(), mergedImage);
+            if (imageUrls.size() == 4) {
+                BufferedImage mergedImage = ImageMerger.mergeImages(imageUrls);
+                String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, "merged-images/" + challengeNum + "_" + lucky.getLuckyId() + "_" + entry.getKey() + ".png");
+
+                // Save merged image URL to database
+                SharedFile mergedFile = new SharedFile();
+                mergedFile.setChallengeNum(challengeNum);
+                mergedFile.setFileName(mergedImageUrl);
+                mergedFile.setFileType(FileType.IMAGE);
+                mergedFile.setLucky(lucky);
+                sharedFileRepository.save(mergedFile);
             }
         }
-
-        return mergedImages;
     }
+
+
+    public String uploadMergedImageToS3(BufferedImage mergedImage, String bucketName, String fileObjKeyName) throws IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        ImageIO.write(mergedImage, "png", os);
+        byte[] buffer = os.toByteArray();
+        InputStream is = new ByteArrayInputStream(buffer);
+        ObjectMetadata meta = new ObjectMetadata();
+        meta.setContentLength(buffer.length);
+        meta.setContentType("image/png");
+
+        AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
+        s3Client.putObject(new PutObjectRequest(bucketName, fileObjKeyName, is, meta));
+
+        return s3Client.getUrl(bucketName, fileObjKeyName).toString();
+    }
+
+    public Map<String, BufferedImage> getFaceChallengeResults(int challengeNum, Long luckyId) {
+        List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, luckyRepository.getLuckyByLuckyId(luckyId));
+        Map<String, BufferedImage> results = new HashMap<>();
+
+        for (SharedFile sharedFile : sharedFiles) {
+            if (sharedFile.getFileName().contains("merged-images")) {
+                try {
+                    BufferedImage image = ImageIO.read(new URL(sharedFile.getFileName()));
+                    results.put(sharedFile.getFileName(), image);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return results;
+    }
+
 
 }

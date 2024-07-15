@@ -5,20 +5,38 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 
 public class ImageMerger {
 
-    public static BufferedImage mergeImages(List<File> imageFiles) throws IOException {
-        if (imageFiles.size() != 4) {
-            throw new IllegalArgumentException("Exactly 4 images are required");
+    public static BufferedImage mergeImages(List<URL> imageUrls) throws IOException {
+
+        // 이 메소드가 호출되기 전에 imageFiles 목록이 null 이나 비어 있지 않은지 확인하세요.
+
+        if (imageUrls.size() != 4) {
+            throw new IllegalArgumentException("정확히 4개의 이미지가 필요합니다");
         }
 
-        // Load images
-        BufferedImage img1 = ImageIO.read(imageFiles.get(0));
-        BufferedImage img2 = ImageIO.read(imageFiles.get(1));
-        BufferedImage img3 = ImageIO.read(imageFiles.get(2));
-        BufferedImage img4 = ImageIO.read(imageFiles.get(3));
+        // 이미지 불러오기
+        BufferedImage img1 = null;
+        BufferedImage img2 = null;
+        BufferedImage img3 = null;
+        BufferedImage img4 = null;
+
+        // 이미지 파일이 올바른 경로를 가지고 읽을 수 있는지 확인하세요.
+        try {
+            img1 = ImageIO.read(imageUrls.get(0));
+            img2 = ImageIO.read(imageUrls.get(1));
+            img3 = ImageIO.read(imageUrls.get(2));
+            img4 = ImageIO.read(imageUrls.get(3));
+        }
+        catch(IOException e) {
+            for(URL url: imageUrls) {
+                System.out.println("URL 경로: " + url.toString());
+            }
+            throw e; // 로깅 후 예외를 다시 던집니다.
+        }
 
         // Assume all images are the same size
         int width = img1.getWidth();
@@ -37,4 +55,5 @@ public class ImageMerger {
 
         return combinedImage;
     }
+
 }
