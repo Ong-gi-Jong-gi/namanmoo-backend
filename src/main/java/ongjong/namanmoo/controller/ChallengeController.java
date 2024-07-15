@@ -11,6 +11,7 @@ import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.answer.ModifyAnswerDto;
 import ongjong.namanmoo.dto.ApiResponse;
+import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.service.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +34,7 @@ public class ChallengeController {
     private final FamilyService familyService;
     private final AwsS3Service awsS3Service;
     private final SharedFileService sharedFileService;
+    private final LuckyRepository luckyRepository;
 
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
@@ -246,7 +248,7 @@ public class ChallengeController {
 
     // 화상 통화 챌린지 결과 조회
     @GetMapping("/face/result")
-    public ApiResponse<Map<String, Object>> getFaceTimeAnswer(
+    public ApiResponse<Map<String, List<String>>> getFaceTimeAnswer(
             @RequestParam("challengeId") Long challengeId) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
@@ -261,38 +263,20 @@ public class ChallengeController {
             return new ApiResponse<>("404", "Family not found for the current member", null);
         }
 
-        // 가족의 모든 멤버를 순회하며 답변을 찾음
-        List<Member> members = family.getMembers();
-        Answer foundAnswer = null;
+        Optional<Lucky> lucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(family.getFamilyId());
 
-        for (Member familyMember : members) {
-            Optional<Answer> answerOpt = answerService.findAnswerByChallengeAndMember(challenge, familyMember);
-            if (answerOpt.isPresent() && answerOpt.get().getAnswerContent() != null) {
-                foundAnswer = answerOpt.get();
-                break;
-            }
+        if (!lucky.isPresent()) {
+            return new ApiResponse<>("404", "Lucky not found for the provided challengeId in any family member", null);
         }
-
-        if (foundAnswer == null) {
-            return new ApiResponse<>("404", "Answer not found for the provided challengeId in any family member", null);
-        }
-
-        String answerContent = foundAnswer.getAnswerContent();
-
-        // JSON 형식으로 변환된 URL 목록을 Map 형태로 변환
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<String> familyPhotos = objectMapper.readValue(answerContent, new TypeReference<List<String>>() {});
 
         // 응답 데이터 생성
-        Map<String, Object> responseData = new HashMap<>();
-        responseData.put("challengeTitle", challenge.getChallengeTitle());
-        responseData.put("familyPhotos", familyPhotos);
+        Map<String, List<String>> results = sharedFileService.getChallengeResults(challenge.getChallengeNum(), lucky.get().getLuckyId());
 
         // 챌린지 조회 시 조회수 증가
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
         luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
 
-        return new ApiResponse<>("200", "Success", responseData);
+        return new ApiResponse<>("200", "Challenge results fetched successfully", results);
     }
 
     // 음성 챌린지 조회

@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -52,4 +52,36 @@ public class SharedFileService {
 
         return response;
     }
+
+    public Map<String, List<String>> getChallengeResults(int challengeNum, Long luckyId) {
+        Lucky lucky = luckyRepository.getLuckyByLuckyId(luckyId);
+        List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
+
+        if (sharedFiles.isEmpty()) {
+            System.out.println("No files found for the given challengeNum and luckyId");
+        } else {
+            System.out.println("Found " + sharedFiles.size() + " files.");
+        }
+
+        // 파일 이름의 숫자를 기준으로 그룹화
+        Map<String, List<String>> groupedFiles = new HashMap<>();
+        Pattern pattern = Pattern.compile("screenshot_(\\d+)");
+
+        for (SharedFile sharedFile : sharedFiles) {
+            String fileName = sharedFile.getFileName();
+            System.out.println("Processing file: " + fileName);
+            Matcher matcher = pattern.matcher(fileName);
+
+            if (matcher.find()) {
+                String group = matcher.group(1);
+                groupedFiles.computeIfAbsent(group, k -> new ArrayList<>()).add(fileName);
+                System.out.println("Matched group: " + group);
+            } else {
+                System.out.println("No match found for file: " + fileName);
+            }
+        }
+
+        return groupedFiles;
+    }
+
 }
