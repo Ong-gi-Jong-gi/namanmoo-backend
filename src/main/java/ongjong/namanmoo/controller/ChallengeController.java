@@ -165,7 +165,6 @@ public class ChallengeController {
         return new ApiResponse<>("200", "Success", responseData);
     }
 
-
     // 화상 통화 챌린지 조회
     @GetMapping("/face")
     public ApiResponse<Object> getFaceChallenge(
