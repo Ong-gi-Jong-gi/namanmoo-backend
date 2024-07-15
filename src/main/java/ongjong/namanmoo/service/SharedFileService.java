@@ -4,6 +4,7 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import ongjong.namanmoo.domain.*;
@@ -133,7 +134,7 @@ public class SharedFileService {
 
             String uuid = UUID.randomUUID().toString(); // Here we generate the UUID
             BufferedImage mergedImage = ImageMerger.mergeImages(images);
-            String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, "merged-images/" + challengeNum + "_" + lucky.getLuckyId() + "_" + entry.getKey() + "_" + uuid + ".png"); // Appending UUID in the filename
+            String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_" + entry.getKey() + ".png"); // Appending UUID in the filename
 
             // Save merged image URL to database
             SharedFile mergedFile = new SharedFile();
@@ -155,7 +156,7 @@ public class SharedFileService {
         meta.setContentLength(buffer.length);
         meta.setContentType("image/png");
 
-        amazonS3Client.putObject(new PutObjectRequest(bucketName, fileObjKeyName, is, meta));
+        amazonS3Client.putObject(new PutObjectRequest(bucketName, fileObjKeyName, is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
 
         // 선택: amazonS3Client.getUrl(bucketName, fileObjKeyName).toString(); 또는 String.format을 사용
         return amazonS3Client.getUrl(bucketName, fileObjKeyName).toString();
