@@ -138,22 +138,7 @@ public class ChallengeController {
     // 사진 챌린지 조회
     @GetMapping("/photo")
     public ApiResponse<PhotoChallengeDto> getPhotoChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
-
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        if (challenge == null) {
-            return new ApiResponse<>("failure", "Challenge not found for the provided challengeId", null);
-        }
-
-        Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
-        ChallengeDetailsDto details = answerService.getChallengeDetails(challenge, member);
-
-        // 챌린지 조회 시 조회수 증가
-        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
-
-        PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, details.isComplete(), details.getChallengeDate(), details.getAnswers());
-        return new ApiResponse<>("200", "Challenge retrieved successfully",photoChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
-
+        return getPhotoOrVoiceChallenge(challengeId, PhotoChallengeDto.class);
     }
 
     // 사진 챌린지 수정
@@ -290,7 +275,36 @@ public class ChallengeController {
     // 음성 챌린지 조회
     @GetMapping("/voice")
     public ApiResponse<VoiceChallengeDto> getVoiceChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
+        return getPhotoOrVoiceChallenge(challengeId, VoiceChallengeDto.class);
+    }
 
+    // 음성 챌린지 수정 (바뀔 예정 있으므로 중복 처리 아직 안함)
+    @PostMapping("/voice")
+    public ApiResponse<Map<String, String>> saveVoiceAnswer(
+            @RequestParam("challengeId") Long challengeId,
+            @RequestPart("answer") MultipartFile answerFile) throws Exception {
+        // challengeId RequestParam으로 변경해서 테스트
+
+        if (answerFile == null || answerFile.isEmpty()) {
+            return new ApiResponse<>("400", "Answer file is missing", null);
+        }
+
+        // S3에 파일 업로드
+        String uploadVoiceUrl = awsS3Service.uploadFile(answerFile);
+
+        // Answer 업데이트
+        Answer answer = answerService.modifyAnswer(challengeId, uploadVoiceUrl);
+
+        // Map 형태로 답변 URL 반환
+        Map<String, String> responseData = new HashMap<>();
+        responseData.put("answer", uploadVoiceUrl);
+
+
+        return new ApiResponse<>("200", "Success", responseData);
+    }
+
+    // 사진, 음성 챌린지 중복 로직 처리
+    private <T> ApiResponse<T> getPhotoOrVoiceChallenge(Long challengeId, Class<T> dtoClass) throws Exception {
         Challenge challenge = challengeService.findChallengeById(challengeId);
         if (challenge == null) {
             return new ApiResponse<>("failure", "Challenge not found for the provided challengeId", null);
@@ -303,9 +317,10 @@ public class ChallengeController {
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
         luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
 
-        VoiceChallengeDto voiceChallengeDto = new VoiceChallengeDto(challenge, details.isComplete(), details.getChallengeDate(), details.getAnswers());
-        return new ApiResponse<>("200", "Challenge retrieved successfully",voiceChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
-    }
+        T challengeDto = dtoClass.getConstructor(Challenge.class, boolean.class, Long.class, List.class)
+                .newInstance(challenge, details.isComplete(), details.getChallengeDate(), details.getAnswers());
 
+        return new ApiResponse<>("200", "Challenge retrieved successfully", challengeDto);
+    }
 
 }

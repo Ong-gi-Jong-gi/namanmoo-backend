@@ -1,6 +1,7 @@
 package ongjong.namanmoo.service;
 
 import lombok.RequiredArgsConstructor;
+import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.dto.member.LoginRequestDto;
