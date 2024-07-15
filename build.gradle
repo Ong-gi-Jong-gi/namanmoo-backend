@@ -55,6 +55,7 @@ dependencies {
 
 	// Jackson for JSON processing
 	implementation 'com.fasterxml.jackson.jr:jackson-jr-all:2.15.2'
+
 }
 
 tasks.named('test') {

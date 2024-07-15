@@ -1,5 +1,6 @@
 package ongjong.namanmoo.dto.challenge;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
@@ -14,6 +15,7 @@ public class FaceChallengeDto {
     private String challengeTitle;
     private String challengeNumber;
     private Long challengeDate;
+    @JsonProperty("isComplete")
     private boolean isComplete;
     private String code;
 
