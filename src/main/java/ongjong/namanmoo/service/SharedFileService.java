@@ -154,7 +154,10 @@ public class SharedFileService {
 
         amazonS3Client.putObject(new PutObjectRequest(bucketName, fileObjKeyName, is, meta));
 
+        // 선택: amazonS3Client.getUrl(bucketName, fileObjKeyName).toString(); 또는 String.format을 사용
         return amazonS3Client.getUrl(bucketName, fileObjKeyName).toString();
+        // 또는
+        // return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, fileObjKeyName);
     }
 
     public Map<String, BufferedImage> getFaceChallengeResults(int challengeNum, Long luckyId) {
