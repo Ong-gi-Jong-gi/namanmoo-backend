@@ -131,20 +131,18 @@ public class SharedFileService {
                 images.add(emptyImage);
             }
 
+            String uuid = UUID.randomUUID().toString(); // Here we generate the UUID
             BufferedImage mergedImage = ImageMerger.mergeImages(images);
-            String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, "merged-images/" + challengeNum + "_" + lucky.getLuckyId() + "_" + entry.getKey() + ".png");
-            String existingFile = sharedFileRepository.findByFileName(mergedImageUrl).getFileName();
+            String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, "merged-images/" + challengeNum + "_" + lucky.getLuckyId() + "_" + entry.getKey() + "_" + uuid + ".png"); // Appending UUID in the filename
 
             // Save merged image URL to database
-            if (existingFile == null) {
-                SharedFile mergedFile = new SharedFile();
-                mergedFile.setChallengeNum(challengeNum);
-                mergedFile.setCreateDate(System.currentTimeMillis());
-                mergedFile.setFileName(mergedImageUrl);
-                mergedFile.setFileType(FileType.IMAGE);
-                mergedFile.setLucky(lucky);
-                sharedFileRepository.save(mergedFile);
-            }
+            SharedFile mergedFile = new SharedFile();
+            mergedFile.setChallengeNum(challengeNum);
+            mergedFile.setCreateDate(System.currentTimeMillis());
+            mergedFile.setFileName(mergedImageUrl);
+            mergedFile.setFileType(FileType.IMAGE);
+            mergedFile.setLucky(lucky);
+            sharedFileRepository.save(mergedFile);
         }
     }
 
