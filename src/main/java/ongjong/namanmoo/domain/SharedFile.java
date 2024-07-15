@@ -23,6 +23,6 @@ public class SharedFile {
 
     private int challengeNum;
 
-    private long creationDate;
+    private long createDate;
 
 }

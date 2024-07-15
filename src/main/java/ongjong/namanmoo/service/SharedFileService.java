@@ -6,7 +6,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import lombok.RequiredArgsConstructor;
 import ongjong.namanmoo.domain.*;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.repository.LuckyRepository;
@@ -19,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -83,7 +81,7 @@ public class SharedFileService {
         sharedFile.setFileName(uploadedUrl);
         sharedFile.setFileType(FileType.IMAGE);
         sharedFile.setChallengeNum(challenge.getChallengeNum());
-        sharedFile.setCreationDate(System.currentTimeMillis());
+        sharedFile.setCreateDate(System.currentTimeMillis());
         sharedFile.setLucky(lucky); // Lucky 엔티티 설정
         sharedFileRepository.save(sharedFile);
 
@@ -132,14 +130,18 @@ public class SharedFileService {
 
             BufferedImage mergedImage = ImageMerger.mergeImages(images);
             String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, "merged-images/" + challengeNum + "_" + lucky.getLuckyId() + "_" + entry.getKey() + ".png");
+            String existingFile = sharedFileRepository.findByFileName(mergedImageUrl).getFileName();
 
             // Save merged image URL to database
-            SharedFile mergedFile = new SharedFile();
-            mergedFile.setChallengeNum(challengeNum);
-            mergedFile.setFileName(mergedImageUrl);
-            mergedFile.setFileType(FileType.IMAGE);
-            mergedFile.setLucky(lucky);
-            sharedFileRepository.save(mergedFile);
+            if (existingFile == null) {
+                SharedFile mergedFile = new SharedFile();
+                mergedFile.setChallengeNum(challengeNum);
+                mergedFile.setCreateDate(System.currentTimeMillis());
+                mergedFile.setFileName(mergedImageUrl);
+                mergedFile.setFileType(FileType.IMAGE);
+                mergedFile.setLucky(lucky);
+                sharedFileRepository.save(mergedFile);
+            }
         }
     }
 
