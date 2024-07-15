@@ -76,14 +76,18 @@ public class SharedFileService {
         Optional<Lucky> optionalLucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(family.getFamilyId());
         Lucky lucky = optionalLucky.orElseThrow(() -> new RuntimeException("Running Lucky not found for family"));
 
-        // SharedFile 엔티티 저장
-        SharedFile sharedFile = new SharedFile();
-        sharedFile.setFileName(uploadedUrl);
-        sharedFile.setFileType(FileType.IMAGE);
-        sharedFile.setChallengeNum(challenge.getChallengeNum());
-        sharedFile.setCreateDate(System.currentTimeMillis());
-        sharedFile.setLucky(lucky); // Lucky 엔티티 설정
-        sharedFileRepository.save(sharedFile);
+        try{
+            // SharedFile 엔티티 저장
+            SharedFile sharedFile = new SharedFile();
+            sharedFile.setFileName(uploadedUrl);
+            sharedFile.setFileType(FileType.IMAGE);
+            sharedFile.setChallengeNum(challenge.getChallengeNum());
+            sharedFile.setCreateDate(System.currentTimeMillis());
+            sharedFile.setLucky(lucky); // Lucky 엔티티 설정
+            sharedFileRepository.save(sharedFile);
+        } catch (Exception e) {
+            e.printStackTrace();  // Or use appropriate logging
+        }
 
         // 그룹별 4개의 이미지가 모였는지 확인 및 병합
         checkAndMergeImages(challenge.getChallengeNum(), lucky);
