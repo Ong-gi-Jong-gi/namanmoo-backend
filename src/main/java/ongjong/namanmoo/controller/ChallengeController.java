@@ -203,10 +203,15 @@ public class ChallengeController {
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
-
         if (answerFile == null || answerFile.isEmpty()) {
             return new ApiResponse<>("400", "Answer file is missing", null);
         }
+        Member member = memberService.findMemberByLoginId();
+        Family family = member.getFamily();
+        if (family == null) {
+            return new ApiResponse<>("404", "Family not found for the current member", null);
+        }
+        Lucky lucky = luckyService.findCurrentLucky(family.getFamilyId());
 
         FileType fileType;
         if (answerFile.getContentType().startsWith("image/")) {
@@ -221,8 +226,11 @@ public class ChallengeController {
 
             // Answer 업데이트
             Answer answer = answerService.modifyAnswer(challengeId, uploadedUrl);
-            Map<String, String> response = new HashMap<>();
 
+            // 그룹별 4개의 이미지가 모였는지 확인 및 병합
+            sharedFileService.checkAndMergeImages(challenge.getChallengeNum(), lucky);
+
+            Map<String, String> response = new HashMap<>();
             response.put("url", uploadedUrl);
             response.put("message", "Video uploaded successfully");
             return new ApiResponse<>("200", response.get("message"), response);
@@ -243,19 +251,13 @@ public class ChallengeController {
 
         Member member = memberService.findMemberByLoginId();
         Family family = member.getFamily();
-
         if (family == null) {
             return new ApiResponse<>("404", "Family not found for the current member", null);
         }
-
-        Optional<Lucky> lucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(family.getFamilyId());
-
-        if (!lucky.isPresent()) {
-            return new ApiResponse<>("404", "Lucky not found for the provided challengeId in any family member", null);
-        }
+        Lucky lucky = luckyService.findCurrentLucky(family.getFamilyId());
 
         // 응답 데이터 생성
-        Map<String, BufferedImage> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), lucky.get().getLuckyId());
+        Map<String, BufferedImage> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), lucky.getLuckyId());
 
         Map<String, String> encodedResults = new HashMap<>();
         for (Map.Entry<String, BufferedImage> entry : results.entrySet()) {

@@ -91,16 +91,13 @@ public class SharedFileService {
             e.printStackTrace();  // Or use appropriate logging
         }
 
-        // 그룹별 4개의 이미지가 모였는지 확인 및 병합
-        checkAndMergeImages(challenge.getChallengeNum(), lucky);
-
         response.put("url", uploadedUrl);
         response.put("message", "Photo uploaded successfully");
 
         return response;
     }
 
-    private void checkAndMergeImages(int challengeNum, Lucky lucky) throws IOException {
+    public void checkAndMergeImages(int challengeNum, Lucky lucky) throws IOException {
         List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
 
         // 파일 이름의 숫자를 기준으로 그룹화
