@@ -1,5 +1,7 @@
 package ongjong.namanmoo.service;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -36,10 +38,28 @@ public class SharedFileService {
     @Autowired
     private SharedFileRepository sharedFileRepository;
 
+    private final AmazonS3 amazonS3Client;
     private final String bucket;
+    private final String region;
 
-    public SharedFileService(@Value("${cloud.aws.s3.bucket}") String bucket) {
+    public SharedFileService(
+            @Value("${cloud.aws.credentials.access-key}") String accessKeyId,
+            @Value("${cloud.aws.credentials.secret-key}") String secretKey,
+            @Value("${cloud.aws.s3.bucket}") String bucket,
+            @Value("${cloud.aws.region.static}") String region) {
+
+        // AWS 인증 정보 생성
+        BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKeyId, secretKey);
+
+        // AmazonS3 클라이언트 생성
+        this.amazonS3Client = AmazonS3ClientBuilder.standard()
+                .withRegion(region)
+                .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
+                .build();
+
+        // 필드 초기화
         this.bucket = bucket;
+        this.region = region;
     }
 
     public Map<String, String> uploadImageFile(Challenge challenge, MultipartFile photo, FileType fileType) throws Exception {
@@ -129,10 +149,9 @@ public class SharedFileService {
         meta.setContentLength(buffer.length);
         meta.setContentType("image/png");
 
-        AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
-        s3Client.putObject(new PutObjectRequest(bucketName, fileObjKeyName, is, meta));
+        amazonS3Client.putObject(new PutObjectRequest(bucketName, fileObjKeyName, is, meta));
 
-        return s3Client.getUrl(bucketName, fileObjKeyName).toString();
+        return amazonS3Client.getUrl(bucketName, fileObjKeyName).toString();
     }
 
     public Map<String, BufferedImage> getFaceChallengeResults(int challengeNum, Long luckyId) {
