@@ -8,7 +8,7 @@ import ongjong.namanmoo.dto.member.LoginRequestDto;
 import ongjong.namanmoo.dto.member.MemberInfoDto;
 import ongjong.namanmoo.dto.member.MemberSignUpDto;
 import ongjong.namanmoo.dto.member.MemberUpdateDto;
-import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
+import ongjong.namanmoo.dto.recap.MemberAndCountDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.AnswerRepository;
 import ongjong.namanmoo.repository.LuckyRepository;

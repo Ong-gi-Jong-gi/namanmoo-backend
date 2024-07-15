@@ -8,8 +8,10 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.dto.challenge.ChallengeDetailsDto;
-import ongjong.namanmoo.dto.recapMember.MemberAndCountDto;
-import ongjong.namanmoo.dto.recapMember.MemberYouthAnswerDto;
+import ongjong.namanmoo.dto.recap.MemberAppreciationDto;
+import ongjong.namanmoo.dto.recap.MemberDto;
+import ongjong.namanmoo.dto.recap.MemberPhotosAnswerDto;
+import ongjong.namanmoo.dto.recap.MemberYouthAnswerDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
@@ -19,10 +21,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static ongjong.namanmoo.domain.answer.AnswerType.PHOTO;
 
 @Slf4j
 @Service
@@ -32,7 +34,6 @@ public class AnswerServiceImpl implements AnswerService {
 
     private final AnswerRepository answerRepository;
     private final MemberRepository memberRepository;
-    private final FaceTimeAnswerRepository faceTimeAnswerRepository;
     private final LuckyRepository luckyRepository;
     private final FamilyRepository familyRepository;
     private final ChallengeRepository challengeRepository;
@@ -40,8 +41,6 @@ public class AnswerServiceImpl implements AnswerService {
     private final LuckyService luckyService;
     private final ChallengeService challengeService;
     private final MemberService memberService;
-
-
 
     // 답변 생성칸 만들기
     @Override
@@ -73,46 +72,42 @@ public class AnswerServiceImpl implements AnswerService {
                     }
                 }
 
-                Answer answer = new Answer(); // Answer 객체 생성
-                answer.setMember(member);
-                answer.setChallenge(challenge);
-                answer.setBubbleVisible(false);
-
-                if (challenge.getChallengeType()== ChallengeType.NORMAL) {
-                    answer.setAnswerType(AnswerType.NORMAL);
-                    answer.setCreateDate(strChallengeDate);
-                } else if (challenge.getChallengeType()== ChallengeType.GROUP_CHILD) {
-                    answer.setAnswerType(AnswerType.GROUP);
-                    answer.setCreateDate(strChallengeDate);
-                } else if (challenge.getChallengeType()== ChallengeType.GROUP_PARENT) {
-                    answer.setAnswerType(AnswerType.GROUP);
-                    answer.setCreateDate(strChallengeDate);
-                } else if (challenge.getChallengeType()== ChallengeType.FACETIME) {
-                    answer.setAnswerType(AnswerType.FACETIME);
-                    answer.setCreateDate(strChallengeDate);
-
-                    // FaceTimeC일 경우 FaceTimeAnswer 생성 및 저장
-                    FaceTimeAnswer faceTimeAnswer = new FaceTimeAnswer();
-                    faceTimeAnswer.setLucky(luckyService.findCurrentLucky(member.getFamily().getFamilyId()));
-                    faceTimeAnswerRepository.save(faceTimeAnswer);
-
-                    // FaceTimeAnswer의 ID를 Answer의 answerContent에 저장
-                    answer.setAnswerContent(String.valueOf(faceTimeAnswer.getFaceTimeAnswerId()));
-                } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
-                    answer.setAnswerType(AnswerType.PHOTO);
-                    answer.setCreateDate(strChallengeDate);
-                } else if (challenge.getChallengeType()== ChallengeType.VOICE) {
-                    answer.setAnswerType(AnswerType.VOICE);
-                    answer.setCreateDate(strChallengeDate);
-                }
+                Answer answer = getAnswer(member, challenge, strChallengeDate);
                 // challengeDate를 1일 증가
                 strChallengeDate = dateUtil.addDaysToStringDate(strChallengeDate,1);
                 // 생성된 Answer 저장
                 answerRepository.save(answer);
             }
         }
-
         return true;
+    }
+
+    private Answer getAnswer(Member member, Challenge challenge, String strChallengeDate) {
+        Answer answer = new Answer(); // Answer 객체 생성
+        answer.setMember(member);
+        answer.setChallenge(challenge);
+        answer.setBubbleVisible(false);
+
+        if (challenge.getChallengeType()== ChallengeType.NORMAL) {
+            answer.setAnswerType(AnswerType.NORMAL);
+            answer.setCreateDate(strChallengeDate);
+        } else if (challenge.getChallengeType()== ChallengeType.GROUP_CHILD) {
+            answer.setAnswerType(AnswerType.GROUP);
+            answer.setCreateDate(strChallengeDate);
+        } else if (challenge.getChallengeType()== ChallengeType.GROUP_PARENT) {
+            answer.setAnswerType(AnswerType.GROUP);
+            answer.setCreateDate(strChallengeDate);
+        } else if (challenge.getChallengeType()== ChallengeType.FACETIME) {
+            answer.setAnswerType(AnswerType.FACETIME);
+            answer.setCreateDate(strChallengeDate);
+        } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
+            answer.setAnswerType(AnswerType.PHOTO);
+            answer.setCreateDate(strChallengeDate);
+        } else if (challenge.getChallengeType()== ChallengeType.VOICE) {
+            answer.setAnswerType(AnswerType.VOICE);
+            answer.setCreateDate(strChallengeDate);
+        }
+        return answer;
     }
 
     // challenge와 member로 answer찾기
@@ -229,60 +224,144 @@ public class AnswerServiceImpl implements AnswerService {
                 .collect(Collectors.toList());
     }
 
-    // member 정보와 각 member에 대한 답변 입력 횟수 반환
-    @Override
-    @Transactional(readOnly = true)
-    public List<MemberAndCountDto> getMemberAndCount(Lucky lucky) {
-        String startDate = lucky.getChallengeStartDate();
-        Long familyId = lucky.getFamily().getFamilyId();
-        List<Member> memberList = memberRepository.findByFamilyFamilyId(familyId);
-        List<MemberAndCountDto> memberCountList = new ArrayList<>();
-        for (Member member : memberList) {
-            int count = 0;
-            String currentDate = startDate;
-            for (int i = 0; i < lucky.getLifetime().getDays(); i++) {
-                if (answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, currentDate)) {
-                    count++;
-                }
-                currentDate = DateUtil.getInstance().addDaysToStringDate(currentDate, 1);
-            }
-            memberCountList.add(new MemberAndCountDto(member, count));
-        }
-        return memberCountList;
-    }
 
-    // 각 member의 memberimg와 특정 번호의 챌린지 답변을 묶어 반환
-    @Override
+    // 공통 로직을 처리하는 메서드
+    // 각 member의 정보와 특정 두 번호에 해당하는 두 챌린지 답변을 묶어 반환
     @Transactional(readOnly = true)
-    public List<MemberYouthAnswerDto> getAnswerByMember(List<Member> members) throws Exception{
-        List<MemberYouthAnswerDto> memberAnswerDtoList = new ArrayList<>();
+    public List<MemberDto> getAnswersByMember(List<Member> members, int challengeNum1, int challengeNum2, Class<? extends MemberDto> dtoClass) throws Exception {
+        List<MemberDto> memberDtoList = new ArrayList<>();
+        Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
+        int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId()); // 이번 lucky에서 시작해야하는 challengeNum
 
-        Challenge challenge13 = challengeRepository.findByChallengeNum(1)
+        Challenge challenge1 = challengeRepository.findByChallengeNum(startChallengeNum + challengeNum1)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new Exception("Challenge 13 not found"));
+                .orElseThrow(() -> new Exception("Challenge " + (startChallengeNum + challengeNum1) + " not found"));
 
-        Challenge challenge28 = challengeRepository.findByChallengeNum(2)
+        Challenge challenge2 = challengeRepository.findByChallengeNum(startChallengeNum + challengeNum2)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new Exception("Challenge 28 not found"));
+                .orElseThrow(() -> new Exception("Challenge " + (startChallengeNum + challengeNum2) + " not found"));
 
         for (Member member : members) {
-            String memberImg = member.getMemberImage();
-            Answer challenge13Answer = answerRepository.findByChallengeAndMember(challenge13, member)
-                    .orElseThrow(() -> new Exception("Answer for Challenge 13 not found"));
-            Answer challenge28Answer = answerRepository.findByChallengeAndMember(challenge28, member)
-                    .orElseThrow(() -> new Exception("Answer for Challenge 28 not found"));
+            Answer challenge1Answer = answerRepository.findByChallengeAndMember(challenge1, member)
+                    .orElseThrow(() -> new Exception("Answer for Challenge " + (startChallengeNum + challengeNum1) + " not found"));
+            Answer challenge2Answer = answerRepository.findByChallengeAndMember(challenge2, member)
+                    .orElseThrow(() -> new Exception("Answer for Challenge " + (startChallengeNum + challengeNum2) + " not found"));
 
-            String photo = challenge13Answer.getAnswerContent();
-            String text = challenge28Answer.getAnswerContent();
+            String answer1 = challenge1Answer.getAnswerContent();
+            String answer2 = challenge2Answer.getAnswerContent();
 
-            MemberYouthAnswerDto dto = new MemberYouthAnswerDto(memberImg, photo, text);
-            memberAnswerDtoList.add(dto);
+            memberDtoList.add(createDto(dtoClass, member, answer1, answer2));
         }
-        return memberAnswerDtoList;
+        return memberDtoList;
     }
 
+    // DTO 생성 로직을 처리하는 메서드
+    public MemberDto createDto(Class<? extends MemberDto> dtoClass, Member member, String answer1, String answer2) {
+        if (dtoClass == MemberAppreciationDto.class) {
+            return new MemberAppreciationDto(member, answer1, answer2);
+        } else if (dtoClass == MemberYouthAnswerDto.class) {
+            return new MemberYouthAnswerDto(member.getMemberImage(), answer1, answer2);
+        }
+        throw new IllegalArgumentException("Unsupported DTO class: " + dtoClass.getName());
+    }
+
+    @Transactional(readOnly = true)
+    public List<MemberYouthAnswerDto> getYouthByMember(List<Member> members, int challengeNum1, int challengeNum2) throws Exception {
+        return (List<MemberYouthAnswerDto>) (List<?>) getAnswersByMember(members, challengeNum1, challengeNum2, MemberYouthAnswerDto.class);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MemberAppreciationDto> getAppreciationByMember(List<Member> members, int challengeNum1, int challengeNum2) throws Exception {
+        return (List<MemberAppreciationDto>) (List<?>) getAnswersByMember(members, challengeNum1, challengeNum2, MemberAppreciationDto.class);
+    }
+
+    // 각 멤버의 photo 타입의 질문에 대한 사진을 랜덤으로 반환
+    @Override
+    @Transactional(readOnly = true)
+    public MemberPhotosAnswerDto getPhotoByMember(List<Member> members) throws Exception {
+        List<Answer> memberAnswerList = new ArrayList<>();
+        List<String> otherPhotos = new ArrayList<>();
+
+        Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
+        int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId());
+
+        // 1. Challenge 19 가져오기
+        Challenge challenge19 = challengeRepository.findByChallengeNum(startChallengeNum+19)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new Exception("Challenge 19 not found"));
+
+        // 2. 멤버들의 Challenge 19에 대한 답변 가져오기
+        for (Member member : members) {
+            Answer challenge19Answer = answerRepository.findByChallengeAndMember(challenge19, member)
+                    .orElseThrow(() -> new Exception("Answer for Challenge 19 not found"));
+            if(challenge19Answer.getAnswerContent() != null){
+                memberAnswerList.add(challenge19Answer);
+            }
+        }
+        // 3. memberAnswerList에서 랜덤하게 하나의 answer를 선택하여 familyPhoto로 설정
+        Random random = new Random();
+        Answer familyPhotoAnswer = memberAnswerList.get(random.nextInt(memberAnswerList.size()));
+        String familyPhoto = familyPhotoAnswer.getAnswerContent();
+
+        // 4. type이 photo이고 challengenum이 19번이 아닌 멤버들의 answer 중에서 모든 사진 URL을 담은 리스트 생성
+        List<String> allOtherPhotos = new ArrayList<>();
+        int number = luckyService.findCurrentLuckyLifetime(currentUser.get().getFamily().getFamilyId());
+        // 현재 진행한 challengeList
+        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum((currentUser.get().getFamily().getFamilyId())), number);
+
+        for (Member member : members) {
+            // 그룹챌린지를 고려한 새로운 리스트 적용
+            List<Challenge> newChallengeList = challengeService.groupChallengeExceptionRemove(challengeList,member);
+            for (Challenge challenge : newChallengeList) {
+                if (challenge.getChallengeNum() != startChallengeNum+19){
+                    Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge,member);
+                    if (answer.get().getAnswerType() == PHOTO && answer.get().getAnswerContent() != null){
+                        allOtherPhotos.add(answer.get().getAnswerContent());
+                    }
+                }
+            }
+        }
+
+        // 최대 9장의 사진을 랜덤으로 고른다.
+        int numPhotosToAdd = Math.min(9, allOtherPhotos.size());
+        Set<Integer> chosenIndices = new HashSet<>();
+        while (chosenIndices.size() < numPhotosToAdd) {
+            int randomIndex = random.nextInt(allOtherPhotos.size());
+            if (chosenIndices.add(randomIndex)) {
+                otherPhotos.add(allOtherPhotos.get(randomIndex));
+            }
+        }
+
+        return new MemberPhotosAnswerDto(familyPhoto,otherPhotos);
+    }
+
+    // facetime에 대한 answerList를 반환
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getFacetimeAnswerList(Long luckyId){
+        Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
+        Family family = currentUser.get().getFamily();
+        List<Member> memberList = memberRepository.findByFamilyFamilyId(family.getFamilyId());
+        int number = luckyService.findCurrentLuckyLifetime(currentUser.get().getFamily().getFamilyId());
+        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum((currentUser.get().getFamily().getFamilyId())), number);
+
+        List<String> facetimeAnswerList = new ArrayList<>();
+        for (Challenge challenge : challengeList){
+            if(challenge.getChallengeType() == ChallengeType.FACETIME){
+                for(Member member : memberList){
+                    Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge,member);
+                    if(answer.get().getAnswerContent() != null){
+                        facetimeAnswerList.add(answer.get().getAnswerContent());
+                    }
+                }
+                return facetimeAnswerList;
+            }
+        }
+        return null;
+    }
 
     // 챌린지 상세조회 중복요소 매핑
     @Override
@@ -313,6 +392,7 @@ public class AnswerServiceImpl implements AnswerService {
                 })
                 .collect(Collectors.toList());
     }
+
 
 
 }

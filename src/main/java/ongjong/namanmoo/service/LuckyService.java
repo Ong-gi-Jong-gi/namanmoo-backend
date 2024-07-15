@@ -38,4 +38,9 @@ public interface LuckyService {
 
     // 현재 실행 중인 Lucky 객체의 lifetime (챌린지 길이) 가져오기
     Integer findCurrentLuckyLifetime(Long familyId);
+
+    // 해당 Lucky에 해당하는 챌린지 조회수 늘리기
+    void increaseChallengeViews(Long luckyId, Integer challengeNum);
+
+    void luckyDeadOrAlive(String challengeDate) throws Exception;
 }

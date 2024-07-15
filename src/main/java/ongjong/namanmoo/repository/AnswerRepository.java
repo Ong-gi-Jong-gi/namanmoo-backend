@@ -1,5 +1,6 @@
 package ongjong.namanmoo.repository;
 
+import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
@@ -14,4 +15,5 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
     List<Answer> findByChallenge(Challenge challenge);
     Optional<Answer> findByMemberAndCreateDate(Member member, String createDate);
     boolean existsByMemberAndCreateDateAndAnswerContentIsNotNull(Member member, String createDate);
+    List<Answer> findByChallengeAndMemberFamily(Challenge challenge, Family family);
 }
