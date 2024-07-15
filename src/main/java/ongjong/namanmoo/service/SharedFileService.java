@@ -76,7 +76,7 @@ public class SharedFileService {
         Optional<Lucky> optionalLucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(family.getFamilyId());
         Lucky lucky = optionalLucky.orElseThrow(() -> new RuntimeException("Running Lucky not found for family"));
 
-        try{
+        try {
             // SharedFile 엔티티 저장
             SharedFile sharedFile = new SharedFile();
             sharedFile.setFileName(uploadedUrl);
@@ -85,6 +85,8 @@ public class SharedFileService {
             sharedFile.setCreateDate(System.currentTimeMillis());
             sharedFile.setLucky(lucky); // Lucky 엔티티 설정
             sharedFileRepository.save(sharedFile);
+            // 저장이 성공했는지 확인하는 로그
+            System.out.println("SharedFile 저장 성공: " + sharedFile.getSharedFileId());
         } catch (Exception e) {
             e.printStackTrace();  // Or use appropriate logging
         }
@@ -182,6 +184,5 @@ public class SharedFileService {
         }
         return results;
     }
-
 
 }
