@@ -39,7 +39,6 @@ public class Lucky {
 //    @OneToMany(mappedBy = "lucky")
 //    private List<FaceTimeAnswer> faceTimeAnswers;
 
-
     // 각 챌린지 번호에 대한 조회수 기록
     @Builder.Default
     @ElementCollection
@@ -47,4 +46,7 @@ public class Lucky {
     @MapKeyColumn(name = "challenge_num")
     @Column(name = "views")
     private Map<Integer, Integer> challengeViews = new HashMap<>();
+
+    @OneToMany(mappedBy = "lucky")
+    private List<SharedFile> sharedFiles = new ArrayList<>();
 }

@@ -5,18 +5,18 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ongjong.namanmoo.domain.Family;
-import ongjong.namanmoo.domain.Lucky;
+import ongjong.namanmoo.domain.*;
 import ongjong.namanmoo.dto.challenge.*;
-import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.answer.ModifyAnswerDto;
 import ongjong.namanmoo.dto.ApiResponse;
+import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.service.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +33,8 @@ public class ChallengeController {
     private final AnswerService answerService;
     private final FamilyService familyService;
     private final AwsS3Service awsS3Service;
+    private final SharedFileService sharedFileService;
+    private final LuckyRepository luckyRepository;
 
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
@@ -196,34 +198,42 @@ public class ChallengeController {
 
     // 화상 통화 챌린지 결과 저장
     @PostMapping("/face")
-    public ApiResponse<String> saveFaceTimeAnswer(
+    public ApiResponse<Map<String, String>> saveFaceTimeAnswer(
             @RequestParam("challengeId") Long challengeId,
-            @RequestParam("familyPhotos") MultipartFile[] familyPhotos) throws Exception {
+            @RequestPart("answer") MultipartFile answerFile) throws Exception {
 
-        if (familyPhotos.length != 4) {
-            return new ApiResponse<>("400", "Exactly 4 photos must be uploaded", null);
+        Challenge challenge = challengeService.findChallengeById(challengeId);
+
+        if (answerFile == null || answerFile.isEmpty()) {
+            return new ApiResponse<>("400", "Answer file is missing", null);
         }
 
-        // S3에 파일 업로드 및 URL 저장
-        List<String> uploadedUrls = new ArrayList<>();
-        for (MultipartFile photo : familyPhotos) {
-            String uploadedUrl = awsS3Service.uploadFile(photo);
-            uploadedUrls.add(uploadedUrl);
+        FileType fileType;
+        if (answerFile.getContentType().startsWith("image/")) {
+            fileType = FileType.IMAGE;
+            Map<String, String> response = sharedFileService.uploadImageFile(challenge, answerFile, fileType);
+            return new ApiResponse<>("200", response.get("message"), response);
+        } else if (answerFile.getContentType().startsWith("video/")) {
+            fileType = FileType.VIDEO;
+
+            // S3에 파일 업로드 및 URL 저장
+            String uploadedUrl = awsS3Service.uploadFile(answerFile);
+
+            // Answer 업데이트
+            Answer answer = answerService.modifyAnswer(challengeId, uploadedUrl);
+            Map<String, String> response = new HashMap<>();
+
+            response.put("url", uploadedUrl);
+            response.put("message", "Video uploaded successfully");
+            return new ApiResponse<>("200", response.get("message"), response);
+        } else {
+            return new ApiResponse<>("400", "Invalid file type: " + answerFile.getContentType(), null);
         }
-
-        // JSON 형식으로 변환
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonAnswerContent = objectMapper.writeValueAsString(uploadedUrls);
-
-        // Answer 업데이트
-        answerService.modifyAnswer(challengeId, jsonAnswerContent);
-
-        return new ApiResponse<>("200", "Success", null);
     }
 
     // 화상 통화 챌린지 결과 조회
     @GetMapping("/face/result")
-    public ApiResponse<Map<String, Object>> getFaceTimeAnswer(
+    public ApiResponse<Map<String, List<String>>> getFaceTimeAnswer(
             @RequestParam("challengeId") Long challengeId) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
@@ -238,38 +248,20 @@ public class ChallengeController {
             return new ApiResponse<>("404", "Family not found for the current member", null);
         }
 
-        // 가족의 모든 멤버를 순회하며 답변을 찾음
-        List<Member> members = family.getMembers();
-        Answer foundAnswer = null;
+        Optional<Lucky> lucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(family.getFamilyId());
 
-        for (Member familyMember : members) {
-            Optional<Answer> answerOpt = answerService.findAnswerByChallengeAndMember(challenge, familyMember);
-            if (answerOpt.isPresent() && answerOpt.get().getAnswerContent() != null) {
-                foundAnswer = answerOpt.get();
-                break;
-            }
+        if (!lucky.isPresent()) {
+            return new ApiResponse<>("404", "Lucky not found for the provided challengeId in any family member", null);
         }
-
-        if (foundAnswer == null) {
-            return new ApiResponse<>("404", "Answer not found for the provided challengeId in any family member", null);
-        }
-
-        String answerContent = foundAnswer.getAnswerContent();
-
-        // JSON 형식으로 변환된 URL 목록을 Map 형태로 변환
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<String> familyPhotos = objectMapper.readValue(answerContent, new TypeReference<List<String>>() {});
 
         // 응답 데이터 생성
-        Map<String, Object> responseData = new HashMap<>();
-        responseData.put("challengeTitle", challenge.getChallengeTitle());
-        responseData.put("familyPhotos", familyPhotos);
+        Map<String, List<String>> results = sharedFileService.getChallengeResults(challenge.getChallengeNum(), lucky.get().getLuckyId());
 
         // 챌린지 조회 시 조회수 증가
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
         luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
 
-        return new ApiResponse<>("200", "Success", responseData);
+        return new ApiResponse<>("200", "Challenge results fetched successfully", results);
     }
 
     // 음성 챌린지 조회
