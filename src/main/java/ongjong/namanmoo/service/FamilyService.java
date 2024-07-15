@@ -17,7 +17,7 @@ public interface FamilyService {
     List<FamilyMemberDto> getFamilyMembersInfo();
 
     // 내 가족 코드 확인
-    String getInviteCode();
+//    String getInviteCode();
 
     // 초대 코드로 가족 정보 확인
     FamilyInviteResponse getFamilyInfoByInviteCode(String inviteCode);

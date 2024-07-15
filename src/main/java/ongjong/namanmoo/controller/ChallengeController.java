@@ -322,4 +322,42 @@ public class ChallengeController {
         return new ApiResponse<>("200", "Challenge retrieved successfully",voiceChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
     }
 
+    @PostMapping("/voice")
+    public ApiResponse<Map<String, String>> saveVoiceAnswer(
+            @RequestParam("challengeId") Long challengeId,
+            @RequestPart("answer") MultipartFile answerFile) throws Exception {
+        // challengeId RequestParam으로 변경해서 테스트
+
+        Member member = memberService.findMemberByLoginId();
+        Challenge challenge = challengeService.findChallengeById(challengeId);
+
+        if (challenge == null) {
+            return new ApiResponse<>("404", "Challenge not found", null);
+        }
+
+        if (answerFile == null || answerFile.isEmpty()) {
+            return new ApiResponse<>("400", "Answer file is missing", null);
+        }
+
+        // S3에 파일 업로드
+        String uploadImageUrl = awsS3Service.uploadFile(answerFile);
+
+        // Answer 객체 수정 및 저장
+        Optional<Answer> optionalAnswer = answerService.findAnswerByChallengeAndMember(challenge, member);
+        if (optionalAnswer.isPresent()) {
+            Answer answer = optionalAnswer.get();
+            answer.setAnswerContent(uploadImageUrl);
+            answer.setModifiedDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")));
+            answerService.saveAnswer(answer);
+
+            // Map 형태로 답변 URL 반환
+            Map<String, String> responseData = new HashMap<>();
+            responseData.put("answer", uploadImageUrl);
+
+            return new ApiResponse<>("200", "Success", responseData);
+        } else {
+            return new ApiResponse<>("404", "Answer not found", null);
+        }
+    }
+
 }
