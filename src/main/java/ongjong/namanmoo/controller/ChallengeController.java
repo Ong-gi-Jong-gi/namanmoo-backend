@@ -214,7 +214,7 @@ public class ChallengeController {
         Lucky lucky = luckyService.findCurrentLucky(family.getFamilyId());
 
         FileType fileType;
-        if (answerFile.getContentType().startsWith("image/")) {
+        if (Objects.requireNonNull(answerFile.getContentType()).startsWith("image/")) {
             fileType = FileType.IMAGE;
             Map<String, String> response = sharedFileService.uploadImageFile(challenge, answerFile, fileType);
             return new ApiResponse<>("200", response.get("message"), response);
