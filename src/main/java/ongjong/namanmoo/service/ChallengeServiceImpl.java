@@ -119,30 +119,35 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Override
     @Transactional(readOnly = true)
     public Challenge findOneInCurrentChallenges(List<Challenge> challenges) throws Exception{
+        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));  //로그인한 member
         if (challenges.isEmpty()) {
             return null;        // 오늘의 챌린지리스트가 비어있는 경우 null 리턴
         }
         if(challenges.size() == 1){
             return challenges.get(0);       // 오늘의 챌린지리스트 사이즈가 1이라면 첫번째 챌린지 반환
         }
-        else if(challenges.size() == 2){    // 오늘의 챌린지리스트 사이즈가 2일 경우
+        else if(challenges.size() == 2) {    // 오늘의 챌린지리스트 사이즈가 2일 경우
             Challenge challenge1 = challenges.get(0);
             Challenge challenge2 = challenges.get(1);
-            Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));  //로그인한 member
-            if (challenge1.getChallengeType() == ChallengeType.GROUP_PARENT){
-                if (member.getRole().equals("아빠") || member.getRole().equals("엄마")){
+            if (challenge1.getChallengeType() == ChallengeType.GROUP_PARENT) {
+                if (member.getRole().equals("아빠") || member.getRole().equals("엄마")) {
                     return challenge1;
+                } else {
+                    return challenge2;
                 }
-                else{
+            } else if (challenge1.getChallengeType() == ChallengeType.GROUP_CHILD) {
+                if (member.getRole().equals("아들") || member.getRole().equals("딸")) {
+                    return challenge1;
+                } else {
                     return challenge2;
                 }
             }
-            else if (challenge1.getChallengeType() == ChallengeType.GROUP_CHILD){
-                if (member.getRole().equals("아들") || member.getRole().equals("딸")){
-                    return challenge1;
-                }
-                else{
-                    return challenge2;
+        }
+        else if(challenges.size() == 4){
+            List<Member> memberList = memberRepository.findByFamilyFamilyId(member.getFamily().getFamilyId());
+            for(int i = 0; i < memberList.size(); i++){
+                if(memberList.get(i) == member){
+                    return challenges.get(i);
                 }
             }
         }

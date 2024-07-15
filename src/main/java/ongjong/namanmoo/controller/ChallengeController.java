@@ -307,10 +307,5 @@ public class ChallengeController {
         return new ApiResponse<>("200", "Challenge retrieved successfully",voiceChallengeDto);      // 객체를 리스트 형태로 감싸서 반환
     }
 
-//    // 음성 챌린지 수정
-//    @PostMapping("/voice")
-//    public ApiResponse<> saveVoiceAnswer() throws Exception{
-//
-//    }
 
 }
