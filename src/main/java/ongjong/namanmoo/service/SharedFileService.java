@@ -114,31 +114,34 @@ public class SharedFileService {
         }
 
         for (Map.Entry<String, List<SharedFile>> entry : groupedFiles.entrySet()) {
-            List<URL> imageUrls = entry.getValue().stream()
+            List<BufferedImage> images = entry.getValue().stream()
                     .map(sharedFile -> {
                         try {
-                            return new URL(sharedFile.getFileName());
+                            return ImageIO.read(new URL(sharedFile.getFileName()));
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
                     })
                     .collect(Collectors.toList());
 
-            if (imageUrls.size() == 4) {
-                BufferedImage mergedImage = ImageMerger.mergeImages(imageUrls);
-                String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, "merged-images/" + challengeNum + "_" + lucky.getLuckyId() + "_" + entry.getKey() + ".png");
-
-                // Save merged image URL to database
-                SharedFile mergedFile = new SharedFile();
-                mergedFile.setChallengeNum(challengeNum);
-                mergedFile.setFileName(mergedImageUrl);
-                mergedFile.setFileType(FileType.IMAGE);
-                mergedFile.setLucky(lucky);
-                sharedFileRepository.save(mergedFile);
+            // 빈 공간을 투명하게 채워 4개가 되도록 처리
+            while (images.size() < 4) {
+                BufferedImage emptyImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+                images.add(emptyImage);
             }
+
+            BufferedImage mergedImage = ImageMerger.mergeImages(images);
+            String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, "merged-images/" + challengeNum + "_" + lucky.getLuckyId() + "_" + entry.getKey() + ".png");
+
+            // Save merged image URL to database
+            SharedFile mergedFile = new SharedFile();
+            mergedFile.setChallengeNum(challengeNum);
+            mergedFile.setFileName(mergedImageUrl);
+            mergedFile.setFileType(FileType.IMAGE);
+            mergedFile.setLucky(lucky);
+            sharedFileRepository.save(mergedFile);
         }
     }
-
 
     public String uploadMergedImageToS3(BufferedImage mergedImage, String bucketName, String fileObjKeyName) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
