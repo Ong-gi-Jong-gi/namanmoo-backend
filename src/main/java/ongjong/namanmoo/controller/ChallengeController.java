@@ -16,7 +16,11 @@ import ongjong.namanmoo.service.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -248,7 +252,7 @@ public class ChallengeController {
 
     // 화상 통화 챌린지 결과 조회
     @GetMapping("/face/result")
-    public ApiResponse<Map<String, List<String>>> getFaceTimeAnswer(
+    public ApiResponse<Map<String, String>> getFaceTimeAnswer(
             @RequestParam("challengeId") Long challengeId) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
@@ -270,13 +274,17 @@ public class ChallengeController {
         }
 
         // 응답 데이터 생성
-        Map<String, List<String>> results = sharedFileService.getChallengeResults(challenge.getChallengeNum(), lucky.get().getLuckyId());
+        Map<String, BufferedImage> results = sharedFileService.getChallengeResults(challenge.getChallengeNum(), lucky.get().getLuckyId());
 
-        // 챌린지 조회 시 조회수 증가
-        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        Map<String, String> encodedResults = new HashMap<>();
+        for (Map.Entry<String, BufferedImage> entry : results.entrySet()) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(entry.getValue(), "png", baos);
+            String base64Image = Base64.getEncoder().encodeToString(baos.toByteArray());
+            encodedResults.put(entry.getKey(), base64Image);
+        }
 
-        return new ApiResponse<>("200", "Challenge results fetched successfully", results);
+        return new ApiResponse<>("200", "Challenge results fetched successfully", encodedResults);
     }
 
     // 음성 챌린지 조회

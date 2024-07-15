@@ -8,10 +8,13 @@ import ongjong.namanmoo.repository.SharedFileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -53,18 +56,19 @@ public class SharedFileService {
         return response;
     }
 
-    public Map<String, List<String>> getChallengeResults(int challengeNum, Long luckyId) {
+    public Map<String, BufferedImage> getChallengeResults(int challengeNum, Long luckyId) throws IOException {
         Lucky lucky = luckyRepository.getLuckyByLuckyId(luckyId);
         List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
 
         if (sharedFiles.isEmpty()) {
             System.out.println("No files found for the given challengeNum and luckyId");
+            return Collections.emptyMap();
         } else {
             System.out.println("Found " + sharedFiles.size() + " files.");
         }
 
         // 파일 이름의 숫자를 기준으로 그룹화
-        Map<String, List<String>> groupedFiles = new HashMap<>();
+        Map<String, List<SharedFile>> groupedFiles = new HashMap<>();
         Pattern pattern = Pattern.compile("screenshot_(\\d+)");
 
         for (SharedFile sharedFile : sharedFiles) {
@@ -74,14 +78,27 @@ public class SharedFileService {
 
             if (matcher.find()) {
                 String group = matcher.group(1);
-                groupedFiles.computeIfAbsent(group, k -> new ArrayList<>()).add(fileName);
+                groupedFiles.computeIfAbsent(group, k -> new ArrayList<>()).add(sharedFile);
                 System.out.println("Matched group: " + group);
             } else {
                 System.out.println("No match found for file: " + fileName);
             }
         }
 
-        return groupedFiles;
+        Map<String, BufferedImage> mergedImages = new HashMap<>();
+
+        for (Map.Entry<String, List<SharedFile>> entry : groupedFiles.entrySet()) {
+            List<File> imageFiles = entry.getValue().stream()
+                    .map(sharedFile -> new File(sharedFile.getFileName()))
+                    .collect(Collectors.toList());
+
+            if (imageFiles.size() == 4) {
+                BufferedImage mergedImage = ImageMerger.mergeImages(imageFiles);
+                mergedImages.put(entry.getKey(), mergedImage);
+            }
+        }
+
+        return mergedImages;
     }
 
 }
