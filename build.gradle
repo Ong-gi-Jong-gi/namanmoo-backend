@@ -56,6 +56,8 @@ dependencies {
 	// Jackson for JSON processing
 	implementation 'com.fasterxml.jackson.jr:jackson-jr-all:2.15.2'
 
+	//ffmpeg
+	implementation ('net.bramp.ffmpeg:ffmpeg:0.8.0')
 }
 
 tasks.named('test') {

@@ -14,6 +14,7 @@ public class MemberInfoDto {
     private final String nickname;
     private final String role;
     private final String userImg;
+    private final String code;
 
 
     public MemberInfoDto(Member member) {
@@ -21,6 +22,7 @@ public class MemberInfoDto {
         this.name = member.getName();
         this.nickname = member.getNickname();
         this.role = member.getRole();
-        this.userImg = member.getMemberImage();
+        this.userImg = (member.getMemberImage() != null) ? member.getMemberImage() : "";
+        this.code = (member.getFamily() != null) ? member.getFamily().getInviteCode() : "";
     }
 }

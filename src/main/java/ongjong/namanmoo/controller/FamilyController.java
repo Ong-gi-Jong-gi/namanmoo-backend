@@ -70,11 +70,11 @@ public class FamilyController {
         return ResponseEntity.ok(response);
     }
 
-    // 가족 코드 조회
-    @GetMapping("/code")
-    public ApiResponse<CreateFamilyResponse> getMyFamilyCode() {
-        CreateFamilyResponse inviteCode = new CreateFamilyResponse(familyService.getInviteCode());
-        return new ApiResponse<>("200", "Get InviteCode Success", inviteCode);
-
-    }
+//    // 가족 코드 조회
+//    @GetMapping("/code")
+//    public ApiResponse<CreateFamilyResponse> getMyFamilyCode() {
+//        CreateFamilyResponse inviteCode = new CreateFamilyResponse(familyService.getInviteCode());
+//        return new ApiResponse<>("200", "Get InviteCode Success", inviteCode);
+//
+//    }
 }
