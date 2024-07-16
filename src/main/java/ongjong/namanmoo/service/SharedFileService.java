@@ -158,7 +158,6 @@ public class SharedFileService {
         }
     }
 
-
     // 병합된 이미지를 S3에 업로드하는 메서드
     public String uploadMergedImageToS3(BufferedImage mergedImage, String bucketName, String fileObjKeyName) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -179,8 +178,7 @@ public class SharedFileService {
 
     // 특정 챌린지와 럭키 번호에 대한 이미지 결과를 가져오는 메서드
     public Map<Integer, List<String>> getFaceChallengeResults(int challengeNum, Long luckyId) {
-        List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, luckyRepository.getLuckyByLuckyId(luckyId));
-
+        List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, luckyRepository.getLuckyByLuckyId(luckyId).get());
         Map<Integer, List<String>> groupedFiles = new HashMap<>();
         // 파일 이름 패턴 _cut_${cut_number}
         Pattern pattern = Pattern.compile("_cut_(\\d+)\\.png");

@@ -56,7 +56,7 @@ public class RecapController {
 
     // recap 화상통화
     @GetMapping("/face")
-    public ApiResponse<MemberFacetimeDto> getFacetime(@RequestParam("luckyId") Long luckyId){
+    public ApiResponse<MemberFacetimeDto> getFacetime(@RequestParam("luckyId") Long luckyId) throws Exception {
         List<String> answerList = answerService.getFacetimeAnswerList(luckyId);
         MemberFacetimeDto facetimeAnswerList = new MemberFacetimeDto(answerList);
         return new ApiResponse<>("200", "Ranking retrieved successfully", facetimeAnswerList);
