@@ -54,7 +54,7 @@ public class ChallengeServiceImpl implements ChallengeService {
             return null;
         }
 
-        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum(family.getFamilyId()), number);
+        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum(family.getFamilyId()), 30);    // todo: 30 -> number로 바꿔야해!!!!!
 
         // 멤버 역할에 맞지 않는 challenge는 리스트에서 제외
         return groupChallengeExceptionRemove(challengeList,member);
@@ -147,7 +147,7 @@ public class ChallengeServiceImpl implements ChallengeService {
             List<Member> memberList = memberRepository.findByFamilyFamilyId(member.getFamily().getFamilyId());
             for(int i = 0; i < memberList.size(); i++){
                 if(memberList.get(i) == member){
-                    return challenges.get(i);
+                    return challenges.get(i%4);
                 }
             }
         }

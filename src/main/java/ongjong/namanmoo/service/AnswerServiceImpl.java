@@ -58,7 +58,7 @@ public class AnswerServiceImpl implements AnswerService {
         }
         DateUtil dateUtil = DateUtil.getInstance();
         // 각 회원마다 모든 챌린지에 대해 답변 생성
-        int count = 0;
+        int count = 0;      // member의 번호를 의미
         for (Member member : members) {
             String strChallengeDate = dateUtil.timestampToString(challengeDate);        // timestamp인 challengedate를 string "yyyy.MM.dd" 으로 변환
             for (Challenge challenge : challenges) {                            // 현재 챌린지의 개수 만큼 answer 생성 -> 챌린지의 개수가 30개가 넘었을 경우 stop
@@ -73,22 +73,22 @@ public class AnswerServiceImpl implements AnswerService {
                     }
                 }
                 if (challenge.getChallengeType() == ChallengeType.VOICE1){
-                    if (count != 0){
+                    if (count%4 != 0){
                         continue;
                     }
                 }
                 if (challenge.getChallengeType() == ChallengeType.VOICE2){
-                    if (count != 1){
+                    if (count%4 != 1){
                         continue;
                     }
                 }
                 if (challenge.getChallengeType() == ChallengeType.VOICE3){
-                    if (count != 2){
+                    if (count%4 != 2){
                         continue;
                     }
                 }
                 if (challenge.getChallengeType() == ChallengeType.VOICE4){
-                    if (count != 3){
+                    if (count%4 != 3){
                         continue;
                     }
                 }
