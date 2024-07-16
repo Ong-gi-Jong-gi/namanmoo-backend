@@ -366,7 +366,7 @@ public class AnswerServiceImpl implements AnswerService {
     // facetime에 대한 answerList를 반환
     @Override
     @Transactional(readOnly = true)
-    public List<String> getFacetimeAnswerList(Long luckyId){
+    public List<String> getFacetimeAnswerList(Long luckyId){// TODO luckyID로 가족에 MEMBER를 찾아야한다.
         Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
         Family family = currentUser.get().getFamily();
         List<Member> memberList = memberRepository.findByFamilyFamilyId(family.getFamilyId());

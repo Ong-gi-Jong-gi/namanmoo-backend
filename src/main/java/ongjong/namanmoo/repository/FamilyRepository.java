@@ -13,6 +13,7 @@ import java.util.Optional;
 
 public interface FamilyRepository extends JpaRepository<Family, Long> {
     Optional<Family> findByInviteCode(String inviteCode);
+    Optional<Family> findByLuckyId(Long luckyId); // TODO
 
     boolean existsByInviteCode(String inviteCode);
 }
