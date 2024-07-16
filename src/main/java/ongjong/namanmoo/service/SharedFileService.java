@@ -193,8 +193,19 @@ public class SharedFileService {
             }
         }
 
-        // 결과를 무작위로 선택하는 대신 모든 URL을 반환하도록 수정
-        return groupedFiles;
+        // 결과를 무작위로 선택
+        Map<Integer, List<String>> randomResults = new HashMap<>();
+        Random random = new Random();
+
+        for (Map.Entry<Integer, List<String>> entry : groupedFiles.entrySet()) {
+            List<String> files = entry.getValue();
+            if (!files.isEmpty()) {
+                String randomFile = files.get(random.nextInt(files.size()));
+                randomResults.put(entry.getKey(), Collections.singletonList(randomFile));
+            }
+        }
+
+        return randomResults;
     }
 
 }
