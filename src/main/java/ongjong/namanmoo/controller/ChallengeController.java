@@ -241,7 +241,7 @@ public class ChallengeController {
 
     // 화상 통화 챌린지 결과 조회
     @GetMapping("/face/result")
-    public ApiResponse<Map<String, String>> getFaceTimeAnswer(
+    public ApiResponse<List<String>> getFaceTimeAnswer(
             @RequestParam("challengeId") Long challengeId) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
@@ -257,17 +257,9 @@ public class ChallengeController {
         Lucky lucky = luckyService.findCurrentLucky(family.getFamilyId());
 
         // 응답 데이터 생성
-        Map<String, BufferedImage> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), lucky.getLuckyId());
+        List<String> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), lucky.getLuckyId());
 
-        Map<String, String> encodedResults = new HashMap<>();
-        for (Map.Entry<String, BufferedImage> entry : results.entrySet()) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(entry.getValue(), "png", baos);
-            String base64Image = Base64.getEncoder().encodeToString(baos.toByteArray());
-            encodedResults.put(entry.getKey(), base64Image);
-        }
-
-        return new ApiResponse<>("200", "Challenge results fetched successfully", encodedResults);
+        return new ApiResponse<>("200", "Challenge results fetched successfully", results);
     }
 
     // 음성 챌린지 조회

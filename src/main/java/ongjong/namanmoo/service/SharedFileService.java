@@ -164,18 +164,13 @@ public class SharedFileService {
         // return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, fileObjKeyName);
     }
 
-    public Map<String, BufferedImage> getFaceChallengeResults(int challengeNum, Long luckyId) {
+    public List<String> getFaceChallengeResults(int challengeNum, Long luckyId) {
         List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, luckyRepository.getLuckyByLuckyId(luckyId));
-        Map<String, BufferedImage> results = new HashMap<>();
+        List<String> results = new ArrayList<>();
 
         for (SharedFile sharedFile : sharedFiles) {
             if (sharedFile.getFileName().contains("merged-images")) {
-                try {
-                    BufferedImage image = ImageIO.read(new URL(sharedFile.getFileName()));
-                    results.put(sharedFile.getFileName(), image);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                results.add(sharedFile.getFileName());
             }
         }
         return results;
