@@ -132,11 +132,11 @@ public class SharedFileService {
                 images.add(emptyImage);
             }
 
-            String uuid = UUID.randomUUID().toString(); // Here we generate the UUID
+            // 파일이름에 UUID 추가
+            String uuid = UUID.randomUUID().toString();
             BufferedImage mergedImage = ImageMerger.mergeImages(images);
-            String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_" + entry.getKey() + ".png"); // Appending UUID in the filename
-
-            // Save merged image URL to database
+            String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_" + entry.getKey() + ".png");
+            // 병합된 이미지 URL을 데이터베이스에 저장
             SharedFile mergedFile = new SharedFile();
             mergedFile.setChallengeNum(challengeNum);
             mergedFile.setCreateDate(System.currentTimeMillis());
@@ -147,6 +147,7 @@ public class SharedFileService {
         }
     }
 
+    // 병합된 이미지를 S3에 업로드하는 메서드
     public String uploadMergedImageToS3(BufferedImage mergedImage, String bucketName, String fileObjKeyName) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         ImageIO.write(mergedImage, "png", os);
@@ -164,15 +165,25 @@ public class SharedFileService {
         // return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, fileObjKeyName);
     }
 
+    // 특정 챌린지와 럭키 번호에 대한 이미지 결과를 가져오는 메서드
     public List<String> getFaceChallengeResults(int challengeNum, Long luckyId) {
         List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, luckyRepository.getLuckyByLuckyId(luckyId));
-        List<String> results = new ArrayList<>();
 
+        Map<Integer, List<String>> groupedFiles = new HashMap<>();
         for (SharedFile sharedFile : sharedFiles) {
             if (sharedFile.getFileName().contains("merged-images")) {
-                results.add(sharedFile.getFileName());
+                int cutNumber = Integer.parseInt(sharedFile.getFileName().split("_")[3].replace(".png", ""));
+                groupedFiles.computeIfAbsent(cutNumber, k -> new ArrayList<>()).add(sharedFile.getFileName());
             }
         }
+
+        List<String> results = new ArrayList<>();
+        Random random = new Random();
+
+        for (List<String> files : groupedFiles.values()) {
+            results.add(files.get(random.nextInt(files.size())));
+        }
+
         return results;
     }
 
