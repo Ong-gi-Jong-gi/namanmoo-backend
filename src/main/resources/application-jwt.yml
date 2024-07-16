@@ -2,7 +2,7 @@ jwt:
   secret: ${SECURITY_JWT_TOKEN_SECRET_KEY}
 
   access:
-    expiration: 300 # 유효시간 300초
+    expiration: 3600 # 유효시간 1시간 (3600초)
     header: Authorization
 
   refresh:

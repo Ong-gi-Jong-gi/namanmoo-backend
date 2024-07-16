@@ -3,10 +3,12 @@ package ongjong.namanmoo.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
+import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.dto.family.FamilyMemberDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.FamilyRepository;
+import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.repository.MemberRepository;
 import ongjong.namanmoo.dto.family.FamilyInviteResponse;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ public class FamilyServiceImpl implements FamilyService {
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final int CODE_LENGTH = 8;
     private static final Random RANDOM = new SecureRandom();
+    private final LuckyRepository luckyRepository;
 
 
     // 가족 생성

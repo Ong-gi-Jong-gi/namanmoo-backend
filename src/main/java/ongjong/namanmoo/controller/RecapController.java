@@ -56,12 +56,11 @@ public class RecapController {
 
     // recap 화상통화
     @GetMapping("/face")
-    public ApiResponse<MemberFacetimeDto> getFacetime(@RequestParam("luckyId") Long luckyId){
+    public ApiResponse<MemberFacetimeDto> getFacetime(@RequestParam("luckyId") Long luckyId) throws Exception {
         List<String> answerList = answerService.getFacetimeAnswerList(luckyId);
         MemberFacetimeDto facetimeAnswerList = new MemberFacetimeDto(answerList);
         return new ApiResponse<>("200", "Ranking retrieved successfully", facetimeAnswerList);
     }
-
 
     // 리캡 컨텐츠 조회 - 통계
     @GetMapping("/statistics")
@@ -98,7 +97,7 @@ public class RecapController {
     @GetMapping("/youth")
     public ApiResponse<List<MemberYouthAnswerDto>> getYouth(@RequestParam("luckyId") Long luckyId) throws Exception{
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
-        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(members, 1, 11);
+        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(members, 1, 9);
         return new ApiResponse<>("200", "Youth photos retrieved successfully", memberAnswerDtoList);
     }
 

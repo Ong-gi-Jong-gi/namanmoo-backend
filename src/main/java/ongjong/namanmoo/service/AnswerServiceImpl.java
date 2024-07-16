@@ -58,6 +58,7 @@ public class AnswerServiceImpl implements AnswerService {
         }
         DateUtil dateUtil = DateUtil.getInstance();
         // 각 회원마다 모든 챌린지에 대해 답변 생성
+        int count = 0;      // member의 번호를 의미
         for (Member member : members) {
             String strChallengeDate = dateUtil.timestampToString(challengeDate);        // timestamp인 challengedate를 string "yyyy.MM.dd" 으로 변환
             for (Challenge challenge : challenges) {                            // 현재 챌린지의 개수 만큼 answer 생성 -> 챌린지의 개수가 30개가 넘었을 경우 stop
@@ -71,6 +72,26 @@ public class AnswerServiceImpl implements AnswerService {
                         continue;
                     }
                 }
+//                if (challenge.getChallengeType() == ChallengeType.VOICE1){
+//                    if (count%4 != 0){
+//                        continue;
+//                    }
+//                }
+//                if (challenge.getChallengeType() == ChallengeType.VOICE2){
+//                    if (count%4 != 1){
+//                        continue;
+//                    }
+//                }
+//                if (challenge.getChallengeType() == ChallengeType.VOICE3){
+//                    if (count%4 != 2){
+//                        continue;
+//                    }
+//                }
+//                if (challenge.getChallengeType() == ChallengeType.VOICE4){
+//                    if (count%4 != 3){
+//                        continue;
+//                    }
+//                }
 
                 Answer answer = getAnswer(member, challenge, strChallengeDate);
                 // challengeDate를 1일 증가
@@ -78,6 +99,7 @@ public class AnswerServiceImpl implements AnswerService {
                 // 생성된 Answer 저장
                 answerRepository.save(answer);
             }
+            count++;
         }
         return true;
     }
@@ -87,25 +109,28 @@ public class AnswerServiceImpl implements AnswerService {
         answer.setMember(member);
         answer.setChallenge(challenge);
         answer.setBubbleVisible(false);
+        answer.setCreateDate(strChallengeDate);
 
         if (challenge.getChallengeType()== ChallengeType.NORMAL) {
             answer.setAnswerType(AnswerType.NORMAL);
-            answer.setCreateDate(strChallengeDate);
         } else if (challenge.getChallengeType()== ChallengeType.GROUP_CHILD) {
             answer.setAnswerType(AnswerType.GROUP);
-            answer.setCreateDate(strChallengeDate);
         } else if (challenge.getChallengeType()== ChallengeType.GROUP_PARENT) {
             answer.setAnswerType(AnswerType.GROUP);
-            answer.setCreateDate(strChallengeDate);
         } else if (challenge.getChallengeType()== ChallengeType.FACETIME) {
             answer.setAnswerType(AnswerType.FACETIME);
-            answer.setCreateDate(strChallengeDate);
         } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
             answer.setAnswerType(AnswerType.PHOTO);
-            answer.setCreateDate(strChallengeDate);
         } else if (challenge.getChallengeType()== ChallengeType.VOICE) {
             answer.setAnswerType(AnswerType.VOICE);
-            answer.setCreateDate(strChallengeDate);
+//        } else if (challenge.getChallengeType()== ChallengeType.VOICE1) {
+//            answer.setAnswerType(AnswerType.VOICE);
+//        } else if (challenge.getChallengeType()== ChallengeType.VOICE2) {
+//            answer.setAnswerType(AnswerType.VOICE);
+//        } else if (challenge.getChallengeType()== ChallengeType.VOICE3) {
+//            answer.setAnswerType(AnswerType.VOICE);
+//        } else if (challenge.getChallengeType()== ChallengeType.VOICE4) {
+//            answer.setAnswerType(AnswerType.VOICE);
         }
         return answer;
     }
@@ -288,7 +313,7 @@ public class AnswerServiceImpl implements AnswerService {
         int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId());
 
         // 1. Challenge 19 가져오기
-        Challenge challenge19 = challengeRepository.findByChallengeNum(startChallengeNum+19)
+        Challenge challenge19 = challengeRepository.findByChallengeNum(startChallengeNum+9)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new Exception("Challenge 19 not found"));
@@ -341,9 +366,10 @@ public class AnswerServiceImpl implements AnswerService {
     // facetime에 대한 answerList를 반환
     @Override
     @Transactional(readOnly = true)
-    public List<String> getFacetimeAnswerList(Long luckyId){
+    public List<String> getFacetimeAnswerList(Long luckyId) throws Exception {
         Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
-        Family family = currentUser.get().getFamily();
+        Lucky lucky = luckyRepository.getLuckyByLuckyId(luckyId).orElseThrow(() -> new Exception("luckyID not found"));
+        Family family =lucky.getFamily();
         List<Member> memberList = memberRepository.findByFamilyFamilyId(family.getFamilyId());
         int number = luckyService.findCurrentLuckyLifetime(currentUser.get().getFamily().getFamilyId());
         List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum((currentUser.get().getFamily().getFamilyId())), number);

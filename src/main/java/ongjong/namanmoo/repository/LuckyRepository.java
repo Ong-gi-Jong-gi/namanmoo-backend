@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface LuckyRepository extends JpaRepository<Lucky,Long> {
+    Optional<Lucky> getLuckyByLuckyId(Long luckyId);
     List<Lucky> findByFamilyFamilyId(Long familyId);
     Optional<Lucky> findByFamilyFamilyIdAndRunningTrue(Long familyId);
+
 }
