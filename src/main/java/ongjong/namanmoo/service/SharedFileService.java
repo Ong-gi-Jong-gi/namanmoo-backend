@@ -137,19 +137,18 @@ public class SharedFileService {
             String baseName = "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_";
             BufferedImage mergedImage = ImageMerger.mergeImages(images);
 
+            // 병합된 이미지를 S3에 업로드
+            String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, baseName + (entry.getKey() + 1) + ".png");
+
             // 병합된 이미지 URL을 데이터베이스에 저장
-            for (int i = 0; i < images.size(); i++) {
-                String mergedImageUrl = uploadMergedImageToS3(images.get(i), bucket, baseName + (i + 1) + ".png");
+            SharedFile mergedFile = new SharedFile();
+            mergedFile.setChallengeNum(challengeNum);
+            mergedFile.setCreateDate(System.currentTimeMillis());
+            mergedFile.setFileName(mergedImageUrl);
+            mergedFile.setFileType(FileType.IMAGE);
+            mergedFile.setLucky(lucky);
 
-                SharedFile mergedFile = new SharedFile();
-                mergedFile.setChallengeNum(challengeNum);
-                mergedFile.setCreateDate(System.currentTimeMillis());
-                mergedFile.setFileName(mergedImageUrl);
-                mergedFile.setFileType(FileType.IMAGE);
-                mergedFile.setLucky(lucky);
-
-                sharedFileRepository.save(mergedFile);
-            }
+            sharedFileRepository.save(mergedFile);
         }
     }
 
