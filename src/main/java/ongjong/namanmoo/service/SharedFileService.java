@@ -98,6 +98,7 @@ public class SharedFileService {
         return response;
     }
 
+    // 화상통화 챌린지 이미지 4장 병합 및 저장
     public void checkAndMergeImages(int challengeNum, Lucky lucky) throws IOException {
         List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
 
@@ -115,8 +116,13 @@ public class SharedFileService {
             }
         }
 
-        for (Map.Entry<String, List<SharedFile>> entry : groupedFiles.entrySet()) {
-            List<BufferedImage> images = entry.getValue().stream()
+        // 그룹 키를 정렬하여 순서대로 처리
+        List<String> sortedKeys = new ArrayList<>(groupedFiles.keySet());
+        Collections.sort(sortedKeys);
+
+        // 각 그룹의 이미지를 BufferedImage 리스트로 변환
+        for (String key : sortedKeys) {
+            List<BufferedImage> images = groupedFiles.get(key).stream()
                     .map(sharedFile -> {
                         try {
                             return ImageIO.read(new URL(sharedFile.getFileName()));
@@ -132,13 +138,13 @@ public class SharedFileService {
                 images.add(emptyImage);
             }
 
-            // 파일이름에 UUID 추가
+            // UUID 생성 및 파일 이름 설정
             String uuid = UUID.randomUUID().toString();
-            String baseName = "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_";
-            BufferedImage mergedImage = ImageMerger.mergeImages(images);
+            String baseName = "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_" + key + ".png";
+            BufferedImage mergedImage = ImageMerger.mergeImages(images); // 이미지를 병합하여 새로운 BufferedImage를 생성
 
             // 병합된 이미지를 S3에 업로드
-            String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, baseName + (entry.getKey() + 1) + ".png");
+            String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, baseName);
 
             // 병합된 이미지 URL을 데이터베이스에 저장
             SharedFile mergedFile = new SharedFile();
@@ -148,7 +154,7 @@ public class SharedFileService {
             mergedFile.setFileType(FileType.IMAGE);
             mergedFile.setLucky(lucky);
 
-            sharedFileRepository.save(mergedFile);
+            sharedFileRepository.save(mergedFile); // 데이터베이스에 새 SharedFile 저장
         }
     }
 
@@ -171,7 +177,7 @@ public class SharedFileService {
     }
 
     // 특정 챌린지와 럭키 번호에 대한 이미지 결과를 가져오는 메서드
-    public List<String> getFaceChallengeResults(int challengeNum, Long luckyId) {
+    public Map<Integer, List<String>> getFaceChallengeResults(int challengeNum, Long luckyId) {
         List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, luckyRepository.getLuckyByLuckyId(luckyId).get());
         Map<Integer, List<String>> groupedFiles = new HashMap<>();
         // 파일 이름 패턴 _cut_${cut_number}
@@ -187,14 +193,8 @@ public class SharedFileService {
             }
         }
 
-        List<String> results = new ArrayList<>();
-        Random random = new Random();
-
-        for (List<String> files : groupedFiles.values()) {
-            results.add(files.get(random.nextInt(files.size())));
-        }
-
-        return results;
+        // 결과를 무작위로 선택하는 대신 모든 URL을 반환하도록 수정
+        return groupedFiles;
     }
 
 }
