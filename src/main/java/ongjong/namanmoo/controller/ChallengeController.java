@@ -241,7 +241,7 @@ public class ChallengeController {
 
     // 화상 통화 챌린지 결과 조회
     @GetMapping("/face/result")
-    public ApiResponse<List<String>> getFaceTimeAnswer(
+    public ApiResponse<Map<Integer, List<String>>> getFaceTimeAnswer(
             @RequestParam("challengeId") Long challengeId) throws Exception {
 
         Challenge challenge = challengeService.findChallengeById(challengeId);
@@ -257,9 +257,9 @@ public class ChallengeController {
         Lucky lucky = luckyService.findCurrentLucky(family.getFamilyId());
 
         // 응답 데이터 생성
-        List<String> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), lucky.getLuckyId());
+        Map<Integer, List<String>> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), lucky.getLuckyId());
 
-        return new ApiResponse<>("200", "Challenge results fetched successfully", results);
+        return new ApiResponse<>("200", "Success", results);
     }
 
     // 음성 챌린지 조회

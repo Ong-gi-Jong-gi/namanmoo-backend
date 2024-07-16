@@ -106,6 +106,16 @@ public class SharedFileService {
         Map<String, List<SharedFile>> groupedFiles = new HashMap<>();
         Pattern pattern = Pattern.compile("screenshot_(\\d+)");
 
+        for (SharedFile sharedFile : sharedFiles) {
+            String fileName = sharedFile.getFileName();
+            Matcher matcher = pattern.matcher(fileName);
+
+            if (matcher.find()) {
+                String group = matcher.group(1);
+                groupedFiles.computeIfAbsent(group, k -> new ArrayList<>()).add(sharedFile);
+            }
+        }
+
         // 그룹 키를 정렬하여 순서대로 처리
         List<String> sortedKeys = new ArrayList<>(groupedFiles.keySet());
         Collections.sort(sortedKeys);
@@ -124,7 +134,7 @@ public class SharedFileService {
 
             // 빈 공간을 투명하게 채워 4개가 되도록 처리
             while (images.size() < 4) {
-                BufferedImage emptyImage = new BufferedImage(images.get(0).getWidth(), images.get(0).getHeight(), BufferedImage.TYPE_INT_ARGB);
+                BufferedImage emptyImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
                 images.add(emptyImage);
             }
 
@@ -148,6 +158,7 @@ public class SharedFileService {
         }
     }
 
+
     // 병합된 이미지를 S3에 업로드하는 메서드
     public String uploadMergedImageToS3(BufferedImage mergedImage, String bucketName, String fileObjKeyName) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -167,7 +178,7 @@ public class SharedFileService {
     }
 
     // 특정 챌린지와 럭키 번호에 대한 이미지 결과를 가져오는 메서드
-    public List<String> getFaceChallengeResults(int challengeNum, Long luckyId) {
+    public Map<Integer, List<String>> getFaceChallengeResults(int challengeNum, Long luckyId) {
         List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, luckyRepository.getLuckyByLuckyId(luckyId));
 
         Map<Integer, List<String>> groupedFiles = new HashMap<>();
@@ -183,12 +194,9 @@ public class SharedFileService {
                 }
             }
         }
-        List<String> results = new ArrayList<>();
-        Random random = new Random();
-        for (List<String> files : groupedFiles.values()) {
-            results.add(files.get(random.nextInt(files.size())));
-        }
-        return results;
+
+        // 결과를 무작위로 선택하는 대신 모든 URL을 반환하도록 수정
+        return groupedFiles;
     }
 
 }
