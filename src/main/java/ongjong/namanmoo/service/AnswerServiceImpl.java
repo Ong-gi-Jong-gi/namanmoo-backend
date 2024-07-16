@@ -72,26 +72,26 @@ public class AnswerServiceImpl implements AnswerService {
                         continue;
                     }
                 }
-                if (challenge.getChallengeType() == ChallengeType.VOICE1){
-                    if (count != 0){
-                        continue;
-                    }
-                }
-                if (challenge.getChallengeType() == ChallengeType.VOICE2){
-                    if (count != 1){
-                        continue;
-                    }
-                }
-                if (challenge.getChallengeType() == ChallengeType.VOICE3){
-                    if (count != 2){
-                        continue;
-                    }
-                }
-                if (challenge.getChallengeType() == ChallengeType.VOICE4){
-                    if (count != 3){
-                        continue;
-                    }
-                }
+//                if (challenge.getChallengeType() == ChallengeType.VOICE1){
+//                    if (count%4 != 0){
+//                        continue;
+//                    }
+//                }
+//                if (challenge.getChallengeType() == ChallengeType.VOICE2){
+//                    if (count%4 != 1){
+//                        continue;
+//                    }
+//                }
+//                if (challenge.getChallengeType() == ChallengeType.VOICE3){
+//                    if (count%4 != 2){
+//                        continue;
+//                    }
+//                }
+//                if (challenge.getChallengeType() == ChallengeType.VOICE4){
+//                    if (count%4 != 3){
+//                        continue;
+//                    }
+//                }
 
                 Answer answer = getAnswer(member, challenge, strChallengeDate);
                 // challengeDate를 1일 증가
@@ -121,14 +121,16 @@ public class AnswerServiceImpl implements AnswerService {
             answer.setAnswerType(AnswerType.FACETIME);
         } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
             answer.setAnswerType(AnswerType.PHOTO);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE1) {
+        } else if (challenge.getChallengeType()== ChallengeType.VOICE) {
             answer.setAnswerType(AnswerType.VOICE);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE2) {
-            answer.setAnswerType(AnswerType.VOICE);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE3) {
-            answer.setAnswerType(AnswerType.VOICE);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE4) {
-            answer.setAnswerType(AnswerType.VOICE);
+//        } else if (challenge.getChallengeType()== ChallengeType.VOICE1) {
+//            answer.setAnswerType(AnswerType.VOICE);
+//        } else if (challenge.getChallengeType()== ChallengeType.VOICE2) {
+//            answer.setAnswerType(AnswerType.VOICE);
+//        } else if (challenge.getChallengeType()== ChallengeType.VOICE3) {
+//            answer.setAnswerType(AnswerType.VOICE);
+//        } else if (challenge.getChallengeType()== ChallengeType.VOICE4) {
+//            answer.setAnswerType(AnswerType.VOICE);
         }
         return answer;
     }

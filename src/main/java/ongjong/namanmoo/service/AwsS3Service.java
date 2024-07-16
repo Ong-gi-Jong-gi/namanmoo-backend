@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -141,14 +143,30 @@ public class AwsS3Service {
      * @return 업로드된 파일의 URL
      */
     private String uploadFileToS3(File uploadFile, String fileName) {
-        amazonS3Client.putObject(
-                new PutObjectRequest(bucket, fileName, uploadFile)
-                        .withCannedAcl(CannedAccessControlList.PublicRead)
-        );
+        try {
+            log.info("파일 업로드 시작: {}", fileName);
 
-        log.info("File Upload : " + fileName);
+            amazonS3Client.putObject(
+                    new PutObjectRequest(bucket, fileName, uploadFile)
+                            .withCannedAcl(CannedAccessControlList.PublicRead)
+            );
 
-        return getS3FileURL(fileName);
+            log.info("파일 업로드 완료: {}", fileName);
+
+            String fileUrl = getS3FileURL(fileName);
+            log.info("S3에 파일 업로드 성공: {}", fileUrl);
+
+            return fileUrl;
+        } catch (AmazonServiceException e) {
+            log.error("Amazon 서비스 예외 발생: {}", e.getMessage(), e);
+            throw e;
+        } catch (SdkClientException e) {
+            log.error("SDK 클라이언트 예외 발생: {}", e.getMessage(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error("알 수 없는 예외 발생: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
