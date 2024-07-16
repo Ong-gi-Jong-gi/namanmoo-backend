@@ -72,26 +72,26 @@ public class AnswerServiceImpl implements AnswerService {
                         continue;
                     }
                 }
-//                if (challenge.getChallengeType() == ChallengeType.VOICE1){
-//                    if (count%4 != 0){
-//                        continue;
-//                    }
-//                }
-//                if (challenge.getChallengeType() == ChallengeType.VOICE2){
-//                    if (count%4 != 1){
-//                        continue;
-//                    }
-//                }
-//                if (challenge.getChallengeType() == ChallengeType.VOICE3){
-//                    if (count%4 != 2){
-//                        continue;
-//                    }
-//                }
-//                if (challenge.getChallengeType() == ChallengeType.VOICE4){
-//                    if (count%4 != 3){
-//                        continue;
-//                    }
-//                }
+                if (challenge.getChallengeType() == ChallengeType.VOICE1){
+                    if (count%4 != 0){
+                        continue;
+                    }
+                }
+                if (challenge.getChallengeType() == ChallengeType.VOICE2){
+                    if (count%4 != 1){
+                        continue;
+                    }
+                }
+                if (challenge.getChallengeType() == ChallengeType.VOICE3){
+                    if (count%4 != 2){
+                        continue;
+                    }
+                }
+                if (challenge.getChallengeType() == ChallengeType.VOICE4){
+                    if (count%4 != 3){
+                        continue;
+                    }
+                }
 
                 Answer answer = getAnswer(member, challenge, strChallengeDate);
                 // challengeDate를 1일 증가
@@ -121,16 +121,14 @@ public class AnswerServiceImpl implements AnswerService {
             answer.setAnswerType(AnswerType.FACETIME);
         } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
             answer.setAnswerType(AnswerType.PHOTO);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE) {
+        } else if (challenge.getChallengeType()== ChallengeType.VOICE1) {
             answer.setAnswerType(AnswerType.VOICE);
-//        } else if (challenge.getChallengeType()== ChallengeType.VOICE1) {
-//            answer.setAnswerType(AnswerType.VOICE);
-//        } else if (challenge.getChallengeType()== ChallengeType.VOICE2) {
-//            answer.setAnswerType(AnswerType.VOICE);
-//        } else if (challenge.getChallengeType()== ChallengeType.VOICE3) {
-//            answer.setAnswerType(AnswerType.VOICE);
-//        } else if (challenge.getChallengeType()== ChallengeType.VOICE4) {
-//            answer.setAnswerType(AnswerType.VOICE);
+        } else if (challenge.getChallengeType()== ChallengeType.VOICE2) {
+            answer.setAnswerType(AnswerType.VOICE);
+        } else if (challenge.getChallengeType()== ChallengeType.VOICE3) {
+            answer.setAnswerType(AnswerType.VOICE);
+        } else if (challenge.getChallengeType()== ChallengeType.VOICE4) {
+            answer.setAnswerType(AnswerType.VOICE);
         }
         return answer;
     }
@@ -310,10 +308,14 @@ public class AnswerServiceImpl implements AnswerService {
         List<String> otherPhotos = new ArrayList<>();
 
         Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
+        if (currentUser.isEmpty()) {
+            throw new Exception("Current user not found");
+        }
+
         int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId());
 
         // 1. Challenge 19 가져오기
-        Challenge challenge19 = challengeRepository.findByChallengeNum(startChallengeNum+9)
+        Challenge challenge19 = challengeRepository.findByChallengeNum(startChallengeNum+19)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new Exception("Challenge 19 not found"));
