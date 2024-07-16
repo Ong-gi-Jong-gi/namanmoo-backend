@@ -54,7 +54,7 @@ public interface AnswerService {
     MemberPhotosAnswerDto getPhotoByMember(List<Member> members) throws Exception;
 
     // facetime에 대한 answerList를 반환
-    List<String> getFacetimeAnswerList(Long luckyId);
+    List<String> getFacetimeAnswerList(Long luckyId) throws Exception ;
 
     // 챌린지 상세조회 중복요소 매핑
     ChallengeDetailsDto getChallengeDetails(Challenge challenge, Member member) throws Exception;
