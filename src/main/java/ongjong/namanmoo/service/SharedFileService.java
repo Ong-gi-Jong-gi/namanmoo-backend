@@ -134,16 +134,22 @@ public class SharedFileService {
 
             // 파일이름에 UUID 추가
             String uuid = UUID.randomUUID().toString();
+            String baseName = "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_";
             BufferedImage mergedImage = ImageMerger.mergeImages(images);
-            String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_" + entry.getKey() + ".png");
+
             // 병합된 이미지 URL을 데이터베이스에 저장
-            SharedFile mergedFile = new SharedFile();
-            mergedFile.setChallengeNum(challengeNum);
-            mergedFile.setCreateDate(System.currentTimeMillis());
-            mergedFile.setFileName(mergedImageUrl);
-            mergedFile.setFileType(FileType.IMAGE);
-            mergedFile.setLucky(lucky);
-            sharedFileRepository.save(mergedFile);
+            for (int i = 0; i < images.size(); i++) {
+                String mergedImageUrl = uploadMergedImageToS3(images.get(i), bucket, baseName + (i + 1) + ".png");
+
+                SharedFile mergedFile = new SharedFile();
+                mergedFile.setChallengeNum(challengeNum);
+                mergedFile.setCreateDate(System.currentTimeMillis());
+                mergedFile.setFileName(mergedImageUrl);
+                mergedFile.setFileType(FileType.IMAGE);
+                mergedFile.setLucky(lucky);
+
+                sharedFileRepository.save(mergedFile);
+            }
         }
     }
 
@@ -170,10 +176,16 @@ public class SharedFileService {
         List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, luckyRepository.getLuckyByLuckyId(luckyId));
 
         Map<Integer, List<String>> groupedFiles = new HashMap<>();
+        // 파일 이름 패턴 _cut_${cut_number}
+        Pattern pattern = Pattern.compile("_cut_(\\d+)\\.png");
         for (SharedFile sharedFile : sharedFiles) {
             if (sharedFile.getFileName().contains("merged-images")) {
-                int cutNumber = Integer.parseInt(sharedFile.getFileName().split("_")[3].replace(".png", ""));
-                groupedFiles.computeIfAbsent(cutNumber, k -> new ArrayList<>()).add(sharedFile.getFileName());
+                Matcher matcher = pattern.matcher(sharedFile.getFileName());
+
+                if(matcher.find()) {
+                    int cutNumber = Integer.parseInt(matcher.group(1));
+                    groupedFiles.computeIfAbsent(cutNumber, k -> new ArrayList<>()).add(sharedFile.getFileName());
+                }
             }
         }
 
