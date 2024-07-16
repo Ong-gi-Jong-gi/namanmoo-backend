@@ -58,7 +58,7 @@ public class AnswerServiceImpl implements AnswerService {
         }
         DateUtil dateUtil = DateUtil.getInstance();
         // 각 회원마다 모든 챌린지에 대해 답변 생성
-        int count = 0;
+        int count = 0;      // member의 번호를 의미
         for (Member member : members) {
             String strChallengeDate = dateUtil.timestampToString(challengeDate);        // timestamp인 challengedate를 string "yyyy.MM.dd" 으로 변환
             for (Challenge challenge : challenges) {                            // 현재 챌린지의 개수 만큼 answer 생성 -> 챌린지의 개수가 30개가 넘었을 경우 stop
@@ -366,9 +366,10 @@ public class AnswerServiceImpl implements AnswerService {
     // facetime에 대한 answerList를 반환
     @Override
     @Transactional(readOnly = true)
-    public List<String> getFacetimeAnswerList(Long luckyId){
+    public List<String> getFacetimeAnswerList(Long luckyId) throws Exception {
         Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
-        Family family = currentUser.get().getFamily();
+        Lucky lucky = luckyRepository.getLuckyByLuckyId(luckyId).orElseThrow(() -> new Exception("luckyID not found"));
+        Family family =lucky.getFamily();
         List<Member> memberList = memberRepository.findByFamilyFamilyId(family.getFamilyId());
         int number = luckyService.findCurrentLuckyLifetime(currentUser.get().getFamily().getFamilyId());
         List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum((currentUser.get().getFamily().getFamilyId())), number);

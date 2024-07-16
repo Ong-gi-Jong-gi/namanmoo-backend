@@ -40,7 +40,6 @@ public class ChallengeServiceImpl implements ChallengeService {
     // familyId를 통해 해당 날짜에 해당하는 오늘의 challenge 조회
     // 해당 가족 id를 가지고 있는 행운이 모두 조회
     // 행운이들 중 오늘의 챌린지 값이 30이 아닌 행운이의 오늘의 챌린지 값을 가져와야한다.
-    //todo: 챌린지가 끝났을 때 오늘날짜와 챌린지시작날짜의 차이가 30일때 챌린지가 종료되어야한다. (challenge 테이블이 늘어날 수 있음을 고려 )
 
     // 현재 진행하고 있는 행운이의 챌린지 리스트 가져오기
     @Override
@@ -54,7 +53,7 @@ public class ChallengeServiceImpl implements ChallengeService {
             return null;
         }
 
-        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum(family.getFamilyId()), number);
+        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum(family.getFamilyId()), 30);    // todo: 30 -> number로 바꿔야해!!!!!
 
         // 멤버 역할에 맞지 않는 challenge는 리스트에서 제외
         return groupChallengeExceptionRemove(challengeList,member);
@@ -147,7 +146,7 @@ public class ChallengeServiceImpl implements ChallengeService {
             List<Member> memberList = memberRepository.findByFamilyFamilyId(member.getFamily().getFamilyId());
             for(int i = 0; i < memberList.size(); i++){
                 if(memberList.get(i) == member){
-                    return challenges.get(i);
+                    return challenges.get(i%4);
                 }
             }
         }
