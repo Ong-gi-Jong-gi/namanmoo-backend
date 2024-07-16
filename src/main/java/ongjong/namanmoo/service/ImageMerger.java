@@ -33,10 +33,12 @@ public class ImageMerger {
         BufferedImage mergedImage = new BufferedImage(finalWidth, finalHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = mergedImage.createGraphics();
 
-        // 이미지 병합
+        // 이미지 병합 및 중앙 정렬
         for (int i = 0; i < size; i++) {
-            int x = (i % 2) * width;
-            int y = (i / 2) * height;
+            int imgWidth = images.get(i).getWidth();
+            int imgHeight = images.get(i).getHeight();
+            int x = (i % 2) * width + (width - imgWidth) / 2;
+            int y = (i / 2) * height + (height - imgHeight) / 2;
             g.drawImage(images.get(i), x, y, null);
         }
 
