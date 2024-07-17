@@ -67,6 +67,15 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Override
     @Transactional(readOnly = true)
     public List<Challenge> groupChallengeExceptionRemove(List<Challenge> challengeList, Member member) throws Exception{
+        Family family = member.getFamily();
+        List<Member> members = memberRepository.findByFamilyFamilyId(family.getFamilyId());
+        int count = 0;
+        for(Member member1: members){
+            if (member1 == member){
+                break;
+            }
+            count++;
+        }
         Iterator<Challenge> iterator = challengeList.iterator();        // iterator를 사용 -> challengelist를 순회하면서 조건에 맞지 않는 챌린지 제거
         while (iterator.hasNext()){
             Challenge challenge = iterator.next();
@@ -80,6 +89,27 @@ public class ChallengeServiceImpl implements ChallengeService {
                     iterator.remove();
                 }
             }
+            else if (challenge.getChallengeType() == ChallengeType.VOICE1){
+                if (count % 4 != 0){
+                    iterator.remove();
+                }
+            }
+            else if (challenge.getChallengeType() == ChallengeType.VOICE2){
+                if (count % 4 != 1){
+                    iterator.remove();
+                }
+            }
+            else if (challenge.getChallengeType() == ChallengeType.VOICE3){
+                if (count % 4 != 2){
+                    iterator.remove();
+                }
+            }
+            else if (challenge.getChallengeType() == ChallengeType.VOICE4){
+                if (count % 4 != 3){
+                    iterator.remove();
+                }
+            }
+
         }
         return challengeList;
     }
