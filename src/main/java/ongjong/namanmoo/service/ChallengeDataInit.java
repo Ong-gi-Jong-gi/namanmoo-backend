@@ -54,10 +54,10 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(26, "부모님이 가장 잘 어울린다고 느껴진 순간이 있나요?", ChallengeType.GROUP_CHILD));
         challenges.add(createChallenge(27, "가족에게 진심으로 미안하지만 사과하지 못한 일이 있다면 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(28, "자신의 어릴 적 사진을 올려보세요", ChallengeType.PHOTO));
-//        challenges.add(createChallenge(29, "명대사를 말해라1!", ChallengeType.VOICE1));
-//        challenges.add(createChallenge(29, "명대사를 말해라2!", ChallengeType.VOICE2));
-//        challenges.add(createChallenge(29, "명대사를 말해라3!", ChallengeType.VOICE3));
-//        challenges.add(createChallenge(29, "명대사를 말해라4!", ChallengeType.VOICE4));
+        challenges.add(createChallenge(29, "명대사를 말해라1!", ChallengeType.VOICE1));
+        challenges.add(createChallenge(29, "명대사를 말해라2!", ChallengeType.VOICE2));
+        challenges.add(createChallenge(29, "명대사를 말해라3!", ChallengeType.VOICE3));
+        challenges.add(createChallenge(29, "명대사를 말해라4!", ChallengeType.VOICE4));
         challenges.add(createChallenge(30, "인생네컷 챌린지!", ChallengeType.FACETIME));
 
         // 챌린지를 저장
