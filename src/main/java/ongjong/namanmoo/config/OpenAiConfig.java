@@ -9,7 +9,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class OpenAiConfig {
-    @Value("${OPENAI_API_KEY}")
+    @Value("${openai-service.api-key}")
     private String openAiKey;
 
     @Value("${openai-service.http-client.read-timeout}")
