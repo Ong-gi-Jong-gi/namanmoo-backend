@@ -21,6 +21,8 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -40,6 +42,8 @@ public class SharedFileService {
     private final AmazonS3 amazonS3Client;
     private final String bucket;
     private final String region;
+
+    private final Lock lock = new ReentrantLock();
 
     public SharedFileService(
             @Value("${cloud.aws.credentials.access-key}") String accessKeyId,
@@ -98,44 +102,49 @@ public class SharedFileService {
         return response;
     }
 
-    // 화상통화 챌린지 이미지 4장 병합 및 저장
     public void checkAndMergeImages(int challengeNum, Lucky lucky) throws IOException {
         final int MAX_WAIT_TIME = 15000; // 최대 대기 시간 15초
         final int SLEEP_INTERVAL = 3000; // 3초 간격으로 재시도
         long startTime = System.currentTimeMillis();
 
-        List<SharedFile> sharedFiles;
+        Map<String, List<SharedFile>> groupedFiles = new HashMap<>();
+        Pattern pattern = Pattern.compile("screenshot_(\\d+)");
+
         while (true) {
-            synchronized (this) {
+            List<SharedFile> sharedFiles;
+
+            lock.lock();
+            try {
                 sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
+            } finally {
+                lock.unlock();
             }
 
-            if (sharedFiles.size() >= 4) {
-                break; // 4장 이상이면 병합을 시작
+            for (SharedFile sharedFile : sharedFiles) {
+                String fileName = sharedFile.getFileName();
+                Matcher matcher = pattern.matcher(fileName);
+
+                if (matcher.find()) {
+                    String group = matcher.group(1);
+                    groupedFiles.computeIfAbsent(group, k -> new ArrayList<>()).add(sharedFile);
+                }
+            }
+
+            // 모든 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
+            boolean allGroupsHaveEnoughImages = groupedFiles.values().stream().allMatch(list -> list.size() >= 4);
+
+            if (allGroupsHaveEnoughImages) {
+                break; // 모든 그룹에 4개 이상의 이미지가 있는 경우 병합을 시작
             }
 
             if (System.currentTimeMillis() - startTime > MAX_WAIT_TIME) {
-                throw new IOException("이미지 업로드 시간이 초과되었습니다.");
+                throw new IOException("이미지 업로드 대기 시간이 초과되었습니다.");
             }
 
             try {
                 Thread.sleep(SLEEP_INTERVAL);
             } catch (InterruptedException e) {
                 throw new IOException("병합 대기 중 인터럽트 발생", e);
-            }
-        }
-
-        // 파일 이름의 숫자를 기준으로 그룹화
-        Map<String, List<SharedFile>> groupedFiles = new HashMap<>();
-        Pattern pattern = Pattern.compile("screenshot_(\\d+)");
-
-        for (SharedFile sharedFile : sharedFiles) {
-            String fileName = sharedFile.getFileName();
-            Matcher matcher = pattern.matcher(fileName);
-
-            if (matcher.find()) {
-                String group = matcher.group(1);
-                groupedFiles.computeIfAbsent(group, k -> new ArrayList<>()).add(sharedFile);
             }
         }
 
@@ -146,6 +155,7 @@ public class SharedFileService {
         // 각 그룹의 이미지를 BufferedImage 리스트로 변환
         for (String key : sortedKeys) {
             List<BufferedImage> images = groupedFiles.get(key).stream()
+                    .limit(4) // 최대 4개 이미지를 병합 대상으로 선택
                     .map(sharedFile -> {
                         try {
                             return ImageIO.read(new URL(sharedFile.getFileName()));
