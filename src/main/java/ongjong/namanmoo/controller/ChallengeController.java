@@ -10,6 +10,7 @@ import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.answer.ModifyAnswerDto;
 import ongjong.namanmoo.dto.ApiResponse;
+import ongjong.namanmoo.dto.lucky.CurrentLuckyDto;
 import ongjong.namanmoo.service.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,10 +40,23 @@ public class ChallengeController {
         if (!luckyService.createLucky(familyId, challengeDate) || !answerService.createAnswer(familyId, challengeDate)) {
             return new ApiResponse<>("404", "Challenge not found", null);
         }
-        return new ApiResponse<>("201", "Challenge created successfully", null);
+        return new ApiResponse<>("200", "Challenge created successfully", null);
     }
 
-    @GetMapping("/today")     // 오늘의 챌린지 조회
+    // 현재 진행중인 챌린지 시작 날짜를 반환
+    @GetMapping("/startDate")
+    public ApiResponse<CurrentLuckyDto> getChallengeStartDate(){
+        Long familyId = familyService.findFamilyId();
+        Lucky lucky = luckyService.findCurrentLucky(familyId);
+        if (lucky == null) {
+            return new ApiResponse<>("404", "Lucky Not Found", null);
+        }
+        CurrentLuckyDto currentLuckyDto = new CurrentLuckyDto(DateUtil.getInstance().stringToTimestamp(lucky.getChallengeStartDate(),DateUtil.FORMAT_4));
+        return new ApiResponse<>("200", "Success",currentLuckyDto);
+    }
+
+    // 오늘의 챌린지 조회
+    @GetMapping("/today")
     public ApiResponse<CurrentChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         Member member = memberService.findMemberByLoginId(); // 로그인한 member
         CurrentChallengeDto currentChallenge = challengeService.findChallengesByMemberId(challengeDate, member);
@@ -53,7 +67,8 @@ public class ChallengeController {
         return new ApiResponse<>("200", "Challenge found successfully", currentChallenge);
     }
 
-    @GetMapping("/list")        // 챌린지 리스트 조회 , 챌린지 리스트는 lucky가 여러개 일때를 고려하여 죽은 럭키 개수 * 30 +1 부터 챌린지가 보여져야한다.
+    // 챌린지 리스트 조회
+    @GetMapping("/list")        // 챌린지 리스트는 lucky가 여러개 일때를 고려하여 죽은 럭키 개수 * 30 +1 부터 챌린지가 보여져야한다.
     public ApiResponse<List<ChallengeListDto>> getChallengeList(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         List<Challenge> challenges = challengeService.findChallenges(challengeDate); //
 
@@ -72,7 +87,8 @@ public class ChallengeController {
         return new ApiResponse<>("200", "Challenge list found successfully", challengeList);
     }
 
-    @GetMapping("/normal")      // 일반 챌린지 조회
+    // 일반 챌린지 조회
+    @GetMapping("/normal")
     public ApiResponse<NormalChallengeDto> getNormalChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
         ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.NORMAL);
         if (!challengeResponse.getStatus().equals("200")) {
