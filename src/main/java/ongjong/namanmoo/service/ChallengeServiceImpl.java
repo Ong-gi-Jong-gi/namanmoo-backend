@@ -159,7 +159,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         if(challenges.size() == 1){
             return challenges.get(0);       // 오늘의 챌린지리스트 사이즈가 1이라면 첫번째 챌린지 반환
         }
-        else if(challenges.size() == 2) {    // 오늘의 챌린지리스트 사이즈가 2일 경우
+        else if(challenges.size() == 2) {    // 오늘의 챌린지리스트 사이즈가 2일 경우 -> GROUP 챌린지
             Challenge challenge1 = challenges.get(0);
             Challenge challenge2 = challenges.get(1);
             if (challenge1.getChallengeType() == ChallengeType.GROUP_PARENT) {
@@ -176,9 +176,9 @@ public class ChallengeServiceImpl implements ChallengeService {
                 }
             }
         }
-        else if(challenges.size() == 4){
+        else if(challenges.size() == 4){    // 오늘의 챌린지리스트 사이즈가 4일 경우 -> VOICE 챌린지
             List<Member> memberList = memberRepository.findByFamilyFamilyId(member.getFamily().getFamilyId());
-            for(int i = 0; i < memberList.size(); i++){
+            for(int i = 0; i < memberList.size(); i++) {
                 if(memberList.get(i) == member){
                     return challenges.get(i%4);
                 }
