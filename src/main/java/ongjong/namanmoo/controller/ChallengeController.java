@@ -283,13 +283,13 @@ public class ChallengeController {
 //            // 그룹별 4개의 이미지가 모였는지 확인 및 병합
 //            sharedFileService.checkAndMergeImages(challenge.getChallengeNum(), lucky);
 
-//            // TODO: 방법 1: 이미지 업로드와 병합 분리
-//            // 이미지 업로드가 완료된 후에 병합을 시도합니다.
-//            sharedFileService.mergeImagesIfNeeded(challenge.getChallengeNum(), lucky);
+            // TODO: 방법 1: 이미지 업로드와 병합 분리 (4번째 cut 1장 만들어짐) -> 채택!
+            // 이미지 업로드가 완료된 후에 병합을 시도합니다.
+            sharedFileService.mergeImagesIfNeeded(challenge.getChallengeNum(), lucky);
 
-            // TODO: 방법 2: 병합을 서버 측에서 스케줄링
-            // 이미지 업로드가 완료된 후에 병합을 예약합니다.
-            sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
+//            // TODO: 방법 2: 병합을 서버 측에서 스케줄링 (첫번째 cut만 생성됨)
+//            // 이미지 업로드가 완료된 후에 병합을 예약합니다.
+//            sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
 
             return new ApiResponse<>("200", "Video uploaded successfully", Map.of("url", uploadedUrl));
         } else {
