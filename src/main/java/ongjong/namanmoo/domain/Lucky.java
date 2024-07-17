@@ -47,6 +47,7 @@ public class Lucky {
     @Column(name = "views")
     private Map<Integer, Integer> challengeViews = new HashMap<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "lucky")
     private List<SharedFile> sharedFiles = new ArrayList<>();
 }

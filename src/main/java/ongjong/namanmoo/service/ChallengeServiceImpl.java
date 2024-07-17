@@ -213,7 +213,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         return new GroupChallengeDto(challenge.getChallengeNum().toString(), timeStamp, isComplete, parentChallenge, childrenChallenge);
     }
 
-    // 오늘의 챌린지 반환 .그룹챌린지일 경우 같은 번호의 챌린지가 2개 이므로 리스트로 반환
+    // 오늘의 챌린지 반환 (그룹챌린지일 경우 같은 번호의 챌린지가 2개 이므로 리스트로 반환, 음성챌린지의 경우 4개)
     @Transactional(readOnly = true)
     public CurrentChallengeDto findCurrentChallenges(Long familyId, Long challengeDate) throws Exception {
         boolean isDone = false;
@@ -282,6 +282,15 @@ public class ChallengeServiceImpl implements ChallengeService {
                         if (memberRole.equals("엄마") || memberRole.equals("아빠")) {
                             return challenge;
                         }
+                        // TODO: 음성챌린지 회원에 맞게 보여야함
+//                    } else if (challenge.getChallengeType() == ChallengeType.VOICE1) {
+//
+//                    } else if (challenge.getChallengeType() == ChallengeType.VOICE2) {
+//
+//                    } else if (challenge.getChallengeType() == ChallengeType.VOICE3) {
+//
+//                    } else if (challenge.getChallengeType() == ChallengeType.VOICE4) {
+//
                     } else {
                         // For other challenge types, return the challenge directly
                         return challenge;
@@ -372,7 +381,7 @@ public class ChallengeServiceImpl implements ChallengeService {
                         Date modifiedTime = format9.parse(modifiedDate);
                         log.info("답변 수정 시간: {}, 답변 생성 시간: {}", modifiedTime.getTime(), createTime.getTime());
 
-                        long responseTime = Math.abs(modifiedTime.getTime() - createTime.getTime());
+                        long responseTime = Math.abs(modifiedTime.getTime() - createTime.getTime()); // 원래라면 수정 날짜가 답변이 열리는 날짜보다 나중이기 때문에 음수가 나올일이 없지만 올바른 시연을 위해 절대값 처리
                         log.info("회원 ID: {}, 응답 시간: {}", member.getMemberId(), responseTime);
 
                         if (responseTime > latestResponseTimeForMember) {
