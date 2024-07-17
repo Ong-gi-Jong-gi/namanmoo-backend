@@ -123,6 +123,8 @@ jobs:
               -e S3_BUCKET_NAME="${{ secrets.S3_BUCKET_NAME }}" \
               -e S3_REGION="${{ secrets.S3_REGION }}" \
               -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+              -e FFMPEG_PATH="${{ secrets.FFMPEG_PATH }}" \
+              -e FFPROBE_PATH="${{ secrets.FFPROBE_PATH }}" \
               ${{ env.IMAGE_NAME }}
             sudo docker ps -a
             sudo docker system prune -f
