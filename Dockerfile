@@ -1,7 +1,5 @@
-# Docker file
-
 # jdk17 Image Start
-FROM openjdk:17
+FROM openjdk:17-slim
 
 # 인자 설정 - JAR_FILE
 ARG JAR_FILE=build/libs/*.jar
