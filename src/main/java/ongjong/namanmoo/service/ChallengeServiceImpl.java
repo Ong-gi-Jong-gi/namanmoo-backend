@@ -159,7 +159,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         if(challenges.size() == 1){
             return challenges.get(0);       // 오늘의 챌린지리스트 사이즈가 1이라면 첫번째 챌린지 반환
         }
-        else if(challenges.size() == 2) {    // 오늘의 챌린지리스트 사이즈가 2일 경우
+        else if(challenges.size() == 2) {    // 오늘의 챌린지리스트 사이즈가 2일 경우 -> GROUP 챌린지
             Challenge challenge1 = challenges.get(0);
             Challenge challenge2 = challenges.get(1);
             if (challenge1.getChallengeType() == ChallengeType.GROUP_PARENT) {
@@ -176,9 +176,9 @@ public class ChallengeServiceImpl implements ChallengeService {
                 }
             }
         }
-        else if(challenges.size() == 4){
+        else if(challenges.size() == 4){    // 오늘의 챌린지리스트 사이즈가 4일 경우 -> VOICE 챌린지
             List<Member> memberList = memberRepository.findByFamilyFamilyId(member.getFamily().getFamilyId());
-            for(int i = 0; i < memberList.size(); i++){
+            for(int i = 0; i < memberList.size(); i++) {
                 if(memberList.get(i) == member){
                     return challenges.get(i%4);
                 }
@@ -428,6 +428,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         return fastestChallenge;
     }
 
+    // 챌린지에 달린 답변 중, 가장 늦게 달린 답변 시간을 계산
     @Override
     public long calculateLatestResponseTime(Lucky lucky, Challenge challenge) throws Exception {
         long latestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수

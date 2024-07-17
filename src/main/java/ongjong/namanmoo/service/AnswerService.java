@@ -5,10 +5,7 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.challenge.ChallengeDetailsDto;
-import ongjong.namanmoo.dto.recap.MemberDto;
-import ongjong.namanmoo.dto.recap.MemberPhotosAnswerDto;
-import ongjong.namanmoo.dto.recap.MemberYouthAnswerDto;
-import ongjong.namanmoo.dto.recap.MemberAppreciationDto;
+import ongjong.namanmoo.dto.recap.*;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -54,7 +51,7 @@ public interface AnswerService {
     MemberPhotosAnswerDto getPhotoByMember(List<Member> members) throws Exception;
 
     // facetime에 대한 answerList를 반환
-    List<String> getFacetimeAnswerList(Long luckyId) throws Exception ;
+    MemberFacetimeDto getFacetimeAnswerList(Long luckyId) throws Exception ;
 
     // 챌린지 상세조회 중복요소 매핑
     ChallengeDetailsDto getChallengeDetails(Challenge challenge, Member member) throws Exception;

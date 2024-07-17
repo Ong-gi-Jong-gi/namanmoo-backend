@@ -57,9 +57,8 @@ public class RecapController {
     // recap 화상통화
     @GetMapping("/face")
     public ApiResponse<MemberFacetimeDto> getFacetime(@RequestParam("luckyId") Long luckyId) throws Exception {
-        List<String> answerList = answerService.getFacetimeAnswerList(luckyId);
-        MemberFacetimeDto facetimeAnswerList = new MemberFacetimeDto(answerList);
-        return new ApiResponse<>("200", "Ranking retrieved successfully", facetimeAnswerList);
+        MemberFacetimeDto answerList = answerService.getFacetimeAnswerList(luckyId);
+        return new ApiResponse<>("200", "facetime retrieved successfully", answerList);
     }
 
     // 리캡 컨텐츠 조회 - 통계
@@ -87,7 +86,7 @@ public class RecapController {
         fastestAnsweredData.put("challengeNumber", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeNum() : "");
         fastestAnsweredData.put("challengeTitle", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeTitle() : "");
 
-        return new ApiResponse<>("200", "retrieved successfully", Arrays.asList(mostViewedData, fastestAnsweredData));
+        return new ApiResponse<>("200", "statistics retrieved successfully", Arrays.asList(mostViewedData, fastestAnsweredData));
     }
 
     // recap 과거 사진
