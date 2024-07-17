@@ -100,7 +100,30 @@ public class SharedFileService {
 
     // 화상통화 챌린지 이미지 4장 병합 및 저장
     public void checkAndMergeImages(int challengeNum, Lucky lucky) throws IOException {
-        List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
+        final int MAX_WAIT_TIME = 15000; // 최대 대기 시간 15초
+        final int SLEEP_INTERVAL = 3000; // 3초 간격으로 재시도
+        long startTime = System.currentTimeMillis();
+
+        List<SharedFile> sharedFiles;
+        while (true) {
+            synchronized (this) {
+                sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
+            }
+
+            if (sharedFiles.size() >= 4) {
+                break; // 4장 이상이면 병합을 시작
+            }
+
+            if (System.currentTimeMillis() - startTime > MAX_WAIT_TIME) {
+                throw new IOException("이미지 업로드 시간이 초과되었습니다.");
+            }
+
+            try {
+                Thread.sleep(SLEEP_INTERVAL);
+            } catch (InterruptedException e) {
+                throw new IOException("병합 대기 중 인터럽트 발생", e);
+            }
+        }
 
         // 파일 이름의 숫자를 기준으로 그룹화
         Map<String, List<SharedFile>> groupedFiles = new HashMap<>();
@@ -134,7 +157,7 @@ public class SharedFileService {
 
             // 빈 공간을 투명하게 채워 4개가 되도록 처리
             while (images.size() < 4) {
-                BufferedImage emptyImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+                BufferedImage emptyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB); // 너비와 높이를 100으로 설정하여 빈 이미지를 추가
                 images.add(emptyImage);
             }
 
@@ -157,6 +180,7 @@ public class SharedFileService {
             sharedFileRepository.save(mergedFile); // 데이터베이스에 새 SharedFile 저장
         }
     }
+
 
     // 병합된 이미지를 S3에 업로드하는 메서드
     public String uploadMergedImageToS3(BufferedImage mergedImage, String bucketName, String fileObjKeyName) throws IOException {

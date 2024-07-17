@@ -410,6 +410,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         return fastestChallenge;
     }
 
+    // 챌린지에 달린 답변 중, 가장 늦게 달린 답변 시간을 계산
     @Override
     public long calculateLatestResponseTime(Lucky lucky, Challenge challenge) throws Exception {
         long latestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수
