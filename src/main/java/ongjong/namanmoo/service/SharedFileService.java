@@ -154,11 +154,22 @@ public class SharedFileService {
 
         // 각 그룹의 이미지를 BufferedImage 리스트로 변환
         for (String key : sortedKeys) {
-            List<BufferedImage> images = groupedFiles.get(key).stream()
-                    .limit(4) // 최대 4개 이미지를 병합 대상으로 선택
-                    .map(sharedFile -> {
+            List<SharedFile> sharedFilesInGroup = groupedFiles.get(key);
+
+            // 중복되지 않도록 최대 4개의 고유한 이미지 URL을 선택
+            Set<String> uniqueImageUrls = sharedFilesInGroup.stream()
+                    .map(SharedFile::getFileName)
+                    .collect(Collectors.toSet());
+
+            if (uniqueImageUrls.size() < 4) {
+                throw new IOException("충분한 수의 고유 이미지를 찾을 수 없습니다.");
+            }
+
+            List<BufferedImage> selectedImages = uniqueImageUrls.stream()
+                    .limit(4)
+                    .map(url -> {
                         try {
-                            return ImageIO.read(new URL(sharedFile.getFileName()));
+                            return ImageIO.read(new URL(url));
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
@@ -166,15 +177,15 @@ public class SharedFileService {
                     .collect(Collectors.toList());
 
             // 빈 공간을 투명하게 채워 4개가 되도록 처리
-            while (images.size() < 4) {
+            while (selectedImages.size() < 4) {
                 BufferedImage emptyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB); // 너비와 높이를 100으로 설정하여 빈 이미지를 추가
-                images.add(emptyImage);
+                selectedImages.add(emptyImage);
             }
 
             // UUID 생성 및 파일 이름 설정
             String uuid = UUID.randomUUID().toString();
             String baseName = "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_" + key + ".png";
-            BufferedImage mergedImage = ImageMerger.mergeImages(images); // 이미지를 병합하여 새로운 BufferedImage를 생성
+            BufferedImage mergedImage = ImageMerger.mergeImages(selectedImages); // 이미지를 병합하여 새로운 BufferedImage를 생성
 
             // 병합된 이미지를 S3에 업로드
             String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, baseName);
