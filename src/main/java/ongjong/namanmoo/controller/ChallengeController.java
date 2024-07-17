@@ -58,6 +58,9 @@ public class ChallengeController {
     // 오늘의 챌린지 조회
     @GetMapping("/today")
     public ApiResponse<CurrentChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+        if(String.valueOf(challengeDate).length() != 13){
+            return new ApiResponse<>("404", "Challenge date must be a 13-number", null);
+        }
         Member member = memberService.findMemberByLoginId(); // 로그인한 member
         CurrentChallengeDto currentChallenge = challengeService.findChallengesByMemberId(challengeDate, member);
 
@@ -70,7 +73,11 @@ public class ChallengeController {
     // 챌린지 리스트 조회
     @GetMapping("/list")        // 챌린지 리스트는 lucky가 여러개 일때를 고려하여 죽은 럭키 개수 * 30 +1 부터 챌린지가 보여져야한다.
     public ApiResponse<List<ChallengeListDto>> getChallengeList(@RequestParam("challengeDate") Long challengeDate) throws Exception {
-        List<Challenge> challenges = challengeService.findChallenges(challengeDate); //
+        if(String.valueOf(challengeDate).length() != 13){
+            return new ApiResponse<>("404", "Challenge date must be a 13-number", null);
+        }
+
+        List<Challenge> challenges = challengeService.findChallenges(challengeDate);
 
         if (challenges == null || challenges.isEmpty()) {
             return new ApiResponse<>("400", "No challenges found for the family", null);
@@ -206,16 +213,11 @@ public class ChallengeController {
     @GetMapping("/face")
     public ApiResponse<Object> getFaceChallenge(
             @RequestParam("challengeId") Long challengeId) throws Exception {
-
-        // 챌린지 조회
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.FACETIME);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
         }
-        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유형에 맞지 않으면 오류 반환
-        if (!challenge.getChallengeType().equals(ChallengeType.FACETIME)) {
-            return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
-        }
+        Challenge challenge = challengeResponse.getData();
 
         // 가족 초대 코드 조회 (멤버를 통해 가족 정보를 가져온 후 초대 코드 획득)
         Member member = memberService.findMemberByLoginId();
@@ -242,13 +244,14 @@ public class ChallengeController {
             @RequestParam("challengeId") Long challengeId,
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
 
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유0형에 맞지 않으면 오류 반환
-        if (!challenge.getChallengeType().equals(ChallengeType.FACETIME)) {
-            return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.FACETIME);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
         }
-        if (answerFile == null || answerFile.isEmpty()) {
-            return new ApiResponse<>("400", "Answer file is missing", null);
+        Challenge challenge = challengeResponse.getData();
+        ApiResponse<Void> fileResponse = validateFile(answerFile);
+        if (!fileResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(fileResponse.getStatus(), fileResponse.getMessage(), null);
         }
         Member member = memberService.findMemberByLoginId();
         Family family = member.getFamily();
@@ -288,14 +291,11 @@ public class ChallengeController {
     public ApiResponse<Map<Integer, List<String>>> getFaceTimeAnswer(
             @RequestParam("challengeId") Long challengeId) throws Exception {
 
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.FACETIME);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
         }
-        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유0형에 맞지 않으면 오류 반환
-        if (!challenge.getChallengeType().equals(ChallengeType.FACETIME)) {
-            return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
-        }
+        Challenge challenge = challengeResponse.getData();
 
         Member member = memberService.findMemberByLoginId();
         Family family = member.getFamily();
@@ -365,10 +365,12 @@ public class ChallengeController {
 
     // 챌린지 검증 헬퍼 메서드
     private ApiResponse<Challenge> validateChallenge(Long challengeId, ChallengeType... validTypes) {
+        // 챌린지 조회
         Challenge challenge = challengeService.findChallengeById(challengeId);
         if (challenge == null) {
             return new ApiResponse<>("404", "Challenge with provided challengeId not found", null);
         }
+        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유형에 맞지 않으면 오류 반환
         if (!Arrays.asList(validTypes).contains(challenge.getChallengeType())) {
             return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
         }
