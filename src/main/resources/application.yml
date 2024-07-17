@@ -55,12 +55,12 @@ openai-service:
     chat-url: /chat/completions
     create-transcription-url: /audio/transcriptions
 
-ffmpeg:
-  path: /usr/bin/ffmpeg
-ffprobe:
-  path: /usr/bin/ffprobe
+#ffmpeg:
+#  path: /usr/bin/ffmpeg
+#ffprobe:
+#  path: /usr/bin/ffprobe
 
 #ffmpeg:
-#  path: C:/Users/park/Desktop/JUNGLE/ffmpeg-7.0.1-essentials_build/bin/ffmpeg.exe
+#  path: C:/Users/고동엽/Downloads/ffmpeg-7.0.1-essentials_build/bin/ffmpeg.exe
 #ffprobe:
-#  path: C:/Users/park/Desktop/JUNGLE/ffmpeg-7.0.1-essentials_build/bin/ffprobe.exe
+#  path: C:/Users/고동엽/Downloads/ffmpeg-7.0.1-essentials_build/bin/ffprobe.exe
