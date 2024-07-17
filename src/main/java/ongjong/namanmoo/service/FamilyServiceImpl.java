@@ -130,10 +130,13 @@ public class FamilyServiceImpl implements FamilyService {
                 .orElseThrow(() -> new IllegalArgumentException("Family not found with id: " + familyId));
 
         long currentFamilySize = memberRepository.countByFamilyId(familyId);
-//        log.info("currentFamilySize : {}", currentFamilySize);
-
         if (currentFamilySize >= family.getMaxFamilySize()) {
             throw new IllegalStateException("Family is already full");
+        }
+
+        // Role validation
+        if (!(role.equals("아빠") || role.equals("엄마") || role.equals("아들") || role.equals("딸"))) {
+            throw new IllegalArgumentException("Invalid role: " + role);
         }
 
         member.setFamily(family);
