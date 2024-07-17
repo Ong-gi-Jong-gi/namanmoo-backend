@@ -165,9 +165,6 @@ public class SharedFileService {
                     })
                     .collect(Collectors.toList());
 
-            // 이미지 리스트를 무작위로 섞기
-            Collections.shuffle(images);
-
             // 빈 공간을 투명하게 채워 4개가 되도록 처리
             while (images.size() < 4) {
                 BufferedImage emptyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB); // 너비와 높이를 100으로 설정하여 빈 이미지를 추가
