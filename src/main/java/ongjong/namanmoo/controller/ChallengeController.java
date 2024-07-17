@@ -10,6 +10,7 @@ import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.answer.ModifyAnswerDto;
 import ongjong.namanmoo.dto.ApiResponse;
+import ongjong.namanmoo.dto.lucky.CurrentLuckyDto;
 import ongjong.namanmoo.service.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,7 +40,18 @@ public class ChallengeController {
         if (!luckyService.createLucky(familyId, challengeDate) || !answerService.createAnswer(familyId, challengeDate)) {
             return new ApiResponse<>("404", "Challenge not found", null);
         }
-        return new ApiResponse<>("201", "Challenge created successfully", null);
+        return new ApiResponse<>("200", "Challenge created successfully", null);
+    }
+
+    @GetMapping("/startDate")
+    public ApiResponse<CurrentLuckyDto> getChallengeStartDate(){
+        Long familyId = familyService.findFamilyId();
+        Lucky lucky = luckyService.findCurrentLucky(familyId);
+        if (lucky == null) {
+            return new ApiResponse<>("404", "Lucky Not Found", null);
+        }
+        CurrentLuckyDto currentLuckyDto = new CurrentLuckyDto(DateUtil.getInstance().stringToTimestamp(lucky.getChallengeStartDate(),DateUtil.FORMAT_4));
+        return new ApiResponse<>("200", "Success",currentLuckyDto);
     }
 
     @GetMapping("/today")     // 오늘의 챌린지 조회

@@ -74,7 +74,6 @@ public class FamilyServiceImpl implements FamilyService {
         String currentLoginId = SecurityUtil.getLoginLoginId();
         Member currentUser = memberRepository.findByLoginId(currentLoginId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found for loginId: " + currentLoginId));
-
         if (currentUser.getFamily() == null) {
             return null;
         }
