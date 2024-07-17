@@ -42,3 +42,25 @@ cloud:
       static: ${S3_REGION}
     stack:
       auto: false
+
+openai-service:
+  api-key: ${OPENAI_API_KEY}
+  gpt-model: gpt-3.5-turbo
+  audio-model: whisper-1
+  http-client:
+    read-timeout: 3000  # ms ??
+    connect-timeout: 3000  # ms ??
+  urls:
+    base-url: https://api.openai.com/v1
+    chat-url: /chat/completions
+    create-transcription-url: /audio/transcriptions
+
+ffmpeg:
+  path: /usr/bin/ffmpeg
+ffprobe:
+  path: /usr/bin/ffprobe
+
+#ffmpeg:
+#  path: C:/Users/park/Desktop/JUNGLE/ffmpeg-7.0.1-essentials_build/bin/ffmpeg.exe
+#ffprobe:
+#  path: C:/Users/park/Desktop/JUNGLE/ffmpeg-7.0.1-essentials_build/bin/ffprobe.exe

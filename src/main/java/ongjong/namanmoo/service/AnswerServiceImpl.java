@@ -8,10 +8,7 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.dto.challenge.ChallengeDetailsDto;
-import ongjong.namanmoo.dto.recap.MemberAppreciationDto;
-import ongjong.namanmoo.dto.recap.MemberDto;
-import ongjong.namanmoo.dto.recap.MemberPhotosAnswerDto;
-import ongjong.namanmoo.dto.recap.MemberYouthAnswerDto;
+import ongjong.namanmoo.dto.recap.*;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
@@ -46,8 +43,8 @@ public class AnswerServiceImpl implements AnswerService {
     @Override
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
 
-        // 가족 ID로 해당 가족의 회원들을 조회
-        List<Member> members = memberRepository.findByFamilyFamilyId(familyId);
+        // 가족 ID로 해당 가족의 회원들을 조회 (멤버 오름차순으로 나오도록 수정)
+        List<Member> members = memberRepository.findByFamilyFamilyIdOrderByMemberIdAsc(familyId);
         Optional<Family> family  = familyRepository.findById(familyId);
         // 모든 챌린지를 조회
         List<Challenge> challenges = challengeService.findRunningChallenges();
@@ -368,27 +365,41 @@ public class AnswerServiceImpl implements AnswerService {
     // facetime에 대한 answerList를 반환
     @Override
     @Transactional(readOnly = true)
-    public List<String> getFacetimeAnswerList(Long luckyId) throws Exception {
+    public MemberFacetimeDto getFacetimeAnswerList(Long luckyId) throws Exception {
         Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
-        Lucky lucky = luckyRepository.getLuckyByLuckyId(luckyId).orElseThrow(() -> new Exception("luckyID not found"));
-        Family family =lucky.getFamily();
+        Lucky lucky = luckyRepository.getLuckyByLuckyId(luckyId).orElseThrow(() -> new Exception("luckyId not found"));
+        Family family = lucky.getFamily();
         List<Member> memberList = memberRepository.findByFamilyFamilyId(family.getFamilyId());
-        int number = luckyService.findCurrentLuckyLifetime(currentUser.get().getFamily().getFamilyId());
-        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum((currentUser.get().getFamily().getFamilyId())), number);
+        int challengeLength = luckyService.findCurrentLuckyLifetime(currentUser.get().getFamily().getFamilyId());
+        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum((currentUser.get().getFamily().getFamilyId())), challengeLength);
 
-        List<String> facetimeAnswerList = new ArrayList<>();
-        for (Challenge challenge : challengeList){
-            if(challenge.getChallengeType() == ChallengeType.FACETIME){
-                for(Member member : memberList){
-                    Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge,member);
-                    if(answer.get().getAnswerContent() != null){
-                        facetimeAnswerList.add(answer.get().getAnswerContent());
-                    }
+        // 가져온 챌린지 중에 FACETIME 종류의 챌린지만 골라서 분리한 리스트
+        List<Challenge> faceTimeChallenges = challengeList.stream()
+                .filter(challenge -> challenge.getChallengeType() == ChallengeType.FACETIME)
+                .collect(Collectors.toList());
+        // 가져온 FACETIME 챌린지가 없으면 그냥 null 리턴
+        if(faceTimeChallenges.isEmpty()){
+            return null;
+        }
+
+        Collections.shuffle(faceTimeChallenges);  // 가져온 FACETIME 챌린지들을 무작위로 섞기
+        Challenge randomChallenge = faceTimeChallenges.get(0);  // 섞인 챌린지들 중 아무거나 하나 골라서 얻기
+        List<String> facetimeAnswerList = new ArrayList<>();   // 챌린지 답변을 담을 리스트를 만든다
+        String challengeDate = null;  // Challenge 날짜는 초기에 null로 설정
+
+        for(Member member : memberList){
+            Optional<Answer> answer = answerRepository.findByChallengeAndMember(randomChallenge ,member);
+            if (answer.isPresent()) {
+                facetimeAnswerList.add(answer.get().getAnswerContent());
+                // 현재 챌린지 날짜가 아직 설정되지 않았다면 챌린지 날짜를 이 답변에서 설정합니다.
+                if (challengeDate == null) {
+                    challengeDate = answer.get().getCreateDate();
                 }
-                return facetimeAnswerList;
             }
         }
-        return null;
+        // 챌린지 날짜가 null이 아니면, DateUtil을 이용해서 문자열 형식의 날짜를 타임스탬프로 변환합니다.
+        long challengeTimestamp = challengeDate != null ? DateUtil.getInstance().stringToTimestamp(challengeDate, DateUtil.FORMAT_4) : 0L;
+        return new MemberFacetimeDto(challengeTimestamp, facetimeAnswerList);  // 만들어진 답변 리스트와 챌린지 날짜를 멤버에 담아서 반환합니다.
     }
 
     // 챌린지 상세조회 중복요소 매핑

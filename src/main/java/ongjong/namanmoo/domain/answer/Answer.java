@@ -7,7 +7,6 @@ import lombok.Setter;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.challenge.Challenge;
 
-
 @Entity
 @Getter @Setter
 @RequiredArgsConstructor

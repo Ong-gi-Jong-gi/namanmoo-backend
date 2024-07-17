@@ -13,16 +13,12 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-
-import lombok.RequiredArgsConstructor;
 
 @Slf4j
 @Service
@@ -202,4 +198,20 @@ public class AwsS3Service {
         log.info("File Delete : " + fileName);
         amazonS3Client.deleteObject(bucket, fileName);
     }
+
+    // 오디오 파일 고정 경로 생성
+    public String uploadAudioFile(MultipartFile multipartFile, String s3Path) throws IOException {
+        log.info("Converting MultipartFile to File...");
+        File uploadFile = convertFile(multipartFile)
+                .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
+        String fileName = multipartFile.getOriginalFilename();
+
+        log.info("Uploading file to S3: {}", fileName);
+        String uploadFileUrl = uploadFileToS3(uploadFile, s3Path);
+        log.info("File uploaded to S3: {}", uploadFileUrl);
+
+        removeNewFile(uploadFile);
+        return uploadFileUrl;
+    }
+
 }

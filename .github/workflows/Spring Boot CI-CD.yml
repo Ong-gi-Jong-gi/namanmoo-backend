@@ -122,6 +122,7 @@ jobs:
               -e S3_SECRET_ACCESS_KEY="${{ secrets.S3_SECRET_ACCESS_KEY }}" \
               -e S3_BUCKET_NAME="${{ secrets.S3_BUCKET_NAME }}" \
               -e S3_REGION="${{ secrets.S3_REGION }}" \
+              -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }} \
               ${{ env.IMAGE_NAME }}
             sudo docker ps -a
             sudo docker system prune -f

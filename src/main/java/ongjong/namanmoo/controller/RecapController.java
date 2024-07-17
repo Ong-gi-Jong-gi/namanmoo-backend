@@ -57,9 +57,8 @@ public class RecapController {
     // recap 화상통화
     @GetMapping("/face")
     public ApiResponse<MemberFacetimeDto> getFacetime(@RequestParam("luckyId") Long luckyId) throws Exception {
-        List<String> answerList = answerService.getFacetimeAnswerList(luckyId);
-        MemberFacetimeDto facetimeAnswerList = new MemberFacetimeDto(answerList);
-        return new ApiResponse<>("200", "Ranking retrieved successfully", facetimeAnswerList);
+        MemberFacetimeDto answerList = answerService.getFacetimeAnswerList(luckyId);
+        return new ApiResponse<>("200", "facetime retrieved successfully", answerList);
     }
 
     // 리캡 컨텐츠 조회 - 통계
@@ -87,26 +86,25 @@ public class RecapController {
         fastestAnsweredData.put("challengeNumber", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeNum() : "");
         fastestAnsweredData.put("challengeTitle", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeTitle() : "");
 
-        return new ApiResponse<>("200", "retrieved successfully", Arrays.asList(mostViewedData, fastestAnsweredData));
+        return new ApiResponse<>("200", "statistics retrieved successfully", Arrays.asList(mostViewedData, fastestAnsweredData));
     }
 
     // recap 과거 사진
     // challengeNum => 13: 나의 어렸을 때 장래희망
     // cahllengeNum => 28 : 자신의 어렸을 적 사진 ( 23 : 학생 때 졸업사진 , 9: 가장 마음에 드는 본인 사진)
-    // TODO: 질문 데이터 set 수정 후, ChallengeNum 수정 필요
+
     @GetMapping("/youth")
     public ApiResponse<List<MemberYouthAnswerDto>> getYouth(@RequestParam("luckyId") Long luckyId) throws Exception{
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
-        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(members, 1, 9);
+        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(members, 13, 28);
         return new ApiResponse<>("200", "Youth photos retrieved successfully", memberAnswerDtoList);
     }
 
-    // TODO: 질문 데이터 set 수정 후, ChallengeNum 수정 필요
     // recap 미안한점 고마운점
     @GetMapping("/appreciations")
     public ApiResponse<List<MemberAppreciationDto>> getAppreciations(@RequestParam("luckyId") Long luckyId) throws Exception {
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
-        List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(members, 2, 3);
+        List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(members, 25, 27);
         return new ApiResponse<>("200", "Success", appreciationList);
     }
 
