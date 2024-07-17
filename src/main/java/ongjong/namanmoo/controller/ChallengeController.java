@@ -212,7 +212,7 @@ public class ChallengeController {
         if (challenge == null) {
             return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
         }
-        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유0형에 맞지 않으면 오류 반환
+        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유형에 맞지 않으면 오류 반환
         if (!challenge.getChallengeType().equals(ChallengeType.FACETIME)) {
             return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
         }
