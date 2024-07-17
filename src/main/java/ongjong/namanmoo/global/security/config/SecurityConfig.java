@@ -50,7 +50,7 @@ public class SecurityConfig {
 //						.defaultSuccessUrl("/home"))
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-//                        .logoutSuccessUrl("/login") // 로그아웃 성공 시 리다이렉트될 URL 설정
+                        .logoutSuccessUrl("https://mooluck.site/") // 로그아웃 성공 시 리다이렉트될 URL 설정
                         .invalidateHttpSession(true)) // HTTP 세션 무효화 설정
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 관리 정책 설정 (STATELESS: 세션을 사용하지 않음)

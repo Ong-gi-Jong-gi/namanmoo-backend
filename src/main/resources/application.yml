@@ -39,6 +39,6 @@ cloud:
     s3:
       bucket: ${S3_BUCKET_NAME}
     region:
-      static: ap-northeast-2
+      static: ${S3_REGION}
     stack:
       auto: false

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
+import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.dto.lucky.LuckyListDto;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
@@ -82,8 +83,10 @@ public class LuckyServiceImpl implements LuckyService {
         String createDate = formatter.format(instant);
         log.info("createDate: {}", createDate);
 
+        Answer answer = answerRepository.findByMemberAndCreateDate(member, createDate)
+                .orElseThrow(() -> new RuntimeException("해당 멤버가 작성한 답변을 찾을 수 없습니다."));
 
-        boolean isBubble = answerRepository.existsByMemberAndCreateDateAndAnswerContentIsNotNull(member, createDate);
+        boolean isBubble = answer.isBubbleVisible();
         Integer luckyStatus = calculateLuckyStatus(lucky);
 
         return new LuckyStatusDto(luckyStatus, isBubble);

@@ -47,13 +47,17 @@ public class ChallengeServiceImpl implements ChallengeService {
     public List<Challenge> findChallenges(Long challengeDate) throws Exception{
         Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));  // 로그인한 member
         Family family = member.getFamily();
+        Optional<Lucky> lucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(family.getFamilyId());
+        if (lucky.isEmpty()) {
+            throw new Exception("행운이가 없습니다");
+        }
 
         Integer number = findCurrentChallengeNum(family.getFamilyId(),challengeDate);      // 진행하는 challenge 번호
         if (number == null) {
             return null;
         }
-
-        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum(family.getFamilyId()), 30);    // todo: 30 -> number로 바꿔야해!!!!!
+        // TODO: 챌린지 리스트 다 보여주기 위해 일단은 최대 값인 lucky의 주기로 설정 -> 추후에 현재 날짜에 해당하는 챌린지 번호인 number로 변경 필요
+        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum(family.getFamilyId()), lucky.get().getLifetime().getDays());
 
         // 멤버 역할에 맞지 않는 challenge는 리스트에서 제외
         return groupChallengeExceptionRemove(challengeList,member);
@@ -374,7 +378,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     @Override
     public long calculateLatestResponseTime(Lucky lucky, Challenge challenge) throws Exception {
-        long fastestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수
+        long latestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수
         List<Answer> answers = answerRepository.findByChallenge(challenge);
 
         SimpleDateFormat format4 = new SimpleDateFormat(DateUtil.FORMAT_4);
@@ -390,35 +394,35 @@ public class ChallengeServiceImpl implements ChallengeService {
                         String modifiedDate = answer.getModifiedDate();
 
                         if (createDate == null || modifiedDate == null) {
-                            log.warn("답변 ID: " + answer.getAnswerId() + "에서 Null 타임스탬프를 찾았습니다.");
+                            log.warn("답변 ID: {}에서 Null 타임스탬프를 찾았습니다.", answer.getAnswerId());
                             continue;
                         }
 
                         Date createTime = format4.parse(createDate);
                         Date modifiedTime = format9.parse(modifiedDate);
-                        log.info("답변 수정 시간: " + modifiedTime.getTime() + ", 답변 생성 시간: " + createTime.getTime());
+                        log.info("답변 수정 시간: {}, 답변 생성 시간: {}", modifiedTime.getTime(), createTime.getTime());
 
                         long responseTime = Math.abs(modifiedTime.getTime() - createTime.getTime());
-                        log.info("회원 ID: " + member.getMemberId() + ", 응답 시간: " + responseTime);
+                        log.info("회원 ID: {}, 응답 시간: {}", member.getMemberId(), responseTime);
 
                         if (responseTime > latestResponseTimeForMember) {
                             latestResponseTimeForMember = responseTime;
                         }
                     } catch (ParseException e) {
-                        log.error("답변 ID: " + answer.getAnswerId() + "의 날짜 파싱 에러", e);
+                        log.error("답변 ID: {}의 날짜 파싱 에러", answer.getAnswerId(), e);
                     }
                 }
             }
 
-            if (latestResponseTimeForMember != Long.MIN_VALUE && latestResponseTimeForMember > fastestTime) {
-                fastestTime = latestResponseTimeForMember;
+            if (latestResponseTimeForMember > latestTime) {
+                latestTime = latestResponseTimeForMember;
             }
         }
 
-        if (fastestTime == Long.MIN_VALUE) {
+        if (latestTime == Long.MIN_VALUE) {
             return Long.MAX_VALUE;
         }
-        long totalSeconds = fastestTime / 1000;
+        long totalSeconds = latestTime / 1000;
         long totalMinutes = totalSeconds / 60;
         long totalHours = totalMinutes / 60;
         long days = totalHours / 24;
@@ -426,7 +430,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         long minutes = totalMinutes % 60;
         long hours = totalHours % 24;
         log.info("가장 늦은 응답 시간: " + days + "일 " + hours + "시간 " + minutes + "분 " + seconds + "초");
-        return fastestTime;
+        return latestTime;
     }
 
 }

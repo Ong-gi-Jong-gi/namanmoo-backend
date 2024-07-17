@@ -308,10 +308,14 @@ public class AnswerServiceImpl implements AnswerService {
         List<String> otherPhotos = new ArrayList<>();
 
         Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
+        if (currentUser.isEmpty()) {
+            throw new Exception("Current user not found");
+        }
+
         int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId());
 
         // 1. Challenge 19 가져오기
-        Challenge challenge19 = challengeRepository.findByChallengeNum(startChallengeNum+9)
+        Challenge challenge19 = challengeRepository.findByChallengeNum(startChallengeNum+19)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new Exception("Challenge 19 not found"));
