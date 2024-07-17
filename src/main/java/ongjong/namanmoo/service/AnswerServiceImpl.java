@@ -44,7 +44,7 @@ public class AnswerServiceImpl implements AnswerService {
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
 
         // 가족 ID로 해당 가족의 회원들을 조회
-        List<Member> members = memberRepository.findByFamilyFamilyId(familyId);
+        List<Member> members = memberRepository.findByFamilyFamilyIdOrderByMemberIdAsc(familyId);
         Optional<Family> family  = familyRepository.findById(familyId);
         // 모든 챌린지를 조회
         List<Challenge> challenges = challengeService.findRunningChallenges();

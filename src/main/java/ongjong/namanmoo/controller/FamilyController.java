@@ -58,15 +58,24 @@ public class FamilyController {
      * 내 가족 조회
      */
     @GetMapping("/info")
-    public ResponseEntity<ApiResponse<FamilyInfoResponse>> getFamilyInfo() {
+    public ResponseEntity<ApiResponse<FamilyInfoResponse>> getFamilyInfo(){
         List<FamilyMemberDto> members = familyService.getFamilyMembersInfo();
-        FamilyInfoResponse familyInfoResponse = new FamilyInfoResponse(members);
+        if(members == null) {
+            ApiResponse<FamilyInfoResponse> response = new ApiResponse<>(
+                    "404",
+                    "family not found",
+                    null
+            );
+            return ResponseEntity.ok(response);
+        }
 
+        FamilyInfoResponse familyInfoResponse = new FamilyInfoResponse(members);
         ApiResponse<FamilyInfoResponse> response = new ApiResponse<>(
                 "200",
                 "Get Family Info Success.",
                 familyInfoResponse
         );
+
         return ResponseEntity.ok(response);
     }
 
