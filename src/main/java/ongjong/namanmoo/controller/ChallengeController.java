@@ -78,14 +78,11 @@ public class ChallengeController {
 
     @GetMapping("/normal")      // 일반 챌린지 조회
     public ApiResponse<NormalChallengeDto> getNormalChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.NORMAL);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
         }
-        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유형에 맞지 않으면 오류 반환
-        if (!challenge.getChallengeType().equals(ChallengeType.NORMAL)) {
-            return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
-        }
+        Challenge challenge = challengeResponse.getData();
 
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
         ChallengeDetailsDto details = answerService.getChallengeDetails(challenge, member);
@@ -95,23 +92,20 @@ public class ChallengeController {
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
         luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
 
-        return new ApiResponse<>("200", "Normal challenge found successfully", normalChallengeDto);       // 객체를 리스트 형태로 감싸서 반환
+        return new ApiResponse<>("200", "Normal challenge found successfully", normalChallengeDto);
     }
 
     // 일반 챌린지 내용 수정 -> 새 내용, 수정날짜 저장
     @PostMapping("/normal")
-    public  ApiResponse<ModifyAnswerDto> saveNormalAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
-        Long challengeId = request.getChallengeId();
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
+    public ApiResponse<ModifyAnswerDto> saveNormalAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
+        ApiResponse<Challenge> challengeResponse = validateChallenge(request.getChallengeId(), ChallengeType.NORMAL);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
         }
-        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유형에 맞지 않으면 오류 반환
-        if (!challenge.getChallengeType().equals(ChallengeType.NORMAL)) {
-            return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
-        }
+        Challenge challenge = challengeResponse.getData();
+
         String answerContent = request.getAnswerContent();
-        Answer answer = answerService.modifyAnswer(challengeId, answerContent);
+        Answer answer = answerService.modifyAnswer(challenge.getChallengeId(), answerContent);
         ModifyAnswerDto modifyAnswerDto = new ModifyAnswerDto(answer);
         return new ApiResponse<>("200", "Normal Challenge modified successfully", modifyAnswerDto);
     }
@@ -119,14 +113,11 @@ public class ChallengeController {
     // 그룹 챌린지 조회
     @GetMapping("/group")
     public ApiResponse<GroupChallengeDto> getGroupChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.GROUP_CHILD, ChallengeType.GROUP_PARENT);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
         }
-        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유0형에 맞지 않으면 오류 반환
-        if (!challenge.getChallengeType().equals(ChallengeType.GROUP_CHILD) && !challenge.getChallengeType().equals(ChallengeType.GROUP_PARENT)) {
-            return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
-        }
+        Challenge challenge = challengeResponse.getData();
 
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
         Long challengeDate = answerService.findDateByChallengeMember(challenge, member);
@@ -139,23 +130,19 @@ public class ChallengeController {
 
         GroupChallengeDto groupChallengeDto = challengeService.filterChallengesByMemberRole(challenge, challengeDate, isComplete, allAnswers);
         return new ApiResponse<>("200", "Group Challenge found successfully", groupChallengeDto);
-
     }
 
     // 그룹 챌린지 답변 수정
     @PostMapping("/group")
-    public  ApiResponse<ModifyAnswerDto> saveGroupAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
-        Long challengeId = request.getChallengeId();
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
+    public ApiResponse<ModifyAnswerDto> saveGroupAnswer(@RequestBody SaveAnswerRequest request) throws Exception {
+        ApiResponse<Challenge> challengeResponse = validateChallenge(request.getChallengeId(), ChallengeType.GROUP_CHILD, ChallengeType.GROUP_PARENT);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
         }
-        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유0형에 맞지 않으면 오류 반환
-        if (!challenge.getChallengeType().equals(ChallengeType.GROUP_CHILD) && !challenge.getChallengeType().equals(ChallengeType.GROUP_PARENT)) {
-            return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
-        }
+        Challenge challenge = challengeResponse.getData();
+
         String answerContent = request.getAnswerContent();
-        Answer answer = answerService.modifyAnswer(challengeId, answerContent);
+        Answer answer = answerService.modifyAnswer(challenge.getChallengeId(), answerContent);
         ModifyAnswerDto modifyAnswerDto = new ModifyAnswerDto(answer);
         return new ApiResponse<>("200", "Group Challenge modified successfully", modifyAnswerDto);
     }
@@ -163,55 +150,44 @@ public class ChallengeController {
     // 사진 챌린지 조회
     @GetMapping("/photo")
     public ApiResponse<PhotoChallengeDto> getPhotoChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.PHOTO);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
         }
-        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유0형에 맞지 않으면 오류 반환
-        if (!challenge.getChallengeType().equals(ChallengeType.PHOTO)) {
-            return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
-        }
+        Challenge challenge = challengeResponse.getData();
 
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
-        ChallengeDetailsDto details = answerService.getChallengeDetails(challenge, member);
+        Long challengeDate = answerService.findDateByChallengeMember(challenge, member);
+        boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
+        List<Answer> allAnswers = answerService.findAnswersByChallenges(challenge, member);     // 특정 사진 챌린지에 매핑된 answer list 찾기
 
         // 챌린지 조회 시 조회수 증가
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
         luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
-        PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, details.isComplete(), details.getChallengeDate(), details.getAnswers());
 
-        return new ApiResponse<>("200", "Photo challenge found successfully", photoChallengeDto);
+        PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, isComplete, challengeDate, allAnswers);
+        return new ApiResponse<>("200", "Photo Challenge found successfully", photoChallengeDto);
     }
 
-    // 사진 챌린지 수정
+    // 사진 챌린지 답변 저장
     @PostMapping("/photo")
-    public ApiResponse<Map<String, String>> savePhotoAnswer(
-            @RequestParam("challengeId") Long challengeId,
-            @RequestPart("answer") MultipartFile answerFile) throws Exception {
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge not found for the provided challengeId", null);
+    public ApiResponse<ModifyAnswerDto> savePhotoAnswer(@RequestParam("challengeId") Long challengeId,
+                                                        @RequestParam("answerFile") MultipartFile answerFile) throws Exception {
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.PHOTO);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
         }
-        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유0형에 맞지 않으면 오류 반환
-        if (!challenge.getChallengeType().equals(ChallengeType.PHOTO)) {
-            return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
-        }
+        Challenge challenge = challengeResponse.getData();
 
-        if (answerFile == null || answerFile.isEmpty()) {
-            return new ApiResponse<>("400", "Answer file is missing", null);
+        ApiResponse<Void> fileResponse = validateFile(answerFile);
+        if (!fileResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(fileResponse.getStatus(), fileResponse.getMessage(), null);
         }
 
-        // S3에 파일 업로드
-        String uploadImageUrl = awsS3Service.uploadFile(answerFile);
-
-        // Answer 업데이트
-        Answer answer = answerService.modifyAnswer(challengeId, uploadImageUrl);
-
-        // Map 형태로 답변 URL 반환
-        Map<String, String> responseData = new HashMap<>();
-        responseData.put("answer", uploadImageUrl);
-
-        return new ApiResponse<>("200", "Photo Challenge modified successfully", responseData);
+        String fileUrl = awsS3Service.uploadFile(answerFile);
+        Answer answer = answerService.modifyAnswer(challenge.getChallengeId(), fileUrl);
+        ModifyAnswerDto modifyAnswerDto = new ModifyAnswerDto(answer);
+        return new ApiResponse<>("200", "Photo Challenge modified successfully", modifyAnswerDto);
     }
 
     // 화상 통화 챌린지 조회
@@ -325,23 +301,22 @@ public class ChallengeController {
     // 음성 챌린지 조회
     @GetMapping("/voice")
     public ApiResponse<VoiceChallengeDto> getVoiceChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge with provided challengeId not found", null);
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.VOICE1, ChallengeType.VOICE2, ChallengeType.VOICE3, ChallengeType.VOICE4);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
         }
-        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유0형에 맞지 않으면 오류 반환
-        if (!challenge.getChallengeType().equals(ChallengeType.VOICE1) && !challenge.getChallengeType().equals(ChallengeType.VOICE2) && !challenge.getChallengeType().equals(ChallengeType.VOICE3) && !challenge.getChallengeType().equals(ChallengeType.VOICE4)) {
-            return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
-        }
+        Challenge challenge = challengeResponse.getData();
 
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
-        ChallengeDetailsDto details = answerService.getChallengeDetails(challenge, member);
+        Long challengeDate = answerService.findDateByChallengeMember(challenge, member);
+        boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
+        List<Answer> allAnswers = answerService.findAnswersByChallenges(challenge, member);     // 특정 음성 챌린지에 매핑된 answer list 찾기
 
         // 챌린지 조회 시 조회수 증가
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
         luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
-        VoiceChallengeDto voiceChallengeDto = new VoiceChallengeDto(challenge, details.isComplete(), details.getChallengeDate(), details.getAnswers());
 
+        VoiceChallengeDto voiceChallengeDto = new VoiceChallengeDto(challenge, isComplete, challengeDate, allAnswers);
         return new ApiResponse<>("200", "Voice Challenge found successfully", voiceChallengeDto);
     }
 
@@ -351,16 +326,15 @@ public class ChallengeController {
             @RequestParam("challengeId") Long challengeId,
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
 
-        Challenge challenge = challengeService.findChallengeById(challengeId);
-        if (challenge == null) {
-            return new ApiResponse<>("404", "Challenge with provided challengeId not found", null);
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.VOICE1, ChallengeType.VOICE2, ChallengeType.VOICE3, ChallengeType.VOICE4);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
         }
-        // 챌린지 유형에 맞게 접근하도록 추가 : 챌린지ID로 가져온 챌린지가 Mapping된 챌린지 유0형에 맞지 않으면 오류 반환
-        if (!challenge.getChallengeType().equals(ChallengeType.VOICE1) && !challenge.getChallengeType().equals(ChallengeType.VOICE2) && !challenge.getChallengeType().equals(ChallengeType.VOICE3) && !challenge.getChallengeType().equals(ChallengeType.VOICE4)) {
-            return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
-        }
-        if (answerFile == null || answerFile.isEmpty()) {
-            return new ApiResponse<>("400", "Answer file is missing", null);
+        Challenge challenge = challengeResponse.getData();
+
+        ApiResponse<Void> fileResponse = validateFile(answerFile);
+        if (!fileResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(fileResponse.getStatus(), fileResponse.getMessage(), null);
         }
 
         // S3에 파일 업로드
@@ -375,6 +349,26 @@ public class ChallengeController {
 
 
         return new ApiResponse<>("200", "Voice Challenge modified successfully", responseData);
+    }
+
+    // 챌린지 검증 헬퍼 메서드
+    private ApiResponse<Challenge> validateChallenge(Long challengeId, ChallengeType... validTypes) {
+        Challenge challenge = challengeService.findChallengeById(challengeId);
+        if (challenge == null) {
+            return new ApiResponse<>("404", "Challenge with provided challengeId not found", null);
+        }
+        if (!Arrays.asList(validTypes).contains(challenge.getChallengeType())) {
+            return new ApiResponse<>("400", "Invalid challenge type for the provided challengeId", null);
+        }
+        return new ApiResponse<>("200", "Challenge validated", challenge);
+    }
+
+    // 파일 검증 헬퍼 메서드
+    private ApiResponse<Void> validateFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return new ApiResponse<>("400", "Answer file is missing", null);
+        }
+        return new ApiResponse<>("200", "File validated", null);
     }
 
 }
