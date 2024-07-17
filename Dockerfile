@@ -16,5 +16,8 @@ ENV TZ=Asia/Seoul
 ENV FFMPEG_PATH=/usr/bin/ffmpeg
 ENV FFPROBE_PATH=/usr/bin/ffprobe
 
+# 포트 8080 노출
+EXPOSE 8080
+
 # 기본 프로파일 실행 명령어
 ENTRYPOINT ["java", "-jar", "mooluck-spring.jar", "-Dspring.profiles.active=docker", "-Duser.timezone=Asia/Seoul"]
