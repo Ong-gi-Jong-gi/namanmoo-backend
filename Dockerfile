@@ -1,5 +1,3 @@
-# Docker file
-
 # jdk17 Image Start
 FROM openjdk:17
 
@@ -9,11 +7,8 @@ ARG JAR_FILE=build/libs/*.jar
 # jar File Copy
 COPY ${JAR_FILE} mooluck-spring.jar
 
-# ffmpeg 다운로드 및 설치
-RUN wget -q -O /usr/bin/ffmpeg https://ffmpeg.org/releases/ffmpeg-4.4.tar.gz && \
-    tar -xvf /usr/bin/ffmpeg -C /usr/bin/ && \
-    chmod +x /usr/bin/ffmpeg && \
-    ln -s /usr/bin/ffmpeg /usr/bin/ffprobe
+# 필요한 패키지 설치
+RUN apk add --no-cache ffmpeg
 
 ENV TZ=Asia/Seoul
 ENV FFMPEG_PATH=/usr/bin/ffmpeg
