@@ -52,7 +52,7 @@ public class ChallengeController {
             return new ApiResponse<>("404", "Lucky Not Found", null);
         }
         CurrentLuckyDto currentLuckyDto = new CurrentLuckyDto(DateUtil.getInstance().stringToTimestamp(lucky.getChallengeStartDate(),DateUtil.FORMAT_4));
-        return new ApiResponse<>("200", "Success",currentLuckyDto);
+        return new ApiResponse<>("200", "Success", currentLuckyDto);
     }
 
     // 오늘의 챌린지 조회
