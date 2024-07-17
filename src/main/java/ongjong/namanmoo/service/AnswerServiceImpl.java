@@ -102,6 +102,9 @@ public class AnswerServiceImpl implements AnswerService {
     }
 
     private Answer getAnswer(Member member, Challenge challenge, String strChallengeDate) {
+        // EnumSet으로 코드를 타입을 묶어 중복 코드 제거
+        EnumSet<ChallengeType> voiceTypes = EnumSet.of(ChallengeType.VOICE1, ChallengeType.VOICE2, ChallengeType.VOICE3, ChallengeType.VOICE4);
+        EnumSet<ChallengeType> groupTypes = EnumSet.of(ChallengeType.GROUP_CHILD,ChallengeType.GROUP_PARENT);
         Answer answer = new Answer(); // Answer 객체 생성
         answer.setMember(member);
         answer.setChallenge(challenge);
@@ -110,21 +113,13 @@ public class AnswerServiceImpl implements AnswerService {
 
         if (challenge.getChallengeType()== ChallengeType.NORMAL) {
             answer.setAnswerType(AnswerType.NORMAL);
-        } else if (challenge.getChallengeType()== ChallengeType.GROUP_CHILD) {
-            answer.setAnswerType(AnswerType.GROUP);
-        } else if (challenge.getChallengeType()== ChallengeType.GROUP_PARENT) {
+        } else if (groupTypes.contains(challenge.getChallengeType())) {
             answer.setAnswerType(AnswerType.GROUP);
         } else if (challenge.getChallengeType()== ChallengeType.FACETIME) {
             answer.setAnswerType(AnswerType.FACETIME);
         } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
             answer.setAnswerType(AnswerType.PHOTO);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE1) {
-            answer.setAnswerType(AnswerType.VOICE);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE2) {
-            answer.setAnswerType(AnswerType.VOICE);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE3) {
-            answer.setAnswerType(AnswerType.VOICE);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE4) {
+        } else if (voiceTypes.contains(challenge.getChallengeType())) {
             answer.setAnswerType(AnswerType.VOICE);
         }
         return answer;

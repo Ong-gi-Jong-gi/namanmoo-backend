@@ -15,7 +15,6 @@ import ongjong.namanmoo.dto.openAI.TranscriptionRequest;
 import ongjong.namanmoo.dto.openAI.WhisperTranscriptionResponse;
 import ongjong.namanmoo.global.security.util.CustomMultipartFile;
 import ongjong.namanmoo.service.*;
-import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -356,9 +355,6 @@ public class ChallengeController {
             @RequestParam("challengeId") Long challengeId,
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
         // challengeId RequestParam으로 변경해서 테스트
-
-
-
         if (answerFile == null || answerFile.isEmpty()) {
             return new ApiResponse<>("400", "Answer file is missing", null);
         }

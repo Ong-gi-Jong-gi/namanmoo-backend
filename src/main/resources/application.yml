@@ -60,7 +60,7 @@ openai-service:
 #ffprobe:
 #  path: /usr/bin/ffprobe
 
-#ffmpeg:
-#  path: C:/Users/고동엽/Downloads/ffmpeg-7.0.1-essentials_build/bin/ffmpeg.exe
-#ffprobe:
-#  path: C:/Users/고동엽/Downloads/ffmpeg-7.0.1-essentials_build/bin/ffprobe.exe
+ffmpeg:
+  path: C:/Users/고동엽/Downloads/ffmpeg-7.0.1-essentials_build/bin/ffmpeg.exe
+ffprobe:
+  path: C:/Users/고동엽/Downloads/ffmpeg-7.0.1-essentials_build/bin/ffprobe.exe
