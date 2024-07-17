@@ -225,7 +225,7 @@ public class ChallengeController {
             String uploadedUrl = awsS3Service.uploadFile(answerFile);
 
             // Answer 업데이트
-            Answer answer = answerService.modifyAnswer(challengeId, uploadedUrl);
+            answerService.modifyAnswer(challengeId, uploadedUrl);
 
             // 그룹별 4개의 이미지가 모였는지 확인 및 병합
             sharedFileService.checkAndMergeImages(challenge.getChallengeNum(), lucky);
@@ -283,7 +283,7 @@ public class ChallengeController {
         String uploadVoiceUrl = awsS3Service.uploadFile(answerFile);
 
         // Answer 업데이트
-        Answer answer = answerService.modifyAnswer(challengeId, uploadVoiceUrl);
+        answerService.modifyAnswer(challengeId, uploadVoiceUrl);
 
         // Map 형태로 답변 URL 반환
         Map<String, String> responseData = new HashMap<>();

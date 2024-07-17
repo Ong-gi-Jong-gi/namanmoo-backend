@@ -68,7 +68,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Transactional(readOnly = true)
     public List<Challenge> groupChallengeExceptionRemove(List<Challenge> challengeList, Member member) throws Exception{
         Family family = member.getFamily();
-        List<Member> members = memberRepository.findByFamilyFamilyId(family.getFamilyId());
+        List<Member> members = memberRepository.findByFamilyFamilyIdOrderByMemberIdAsc(family.getFamilyId());
         int count = 0;
         for(Member member1: members){
             if (member1 == member){
