@@ -45,9 +45,6 @@ public class ChallengeController {
     private final OpenAIClientService openAIClientService;
     private final FFmpegService ffmpegService;
 
-    @Value("${spring.servlet.multipart.location}")
-    private String tempLocation;
-
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
         Long challengeDate = request.getChallengeDate();
