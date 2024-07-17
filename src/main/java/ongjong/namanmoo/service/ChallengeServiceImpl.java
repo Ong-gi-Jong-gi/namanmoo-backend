@@ -68,7 +68,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Transactional(readOnly = true)
     public List<Challenge> groupChallengeExceptionRemove(List<Challenge> challengeList, Member member) throws Exception{
         Family family = member.getFamily();
-        List<Member> members = memberRepository.findByFamilyFamilyId(family.getFamilyId());
+        List<Member> members = memberRepository.findByFamilyFamilyIdOrderByMemberIdAsc(family.getFamilyId());
         int count = 0;
         for(Member member1: members){
             if (member1 == member){
@@ -159,7 +159,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         if(challenges.size() == 1){
             return challenges.get(0);       // 오늘의 챌린지리스트 사이즈가 1이라면 첫번째 챌린지 반환
         }
-        else if(challenges.size() == 2) {    // 오늘의 챌린지리스트 사이즈가 2일 경우
+        else if(challenges.size() == 2) {    // 오늘의 챌린지리스트 사이즈가 2일 경우 -> GROUP 챌린지
             Challenge challenge1 = challenges.get(0);
             Challenge challenge2 = challenges.get(1);
             if (challenge1.getChallengeType() == ChallengeType.GROUP_PARENT) {
@@ -176,9 +176,9 @@ public class ChallengeServiceImpl implements ChallengeService {
                 }
             }
         }
-        else if(challenges.size() == 4){
+        else if(challenges.size() == 4){    // 오늘의 챌린지리스트 사이즈가 4일 경우 -> VOICE 챌린지
             List<Member> memberList = memberRepository.findByFamilyFamilyId(member.getFamily().getFamilyId());
-            for(int i = 0; i < memberList.size(); i++){
+            for(int i = 0; i < memberList.size(); i++) {
                 if(memberList.get(i) == member){
                     return challenges.get(i%4);
                 }
@@ -243,7 +243,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         return new GroupChallengeDto(challenge.getChallengeNum().toString(), timeStamp, isComplete, parentChallenge, childrenChallenge);
     }
 
-    // 오늘의 챌린지 반환 .그룹챌린지일 경우 같은 번호의 챌린지가 2개 이므로 리스트로 반환
+    // 오늘의 챌린지 반환 (그룹챌린지일 경우 같은 번호의 챌린지가 2개 이므로 리스트로 반환, 음성챌린지의 경우 4개)
     @Transactional(readOnly = true)
     public CurrentChallengeDto findCurrentChallenges(Long familyId, Long challengeDate) throws Exception {
         boolean isDone = false;
@@ -281,6 +281,17 @@ public class ChallengeServiceImpl implements ChallengeService {
         Integer maxViews = 0;
         Integer mostViewedChallengeNum = null;
 
+        Member currentMember = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
+        Family family = lucky.getFamily();
+        List<Member> members = memberRepository.findByFamilyFamilyIdOrderByMemberIdAsc(family.getFamilyId());
+        int count = 0;
+        for(Member member1: members){
+            if (member1 == currentMember){
+                break;
+            }
+            count++;
+        }
+
         // 모든 챌린지의 조회수를 총합하여 계산
         Map<Integer, Integer> totalViewsByChallengeNum = new HashMap<>();
 
@@ -312,6 +323,22 @@ public class ChallengeServiceImpl implements ChallengeService {
                         if (memberRole.equals("엄마") || memberRole.equals("아빠")) {
                             return challenge;
                         }
+                    } else if (challenge.getChallengeType() == ChallengeType.VOICE1) {
+                        if (count % 4 == 0){
+                            return challenge;
+                        }
+                    } else if (challenge.getChallengeType() == ChallengeType.VOICE2) {
+                        if (count % 4 == 1){
+                            return challenge;
+                        }
+                    } else if (challenge.getChallengeType() == ChallengeType.VOICE3) {
+                        if (count % 4 == 2){
+                            return challenge;
+                        }
+                    } else if (challenge.getChallengeType() == ChallengeType.VOICE4) {
+                        if (count % 4 == 3){
+                            return challenge;
+                        }
                     } else {
                         // For other challenge types, return the challenge directly
                         return challenge;
@@ -322,6 +349,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         return null;
     }
 
+    // 모든 가족 구성원이 가장 빠르게 답한 챌린지를 반환
     @Override
     public Challenge findFastestAnsweredChallenge(Lucky lucky) throws Exception {
         Family family = lucky.getFamily();
@@ -330,15 +358,20 @@ public class ChallengeServiceImpl implements ChallengeService {
         long shortestTime = Long.MAX_VALUE;
 
         for (Challenge challenge : challenges) {
-            if (challenge.getChallengeType() == ChallengeType.GROUP_CHILD || challenge.getChallengeType() == ChallengeType.GROUP_PARENT) { // GROUP 챌린지일 때
+            if (challenge.getChallengeType() == ChallengeType.GROUP_CHILD ||   // 답변 당 여러개의 챌린지ID를 가지는 질문들 (ex. GROUP, VOICE)
+                    challenge.getChallengeType() == ChallengeType.GROUP_PARENT ||
+                    challenge.getChallengeType() == ChallengeType.VOICE1 ||
+                    challenge.getChallengeType() == ChallengeType.VOICE2 ||
+                    challenge.getChallengeType() == ChallengeType.VOICE3 ||
+                    challenge.getChallengeType() == ChallengeType.VOICE4) {
                 // 같은 challengeNum을 가지는 모든 챌린지 조회
                 List<Challenge> relatedChallenges = challengeRepository.findByChallengeNum(challenge.getChallengeNum());
                 log.info("그룹 챌린지 사이즈 " + relatedChallenges.size());
 
                 int checkSize = 0;
-                for (Challenge groupChallenge : relatedChallenges) {
-                    List<Answer> groupAnswers = answerRepository.findByChallengeAndMemberFamily(groupChallenge, family);
-                    checkSize += groupAnswers.size();
+                for (Challenge relatedChallenge : relatedChallenges) {
+                    List<Answer> relatedAnswers = answerRepository.findByChallengeAndMemberFamily(relatedChallenge, family);
+                    checkSize += relatedAnswers.size();
                 }
                 if (checkSize != lucky.getFamily().getMembers().size()) {
                     continue;
@@ -349,20 +382,39 @@ public class ChallengeServiceImpl implements ChallengeService {
                     List<Answer> answers = answerRepository.findByChallengeAndMemberFamily(relatedChallenge, family);
                     log.info("Challenge ID: " + relatedChallenge.getChallengeId() + ", Answer count: " + answers.size());
 
-                    long timeToAnswer = calculateLatestResponseTime(lucky, relatedChallenge); // 챌린지별 가장 늦은 응답 시간 계산
-                    log.info("Challenge ID: " + relatedChallenge.getChallengeId() + ", Time to answer: " + timeToAnswer);
-                    if (timeToAnswer < shortestTime) {
-                        shortestTime = timeToAnswer;
-                        fastestChallenge = relatedChallenge;
+                    // 해당 챌린지에 대해 모든 가족 구성원이 답변 내용을 입력했는지 확인
+                    boolean allMembersAnswered = true;
+                    for (Answer answer : answers) {
+                        if (answer.getAnswerContent() == null || answer.getAnswerContent().isEmpty()) {
+                            allMembersAnswered = false;
+                            break;
+                        }
+                    }
+
+                    if (allMembersAnswered) {
+                        long timeToAnswer = calculateLatestResponseTime(lucky, relatedChallenge); // 챌린지별 가장 늦은 응답 시간 계산
+                        log.info("Challenge ID: " + relatedChallenge.getChallengeId() + ", Time to answer: " + timeToAnswer);
+                        if (timeToAnswer < shortestTime) {
+                            shortestTime = timeToAnswer;
+                            fastestChallenge = relatedChallenge;
+                        }
                     }
                 }
-            } else { // 그룹이 아닌 모든 챌린지
+            } else { // 답변 당 하나의 챌린지ID만 가지는 질문들 (ex. NORMAL, PHOTO, FACETIME)
                 // 해당 챌린지에 대한 모든 답변 가져오기
                 List<Answer> answers = answerRepository.findByChallengeAndMemberFamily(challenge, family);
                 log.info("Challenge ID: " + challenge.getChallengeId() + ", Answer count: " + answers.size());
 
-                // 모든 가족 구성원이 답변했는지 확인
-                if (answers.size() == lucky.getFamily().getMembers().size()) {
+                // 해당 챌린지에 대해 모든 가족 구성원이 답변 내용을 입력했는지 확인
+                boolean allMembersAnswered = true;
+                for (Answer answer : answers) {
+                    if (answer.getAnswerContent() == null || answer.getAnswerContent().isEmpty()) {
+                        allMembersAnswered = false;
+                        break;
+                    }
+                }
+
+                if (allMembersAnswered) {
                     long timeToAnswer = calculateLatestResponseTime(lucky, challenge); // 챌린지별 가장 늦은 응답 시간 계산
                     log.info("Challenge ID: " + challenge.getChallengeId() + ", Time to answer: " + timeToAnswer);
                     if (timeToAnswer < shortestTime) {
@@ -376,6 +428,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         return fastestChallenge;
     }
 
+    // 챌린지에 달린 답변 중, 가장 늦게 달린 답변 시간을 계산
     @Override
     public long calculateLatestResponseTime(Lucky lucky, Challenge challenge) throws Exception {
         long latestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수
@@ -402,7 +455,7 @@ public class ChallengeServiceImpl implements ChallengeService {
                         Date modifiedTime = format9.parse(modifiedDate);
                         log.info("답변 수정 시간: {}, 답변 생성 시간: {}", modifiedTime.getTime(), createTime.getTime());
 
-                        long responseTime = Math.abs(modifiedTime.getTime() - createTime.getTime());
+                        long responseTime = Math.abs(modifiedTime.getTime() - createTime.getTime()); // 원래라면 수정 날짜가 답변이 열리는 날짜보다 나중이기 때문에 음수가 나올일이 없지만 올바른 시연을 위해 절대값 처리
                         log.info("회원 ID: {}, 응답 시간: {}", member.getMemberId(), responseTime);
 
                         if (responseTime > latestResponseTimeForMember) {

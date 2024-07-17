@@ -34,9 +34,9 @@ public class ImageMerger {
         BufferedImage mergedImage = new BufferedImage(finalWidth, finalHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = mergedImage.createGraphics();
 
-        // 배경을 흰색으로 설정 (투명 배경을 원하면 이 부분을 제거)
-        g.setColor(Color.WHITE);
-        g.fillRect(0, 0, finalWidth, finalHeight);
+//        // 배경을 흰색으로 설정 (투명 배경을 원하면 이 부분을 제거)
+//        g.setColor(Color.WHITE);
+//        g.fillRect(0, 0, finalWidth, finalHeight);
 
         // 이미지 병합 및 중앙 정렬 (여유 공간 포함)
         for (int i = 0; i < size; i++) {

@@ -6,9 +6,11 @@ import java.util.List;
 
 @Data
 public class MemberFacetimeDto {
+    private long challengeDate;
     private List<String> video;
 
-    public MemberFacetimeDto(List<String> facetimeAnswerList){
-        this.video = facetimeAnswerList;
+    public MemberFacetimeDto(long challengeDate, List<String> video){
+        this.challengeDate = challengeDate;
+        this.video = video;
     }
 }
