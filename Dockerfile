@@ -1,23 +1,25 @@
-# Docker file
+# Base image
+FROM ubuntu:latest
 
-# jdk17 Image Start
-FROM openjdk:17
+# Install OpenJDK 17 and FFmpeg
+RUN apt-get update && \
+    apt-get install -y openjdk-17-jdk ffmpeg && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # 인자 설정 - JAR_FILE
 ARG JAR_FILE=build/libs/*.jar
 
-# jar File Copy
+# JAR 파일을 이미지에 복사
 COPY ${JAR_FILE} mooluck-spring.jar
 
-# 필요한 패키지 설치
-RUN apt-get update && apt-get install -y ffmpeg
-
+# 환경 변수 설정
 ENV TZ=Asia/Seoul
 ENV FFMPEG_PATH=/usr/bin/ffmpeg
 ENV FFPROBE_PATH=/usr/bin/ffprobe
 
-# 포트 8080 노출
+# 포트 노출
 EXPOSE 8080
 
 # 기본 프로파일 실행 명령어
-ENTRYPOINT ["java", "-jar", "mooluck-spring.jar", "-Dspring.profiles.active=docker", "-Duser.timezone=Asia/Seoul"]
+ENTRYPOINT ["java", "-jar", "/mooluck-spring.jar"]
