@@ -8,10 +8,7 @@ import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.*;
 import ongjong.namanmoo.domain.challenge.*;
 import ongjong.namanmoo.dto.challenge.ChallengeDetailsDto;
-import ongjong.namanmoo.dto.recap.MemberAppreciationDto;
-import ongjong.namanmoo.dto.recap.MemberDto;
-import ongjong.namanmoo.dto.recap.MemberPhotosAnswerDto;
-import ongjong.namanmoo.dto.recap.MemberYouthAnswerDto;
+import ongjong.namanmoo.dto.recap.*;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
 import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
@@ -368,24 +365,27 @@ public class AnswerServiceImpl implements AnswerService {
     // facetime에 대한 answerList를 반환
     @Override
     @Transactional(readOnly = true)
-    public List<String> getFacetimeAnswerList(Long luckyId) throws Exception {
+    public MemberFacetimeDto getFacetimeAnswerList(Long luckyId) throws Exception {
         Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
-        Lucky lucky = luckyRepository.getLuckyByLuckyId(luckyId).orElseThrow(() -> new Exception("luckyID not found"));
-        Family family =lucky.getFamily();
+        Lucky lucky = luckyRepository.getLuckyByLuckyId(luckyId).orElseThrow(() -> new Exception("luckyId not found"));
+        Family family = lucky.getFamily();
         List<Member> memberList = memberRepository.findByFamilyFamilyId(family.getFamilyId());
-        int number = luckyService.findCurrentLuckyLifetime(currentUser.get().getFamily().getFamilyId());
-        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum((currentUser.get().getFamily().getFamilyId())), number);
+        int challengeLength = luckyService.findCurrentLuckyLifetime(currentUser.get().getFamily().getFamilyId());
+        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum((currentUser.get().getFamily().getFamilyId())), challengeLength);
 
         List<String> facetimeAnswerList = new ArrayList<>();
+        String challengeDate = null;
         for (Challenge challenge : challengeList){
             if(challenge.getChallengeType() == ChallengeType.FACETIME){
                 for(Member member : memberList){
                     Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge,member);
                     if(answer.get().getAnswerContent() != null){
                         facetimeAnswerList.add(answer.get().getAnswerContent());
+                        challengeDate = answer.get().getCreateDate();
                     }
                 }
-                return facetimeAnswerList;
+                long challengeTimestamp = DateUtil.getInstance().stringToTimestamp(challengeDate, DateUtil.FORMAT_4);
+                return new MemberFacetimeDto(challengeTimestamp, facetimeAnswerList);
             }
         }
         return null;
