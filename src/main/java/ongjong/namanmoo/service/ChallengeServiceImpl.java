@@ -68,7 +68,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Transactional(readOnly = true)
     public List<Challenge> groupChallengeExceptionRemove(List<Challenge> challengeList, Member member) throws Exception{
         Family family = member.getFamily();
-        List<Member> members = memberRepository.findByFamilyFamilyId(family.getFamilyId());
+        List<Member> members = memberRepository.findByFamilyFamilyIdOrderByMemberIdAsc(family.getFamilyId());
         int count = 0;
         for(Member member1: members){
             if (member1 == member){
@@ -281,6 +281,17 @@ public class ChallengeServiceImpl implements ChallengeService {
         Integer maxViews = 0;
         Integer mostViewedChallengeNum = null;
 
+        Member currentMember = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
+        Family family = lucky.getFamily();
+        List<Member> members = memberRepository.findByFamilyFamilyIdOrderByMemberIdAsc(family.getFamilyId());
+        int count = 0;
+        for(Member member1: members){
+            if (member1 == currentMember){
+                break;
+            }
+            count++;
+        }
+
         // 모든 챌린지의 조회수를 총합하여 계산
         Map<Integer, Integer> totalViewsByChallengeNum = new HashMap<>();
 
@@ -312,15 +323,22 @@ public class ChallengeServiceImpl implements ChallengeService {
                         if (memberRole.equals("엄마") || memberRole.equals("아빠")) {
                             return challenge;
                         }
-                        // TODO: 음성챌린지 회원에 맞게 보여야함
-//                    } else if (challenge.getChallengeType() == ChallengeType.VOICE1) {
-//
-//                    } else if (challenge.getChallengeType() == ChallengeType.VOICE2) {
-//
-//                    } else if (challenge.getChallengeType() == ChallengeType.VOICE3) {
-//
-//                    } else if (challenge.getChallengeType() == ChallengeType.VOICE4) {
-//
+                    } else if (challenge.getChallengeType() == ChallengeType.VOICE1) {
+                        if (count % 4 == 0){
+                            return challenge;
+                        }
+                    } else if (challenge.getChallengeType() == ChallengeType.VOICE2) {
+                        if (count % 4 == 1){
+                            return challenge;
+                        }
+                    } else if (challenge.getChallengeType() == ChallengeType.VOICE3) {
+                        if (count % 4 == 2){
+                            return challenge;
+                        }
+                    } else if (challenge.getChallengeType() == ChallengeType.VOICE4) {
+                        if (count % 4 == 3){
+                            return challenge;
+                        }
                     } else {
                         // For other challenge types, return the challenge directly
                         return challenge;

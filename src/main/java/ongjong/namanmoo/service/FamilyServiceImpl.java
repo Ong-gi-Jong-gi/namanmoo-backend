@@ -75,6 +75,9 @@ public class FamilyServiceImpl implements FamilyService {
         Member currentUser = memberRepository.findByLoginId(currentLoginId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found for loginId: " + currentLoginId));
 
+        if (currentUser.getFamily() == null) {
+            return null;
+        }
         Long familyId = currentUser.getFamily().getFamilyId();
         List<Member> members = memberRepository.findByFamilyFamilyId(familyId);
         return convertMembersToDto(members);
