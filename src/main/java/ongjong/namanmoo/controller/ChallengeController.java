@@ -43,6 +43,7 @@ public class ChallengeController {
         return new ApiResponse<>("200", "Challenge created successfully", null);
     }
 
+    // 현재 진행중인 챌린지 시작 날짜를 반환
     @GetMapping("/startDate")
     public ApiResponse<CurrentLuckyDto> getChallengeStartDate(){
         Long familyId = familyService.findFamilyId();
@@ -54,7 +55,8 @@ public class ChallengeController {
         return new ApiResponse<>("200", "Success",currentLuckyDto);
     }
 
-    @GetMapping("/today")     // 오늘의 챌린지 조회
+    // 오늘의 챌린지 조회
+    @GetMapping("/today")
     public ApiResponse<CurrentChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         Member member = memberService.findMemberByLoginId(); // 로그인한 member
         CurrentChallengeDto currentChallenge = challengeService.findChallengesByMemberId(challengeDate, member);
@@ -65,7 +67,8 @@ public class ChallengeController {
         return new ApiResponse<>("200", "Challenge found successfully", currentChallenge);
     }
 
-    @GetMapping("/list")        // 챌린지 리스트 조회 , 챌린지 리스트는 lucky가 여러개 일때를 고려하여 죽은 럭키 개수 * 30 +1 부터 챌린지가 보여져야한다.
+    // 챌린지 리스트 조회
+    @GetMapping("/list")        // 챌린지 리스트는 lucky가 여러개 일때를 고려하여 죽은 럭키 개수 * 30 +1 부터 챌린지가 보여져야한다.
     public ApiResponse<List<ChallengeListDto>> getChallengeList(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         List<Challenge> challenges = challengeService.findChallenges(challengeDate); //
 
@@ -84,7 +87,8 @@ public class ChallengeController {
         return new ApiResponse<>("200", "Challenge list found successfully", challengeList);
     }
 
-    @GetMapping("/normal")      // 일반 챌린지 조회
+    // 일반 챌린지 조회
+    @GetMapping("/normal")
     public ApiResponse<NormalChallengeDto> getNormalChallenge(@RequestParam("challengeId") Long challengeId) throws Exception {
         ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.NORMAL);
         if (!challengeResponse.getStatus().equals("200")) {
