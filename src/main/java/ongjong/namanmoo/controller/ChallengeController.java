@@ -196,7 +196,7 @@ public class ChallengeController {
     // 사진 챌린지 답변 저장
     @PostMapping("/photo")
     public ApiResponse<ModifyAnswerDto> savePhotoAnswer(@RequestParam("challengeId") Long challengeId,
-                                                        @RequestParam("answerFile") MultipartFile answerFile) throws Exception {
+                                                        @RequestParam("answer") MultipartFile answerFile) throws Exception {
         ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.PHOTO);
         if (!challengeResponse.getStatus().equals("200")) {
             return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
