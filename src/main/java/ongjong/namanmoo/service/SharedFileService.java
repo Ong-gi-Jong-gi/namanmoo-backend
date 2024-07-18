@@ -301,6 +301,9 @@ public class SharedFileService {
             mergedFile.setLucky(lucky);
 
             sharedFileRepository.save(mergedFile); // 데이터베이스에 새 SharedFile 저장
+
+            // 디버깅 로그 추가
+            System.out.println("Merged image saved: " + mergedImageUrl);
         }
     }
 
