@@ -85,7 +85,7 @@ class JwtAuthenticationProcessingFilterTest {
                 .name("Member1")
                 .nickname("Nickname1")
                 .logInRole(LogInRole.USER)
-                .role(MemberRole.SON)
+                .role(String.valueOf(MemberRole.SON))
                 .build());
         clear();
     }
