@@ -358,52 +358,27 @@ public class ChallengeServiceImpl implements ChallengeService {
         long shortestTime = Long.MAX_VALUE;
 
         for (Challenge challenge : challenges) {
-            if (challenge.getChallengeType() == ChallengeType.GROUP_CHILD ||   // 답변 당 여러개의 챌린지ID를 가지는 질문들 (ex. GROUP, VOICE)
-                    challenge.getChallengeType() == ChallengeType.GROUP_PARENT ||
-                    challenge.getChallengeType() == ChallengeType.VOICE1 ||
-                    challenge.getChallengeType() == ChallengeType.VOICE2 ||
-                    challenge.getChallengeType() == ChallengeType.VOICE3 ||
-                    challenge.getChallengeType() == ChallengeType.VOICE4) {
-                // 같은 challengeNum을 가지는 모든 챌린지 조회
-                List<Challenge> relatedChallenges = challengeRepository.findByChallengeNum(challenge.getChallengeNum());
-                log.info("그룹 챌린지 사이즈 " + relatedChallenges.size());
+            List<Challenge> relatedChallenges = challengeRepository.findByChallengeNum(challenge.getChallengeNum());
+            int totalMembers = family.getMembers().size();
 
-                int checkSize = 0;
-                for (Challenge relatedChallenge : relatedChallenges) {
-                    List<Answer> relatedAnswers = answerRepository.findByChallengeAndMemberFamily(relatedChallenge, family);
-                    checkSize += relatedAnswers.size();
+            // 모든 관련 챌린지에 대해 모든 가족 구성원이 답변을 완료했는지 확인
+            boolean allRelatedChallengesAnswered = true;
+            for (Challenge relatedChallenge : relatedChallenges) {
+                List<Answer> relatedAnswers = answerRepository.findByChallengeAndMemberFamily(relatedChallenge, family);
+                if (relatedAnswers.size() != totalMembers) {
+                    allRelatedChallengesAnswered = false;
+                    break;
                 }
-                if (checkSize != lucky.getFamily().getMembers().size()) {
-                    continue;
-                }
+            }
 
-                // 각 챌린지에 대해 답변 확인
-                for (Challenge relatedChallenge : relatedChallenges) {
-                    List<Answer> answers = answerRepository.findByChallengeAndMemberFamily(relatedChallenge, family);
-                    log.info("Challenge ID: " + relatedChallenge.getChallengeId() + ", Answer count: " + answers.size());
+            if (!allRelatedChallengesAnswered) {
+                continue;
+            }
 
-                    // 해당 챌린지에 대해 모든 가족 구성원이 답변 내용을 입력했는지 확인
-                    boolean allMembersAnswered = true;
-                    for (Answer answer : answers) {
-                        if (answer.getAnswerContent() == null || answer.getAnswerContent().isEmpty()) {
-                            allMembersAnswered = false;
-                            break;
-                        }
-                    }
-
-                    if (allMembersAnswered) {
-                        long timeToAnswer = calculateLatestResponseTime(lucky, relatedChallenge); // 챌린지별 가장 늦은 응답 시간 계산
-                        log.info("Challenge ID: " + relatedChallenge.getChallengeId() + ", Time to answer: " + timeToAnswer);
-                        if (timeToAnswer < shortestTime) {
-                            shortestTime = timeToAnswer;
-                            fastestChallenge = relatedChallenge;
-                        }
-                    }
-                }
-            } else { // 답변 당 하나의 챌린지ID만 가지는 질문들 (ex. NORMAL, PHOTO, FACETIME)
-                // 해당 챌린지에 대한 모든 답변 가져오기
-                List<Answer> answers = answerRepository.findByChallengeAndMemberFamily(challenge, family);
-                log.info("Challenge ID: " + challenge.getChallengeId() + ", Answer count: " + answers.size());
+            // 각 챌린지에 대해 답변 확인 및 가장 늦은 응답 시간 계산
+            for (Challenge relatedChallenge : relatedChallenges) {
+                List<Answer> answers = answerRepository.findByChallengeAndMemberFamily(relatedChallenge, family);
+                log.info("Challenge ID: " + relatedChallenge.getChallengeId() + ", Answer count: " + answers.size());
 
                 // 해당 챌린지에 대해 모든 가족 구성원이 답변 내용을 입력했는지 확인
                 boolean allMembersAnswered = true;
@@ -415,11 +390,11 @@ public class ChallengeServiceImpl implements ChallengeService {
                 }
 
                 if (allMembersAnswered) {
-                    long timeToAnswer = calculateLatestResponseTime(lucky, challenge); // 챌린지별 가장 늦은 응답 시간 계산
-                    log.info("Challenge ID: " + challenge.getChallengeId() + ", Time to answer: " + timeToAnswer);
+                    long timeToAnswer = calculateLatestResponseTime(lucky, relatedChallenge); // 챌린지별 가장 늦은 응답 시간 계산
+                    log.info("Challenge ID: " + relatedChallenge.getChallengeId() + ", Time to answer: " + timeToAnswer);
                     if (timeToAnswer < shortestTime) {
                         shortestTime = timeToAnswer;
-                        fastestChallenge = challenge;
+                        fastestChallenge = relatedChallenge;
                     }
                 }
             }

@@ -144,7 +144,13 @@ public class AnswerServiceImpl implements AnswerService {
     public Long findDateByChallengeMember(Challenge challenge, Member member) throws Exception{       // answer의 createDate를 timeStamp로 바꾸기
         Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge, member);
         DateUtil dateUtil = DateUtil.getInstance();
-        return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
+
+        // answer 값을 가져가기 전에 answer가 존재하는지 확인
+        if (answer.isPresent()) {
+            return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
+        } else {
+            return null;
+        }
     }
 
     // 가족 구성원들의 답변 유무 검사

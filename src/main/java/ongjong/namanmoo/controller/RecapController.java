@@ -207,5 +207,15 @@ public class RecapController {
         }
     }
 
-
+    // 중복 해결 예정??
+//    private Map<String, Object> buildChallengeData(String topic, Challenge challenge, Lucky lucky, Long topicResult) {
+//        Map<String, Object> data = new HashMap<>();
+//        data.put("topic", topic);
+//        data.put("topicResult", topicResult);
+//        data.put("challengeId", challenge != null ? challenge.getChallengeId() : "");
+//        data.put("challengeType", challenge != null ? challenge.getChallengeType() : "");
+//        data.put("challengeNumber", challenge != null ? challenge.getChallengeNum() : "");
+//        data.put("challengeTitle", challenge != null ? challenge.getChallengeTitle() : "");
+//        return data;
+//    }
 }

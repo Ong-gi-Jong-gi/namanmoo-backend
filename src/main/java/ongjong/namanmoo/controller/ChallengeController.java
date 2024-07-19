@@ -348,10 +348,14 @@ public class ChallengeController {
     public ApiResponse<Map<String, String>> saveVoiceAnswer(
             @RequestParam("challengeId") Long challengeId,
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
-        // challengeId RequestParam으로 변경해서 테스트
-
-        if (answerFile == null || answerFile.isEmpty()) {
-            return new ApiResponse<>("400", "Answer file is missing", null);
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.PHOTO);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
+        }
+        Challenge challenge = challengeResponse.getData();
+        ApiResponse<Void> fileResponse = validateFile(answerFile);
+        if (!fileResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(fileResponse.getStatus(), fileResponse.getMessage(), null);
         }
 
         // S3에 파일 업로드
@@ -365,7 +369,6 @@ public class ChallengeController {
         transcriptionRequest.setFile(answerFile);
         WhisperTranscriptionResponse transcriptionResponse = openAIClientService.createTranscription(transcriptionRequest);
 
-
         // Map 형태로 답변 URL 반환
         Map<String, String> responseData = new HashMap<>();
         if (transcriptionResponse.getText() == null) {
@@ -376,7 +379,6 @@ public class ChallengeController {
 
         // 단어 리스트에서 특정 단어 검색 및 자르기
         List<WhisperTranscriptionResponse.word> words = transcriptionResponse.getWords();
-        Challenge challenge = challengeService.findChallengeById(challengeId);
         String targetWord = getTargetWordForChallengeType(challenge.getChallengeType());
         WhisperTranscriptionResponse.word target = findTargetWord(words, targetWord);
         if (target == null){
