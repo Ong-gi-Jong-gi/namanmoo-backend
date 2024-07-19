@@ -345,7 +345,7 @@ public class AnswerServiceImpl implements AnswerService {
         }
 
         // 최대 9장의 사진을 랜덤으로 고른다.
-        int numPhotosToAdd = Math.min(9, allOtherPhotos.size());
+        int numPhotosToAdd = Math.min(9, allOtherPhotos.size());      // todo 랜덤 가족사진 개수 수정 필요
         Set<Integer> chosenIndices = new HashSet<>();
         while (chosenIndices.size() < numPhotosToAdd) {
             int randomIndex = random.nextInt(allOtherPhotos.size());
