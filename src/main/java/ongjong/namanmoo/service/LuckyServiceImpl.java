@@ -109,7 +109,7 @@ public class LuckyServiceImpl implements LuckyService {
         // 행운이 상태 결정
         if (percentage >= 75) { // 75% (30일 주기일 때 90개)
             return 3; // 행목
-        } else if (percentage >= 25) { // 25% (30일 주기일 때 40개)
+        } else if (percentage >= 25) { // 25% (30일 주기일 때 30개)
             return 2; // 행운
         } else {
             return 1; // 새싹
