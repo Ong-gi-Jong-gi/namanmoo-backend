@@ -2,7 +2,9 @@ package ongjong.namanmoo.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongjong.namanmoo.domain.FileType;
 import ongjong.namanmoo.domain.Lucky;
+import ongjong.namanmoo.domain.SharedFile;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.ApiResponse;
 import ongjong.namanmoo.dto.lucky.LuckyListDto;
@@ -12,17 +14,20 @@ import ongjong.namanmoo.dto.recap.MemberRankingListDto;
 import ongjong.namanmoo.dto.recap.MemberYouthAnswerDto;
 import ongjong.namanmoo.dto.recap.*;
 import ongjong.namanmoo.domain.Member;
-import ongjong.namanmoo.service.AnswerService;
-import ongjong.namanmoo.service.ChallengeService;
-import ongjong.namanmoo.service.LuckyService;
-import ongjong.namanmoo.service.MemberService;
+import ongjong.namanmoo.global.security.util.CustomMultipartFile;
+import ongjong.namanmoo.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -34,6 +39,9 @@ public class RecapController {
     private final AnswerService answerService;
     private final ChallengeService challengeService;
     private final MemberService memberService;
+    private final AwsS3Service awsS3Service;
+    private final FFmpegService ffmpegService;
+    private final SharedFileService sharedFileService;
 
     // 행운이 리스트
     @GetMapping("/list")
@@ -116,5 +124,88 @@ public class RecapController {
         MemberPhotosAnswerDto photosAnswerDto = answerService.getPhotoByMember(members);
         return new ApiResponse<>("200", "Success", photosAnswerDto);
     }
+
+    // recap 음성
+    @GetMapping("/voice")
+    public ApiResponse<Map<String, String>> mergeVoiceClips(@RequestParam("luckyId") Long luckyId) {
+        List<File> localFiles = null;
+        File outputFile = null;
+
+        try {
+            Lucky lucky = luckyService.getLucky(luckyId);
+
+            // 이미 병합된 음성 파일이 있는지 확인
+            SharedFile mergeVoice = sharedFileService.getMergeVoice(lucky, FileType.AUDIO);
+            if (mergeVoice != null) {
+                Map<String, String> data = new HashMap<>();
+                data.put("backgroundVoice", mergeVoice.getFileName());
+                return new ApiResponse<>("200", "Already Voice Clips Merge Success", data);
+            }
+
+            // S3에서 해당 luckyId의 음성파일 목록을 가져옴
+            List<String> audioPaths = awsS3Service.listAudioFiles(luckyId);
+            if (audioPaths.size() != 4) {
+                return new ApiResponse<>("404", "Not Enough Voice Clips", null);
+            }
+
+            // VOICE_ 순서대로 정렬
+            audioPaths.sort((path1, path2) -> {
+                try {
+                    int num1 = Integer.parseInt(path1.split("VOICE_")[1].split("\\.")[0]);
+                    int num2 = Integer.parseInt(path2.split("VOICE_")[1].split("\\.")[0]);
+                    return Integer.compare(num1, num2);
+                } catch (NumberFormatException e) {
+                    log.error("Error parsing VOICE_ number from path: {} or {}", path1, path2, e);
+                    return 0;
+                }
+            });
+
+            // 임시 디렉토리 생성
+            Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
+            Files.createDirectories(tempDir);  // Ensure the directory exists
+
+            // 오디오 파일들을 임시 디렉토리로 다운로드
+            localFiles = audioPaths.stream().map(path -> {
+                File localFile = new File(tempDir.toString(), Paths.get(path).getFileName().toString());
+                awsS3Service.downloadFile(path, localFile);
+                return localFile;
+            }).collect(Collectors.toList());
+
+            // 출력 파일명 설정
+            String outputFileName = "merged_output_" + luckyId + ".mp3";
+            String outputPath = tempDir.resolve(outputFileName).toString();
+
+            // 오디오 파일 병합(사이에 0.2초 침묵 삽입)
+            ffmpegService.mergeAudiosWithSilence(localFiles.stream().map(File::getPath).collect(Collectors.toList()), outputPath, 0.2);
+
+            // 병합된 파일 S3업로드
+            outputFile = new File(outputPath);
+            String s3Url = awsS3Service.uploadFile(new CustomMultipartFile(outputFile));
+
+            // 디비 저장
+            sharedFileService.uploadMergeVoice(lucky, s3Url, FileType.AUDIO);
+
+            // 성공 응답 생성
+            Map<String, String> data = new HashMap<>();
+            data.put("backgroundVoice", s3Url);
+            return new ApiResponse<>("200", "Voice Clips Merge Success", data);
+        } catch (Exception e) {
+            log.error("Error merging voice clips", e);
+            return new ApiResponse<>("500", "Voice Merge Fail: " + e.getMessage(), null);
+        } finally {
+            // 임시 파일 삭제
+            if (localFiles != null) {
+                localFiles.forEach(file -> {
+                    if (file.exists() && !file.delete()) {
+                        log.warn("Failed to delete temporary file: {}", file.getPath());
+                    }
+                });
+            }
+            if (outputFile != null && outputFile.exists() && !outputFile.delete()) {
+                log.warn("Failed to delete temporary output file: {}", outputFile.getPath());
+            }
+        }
+    }
+
 
 }

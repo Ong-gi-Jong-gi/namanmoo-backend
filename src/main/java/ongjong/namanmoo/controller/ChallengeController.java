@@ -350,8 +350,6 @@ public class ChallengeController {
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
         // challengeId RequestParam으로 변경해서 테스트
 
-
-
         if (answerFile == null || answerFile.isEmpty()) {
             return new ApiResponse<>("400", "Answer file is missing", null);
         }
