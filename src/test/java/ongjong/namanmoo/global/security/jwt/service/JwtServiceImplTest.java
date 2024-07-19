@@ -57,7 +57,7 @@ class JwtServiceImplTest {
                 .name("Member1")
                 .nickname("Nickname1")
                 .logInRole(LogInRole.USER)
-                .role(MemberRole.SON)
+                .role("아들")
                 .build());
         clear();
     }
