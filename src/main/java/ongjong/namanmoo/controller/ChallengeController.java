@@ -40,6 +40,7 @@ public class ChallengeController {
     private final SharedFileService sharedFileService;
     private final OpenAIClientService openAIClientService;
 
+
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
         Long challengeDate = request.getChallengeDate();
@@ -119,7 +120,9 @@ public class ChallengeController {
 
         // 챌린지 조회 시 조회수 증가
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        if (currentLucky != null){
+            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        }
 
         return new ApiResponse<>("200", "Normal challenge found successfully", normalChallengeDto);
     }
@@ -155,7 +158,9 @@ public class ChallengeController {
 
         // 챌린지 조회 시 조회수 증가
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        if (currentLucky != null){
+            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        }
 
         GroupChallengeDto groupChallengeDto = challengeService.filterChallengesByMemberRole(challenge, challengeDate, isComplete, allAnswers);
         return new ApiResponse<>("200", "Group Challenge found successfully", groupChallengeDto);
@@ -192,8 +197,9 @@ public class ChallengeController {
 
         // 챌린지 조회 시 조회수 증가
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
-
+        if (currentLucky != null){
+            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        }
         PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, isComplete, challengeDate, allAnswers);
         return new ApiResponse<>("200", "Photo Challenge found successfully", photoChallengeDto);
     }
@@ -310,7 +316,6 @@ public class ChallengeController {
     @GetMapping("/face/result")
     public ApiResponse<Map<Integer, List<String>>> getFaceTimeAnswer(
             @RequestParam("challengeId") Long challengeId) throws Exception {
-
         ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.FACETIME);
         if (!challengeResponse.getStatus().equals("200")) {
             return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
@@ -322,9 +327,13 @@ public class ChallengeController {
         if (family == null) {
             return new ApiResponse<>("404", "Family not found for the current member", null);
         }
-        Lucky lucky = luckyService.findCurrentLucky(family.getFamilyId());
 
-        // 응답 데이터 생성
+        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
+        if (currentLucky != null){
+            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+            // 응답 데이터 생성
+        }
+        Lucky lucky = luckyService.findMatchingLucky(challengeId,member);
         Map<Integer, List<String>> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), lucky.getLuckyId());
 
         return new ApiResponse<>("200", "FaceTime Challenge results found successfully", results);
@@ -346,7 +355,9 @@ public class ChallengeController {
 
         // 챌린지 조회 시 조회수 증가
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        if (currentLucky != null){
+            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        }
 
         VoiceChallengeDto voiceChallengeDto = new VoiceChallengeDto(challenge, isComplete, challengeDate, allAnswers);
         return new ApiResponse<>("200", "Voice Challenge found successfully", voiceChallengeDto);
