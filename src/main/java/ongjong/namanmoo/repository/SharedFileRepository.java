@@ -1,5 +1,6 @@
 package ongjong.namanmoo.repository;
 
+import ongjong.namanmoo.domain.FileType;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.SharedFile;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,4 +11,6 @@ public interface SharedFileRepository extends JpaRepository<SharedFile, Long> {
     List<SharedFile> findByChallengeNumAndLucky(int challengeNum, Lucky lucky);
 
     SharedFile findByFileName(String fileName);
+
+    SharedFile findByLuckyAndFileType(Lucky lucky, FileType fileType);
 }

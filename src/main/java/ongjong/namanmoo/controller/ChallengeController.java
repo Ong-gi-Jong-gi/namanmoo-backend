@@ -13,18 +13,14 @@ import ongjong.namanmoo.dto.ApiResponse;
 import ongjong.namanmoo.dto.lucky.CurrentLuckyDto;
 import ongjong.namanmoo.dto.openAI.TranscriptionRequest;
 import ongjong.namanmoo.dto.openAI.WhisperTranscriptionResponse;
-import ongjong.namanmoo.global.security.util.CustomMultipartFile;
 import ongjong.namanmoo.service.*;
-import org.springframework.beans.factory.annotation.Value;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,7 +39,6 @@ public class ChallengeController {
     private final AwsS3Service awsS3Service;
     private final SharedFileService sharedFileService;
     private final OpenAIClientService openAIClientService;
-    private final FFmpegService ffmpegService;
 
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
@@ -64,25 +59,35 @@ public class ChallengeController {
             return new ApiResponse<>("404", "Lucky Not Found", null);
         }
         CurrentLuckyDto currentLuckyDto = new CurrentLuckyDto(DateUtil.getInstance().stringToTimestamp(lucky.getChallengeStartDate(),DateUtil.FORMAT_4));
-        return new ApiResponse<>("200", "Success",currentLuckyDto);
+        return new ApiResponse<>("200", "Success", currentLuckyDto);
     }
 
     // 오늘의 챌린지 조회
     @GetMapping("/today")
-    public ApiResponse<CurrentChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+    public ResponseEntity<ApiResponse<CurrentChallengeDto>> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+        if(String.valueOf(challengeDate).length() != 13){
+            ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("404", "Challenge date must be a 13-number", null);
+            return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
+        }
         Member member = memberService.findMemberByLoginId(); // 로그인한 member
         CurrentChallengeDto currentChallenge = challengeService.findChallengesByMemberId(challengeDate, member);
 
         if (currentChallenge == null || currentChallenge.getChallengeInfo() == null) {
-            return new ApiResponse<>("404", "Challenge not found", currentChallenge);
+            ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("404", "Challenge not found", currentChallenge);
+            return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
         }
-        return new ApiResponse<>("200", "Challenge found successfully", currentChallenge);
+        ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("200", "Challenge found successfully", currentChallenge);
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 
     // 챌린지 리스트 조회
     @GetMapping("/list")        // 챌린지 리스트는 lucky가 여러개 일때를 고려하여 죽은 럭키 개수 * 30 +1 부터 챌린지가 보여져야한다.
     public ApiResponse<List<ChallengeListDto>> getChallengeList(@RequestParam("challengeDate") Long challengeDate) throws Exception {
-        List<Challenge> challenges = challengeService.findChallenges(challengeDate); //
+        if(String.valueOf(challengeDate).length() != 13){
+            return new ApiResponse<>("404", "Challenge date must be a 13-number", null);
+        }
+
+        List<Challenge> challenges = challengeService.findChallenges(challengeDate);
 
         if (challenges == null || challenges.isEmpty()) {
             return new ApiResponse<>("400", "No challenges found for the family", null);
@@ -196,7 +201,7 @@ public class ChallengeController {
     // 사진 챌린지 답변 저장
     @PostMapping("/photo")
     public ApiResponse<ModifyAnswerDto> savePhotoAnswer(@RequestParam("challengeId") Long challengeId,
-                                                        @RequestParam("answerFile") MultipartFile answerFile) throws Exception {
+                                                        @RequestParam("answer") MultipartFile answerFile) throws Exception {
         ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.PHOTO);
         if (!challengeResponse.getStatus().equals("200")) {
             return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
@@ -291,6 +296,10 @@ public class ChallengeController {
 //            // 이미지 업로드가 완료된 후에 병합을 예약합니다.
 //            sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
 
+//            // TODO: 비동기 시도...
+//            // 비디오 업로드 후 이미지 병합 작업 스케줄링
+//            sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
+
             return new ApiResponse<>("200", "Video uploaded successfully", Map.of("url", uploadedUrl));
         } else {
             return new ApiResponse<>("400", "Invalid file type: " + answerFile.getContentType(), null);
@@ -348,12 +357,14 @@ public class ChallengeController {
     public ApiResponse<Map<String, String>> saveVoiceAnswer(
             @RequestParam("challengeId") Long challengeId,
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
-        // challengeId RequestParam으로 변경해서 테스트
-
-
-
-        if (answerFile == null || answerFile.isEmpty()) {
-            return new ApiResponse<>("400", "Answer file is missing", null);
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.VOICE1, ChallengeType.VOICE2, ChallengeType.VOICE3, ChallengeType.VOICE4);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
+        }
+        Challenge challenge = challengeResponse.getData();
+        ApiResponse<Void> fileResponse = validateFile(answerFile);
+        if (!fileResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(fileResponse.getStatus(), fileResponse.getMessage(), null);
         }
 
         // S3에 파일 업로드
@@ -378,42 +389,19 @@ public class ChallengeController {
 
         // 단어 리스트에서 특정 단어 검색 및 자르기
         List<WhisperTranscriptionResponse.word> words = transcriptionResponse.getWords();
-        Challenge challenge = challengeService.findChallengeById(challengeId);
         String targetWord = getTargetWordForChallengeType(challenge.getChallengeType());
         WhisperTranscriptionResponse.word target = findTargetWord(words, targetWord);
-        if (target == null){
+
+        if (target == null) {
             return new ApiResponse<>("200", "Voice STT Success But Not Find Target Word", responseData);
         }
 
-        // 임시 파일 경로 설정
-        Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
-        Files.createDirectories(tempDir);  // Ensure the directory exists
-        Path inputFile = tempDir.resolve(answerFile.getOriginalFilename());
-        Files.copy(answerFile.getInputStream(), inputFile, StandardCopyOption.REPLACE_EXISTING); // 임시 저장소로 저장
-
+        // 비동기 작업 시작(음성 자르는것은 비동기로 실행)
         Member member = answer.getMember();
         Lucky lucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-
-        // 출력 파일을 저장할 디렉토리 생성
-        Path outputDir = tempDir.resolve("split-audio/럭키_" + lucky.getLuckyId());
-        Files.createDirectories(outputDir);
-
-        String outputFileName = String.format("멤버_%d_챌린지_%d_%s_VOICE_%d.mp3", member.getMemberId(), challengeId, targetWord, challenge.getChallengeType().getVoiceTypeOrdinal());
-        Path outputFile = outputDir.resolve(outputFileName);
-        ffmpegService.cutAudioClip(inputFile.toString(), outputFile.toString(), target.getStart(), target.getEnd());
-
-        // 잘린 파일을 MultipartFile로 변환
-        MultipartFile multipartFile = new CustomMultipartFile(outputFile.toFile());
-
-        // 잘린 파일을 S3에 업로드
-        String s3Path = "split-audio/럭키_" + lucky.getLuckyId() + "/" + outputFileName;
-        awsS3Service.uploadAudioFile(multipartFile, s3Path);
-
-        // 임시 파일 삭제
-        Files.deleteIfExists(inputFile);
-        Files.deleteIfExists(outputFile);
-
+        sharedFileService.processAndUploadCutAudio(answerFile, targetWord, challengeId, lucky, member, target, challenge);
         return new ApiResponse<>("200", "Voice STT Success", responseData);
+
     }
 
     // 챌린지 검증 헬퍼 메서드

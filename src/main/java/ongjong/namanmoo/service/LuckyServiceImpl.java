@@ -81,15 +81,15 @@ public class LuckyServiceImpl implements LuckyService {
         Instant instant = Instant.ofEpochMilli(timestamp);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd").withZone(ZoneId.systemDefault());
         String createDate = formatter.format(instant);
-        log.info("createDate: {}", createDate);
 
         Answer answer = answerRepository.findByMemberAndCreateDate(member, createDate)
                 .orElseThrow(() -> new RuntimeException("해당 멤버가 작성한 답변을 찾을 수 없습니다."));
 
         boolean isBubble = answer.isBubbleVisible();
         Integer luckyStatus = calculateLuckyStatus(lucky);
+        String luckyId = lucky.getLuckyId().toString();
 
-        return new LuckyStatusDto(luckyStatus, isBubble);
+        return new LuckyStatusDto(luckyStatus, isBubble, luckyId);
     }
 
     // 행운이 상태 계산
@@ -109,7 +109,7 @@ public class LuckyServiceImpl implements LuckyService {
         // 행운이 상태 결정
         if (percentage >= 75) { // 75% (30일 주기일 때 90개)
             return 3; // 행목
-        } else if (percentage >= 25) { // 25% (30일 주기일 때 40개)
+        } else if (percentage >= 25) { // 25% (30일 주기일 때 30개)
             return 2; // 행운
         } else {
             return 1; // 새싹
@@ -234,6 +234,7 @@ public class LuckyServiceImpl implements LuckyService {
                 DateUtil dateUtil = DateUtil.getInstance();
                 // 현재 진행되어야할 challengenum를 반환
                 int currentChallengeNumber = Math.toIntExact(dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.timestampToString(Long.valueOf(challengeDate))));
+                log.info("challengeCurrentDate:{}",currentChallengeNumber);
                 if (luckyLifetime < currentChallengeNumber) {
                     lucky.setRunning(false);
                     luckyRepository.save(lucky);

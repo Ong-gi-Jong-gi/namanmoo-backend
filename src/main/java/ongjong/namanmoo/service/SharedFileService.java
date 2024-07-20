@@ -7,27 +7,38 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.*;
 import ongjong.namanmoo.domain.challenge.Challenge;
+import ongjong.namanmoo.dto.openAI.WhisperTranscriptionResponse;
+import ongjong.namanmoo.global.security.util.CustomMultipartFile;
 import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.repository.SharedFileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class SharedFileService {
 
@@ -39,12 +50,15 @@ public class SharedFileService {
     private LuckyRepository luckyRepository;
     @Autowired
     private SharedFileRepository sharedFileRepository;
+    @Autowired
+    private FFmpegService ffmpegService;
 
     private final AmazonS3 amazonS3Client;
     private final String bucket;
     private final String region;
 
-    private final Lock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock();
+    private final Map<String, Boolean> mergeTasks = new ConcurrentHashMap<>();
 
     public SharedFileService(
             @Value("${cloud.aws.credentials.access-key}") String accessKeyId,
@@ -66,6 +80,8 @@ public class SharedFileService {
         this.region = region;
     }
 
+    // 이미지 업로드 메서드
+    @Transactional
     public Map<String, String> uploadImageFile(Challenge challenge, MultipartFile photo, FileType fileType) throws Exception {
         Map<String, String> response = new HashMap<>();
 
@@ -203,7 +219,7 @@ public class SharedFileService {
         }
     }
 
-    // TODO: 방법 1: 이미지 업로드와 병합 분리
+    // TODO: 방법 1: (동기) 이미지 업로드와 병합 분리
     // 병합을 수행하는 메소드
     public void mergeImagesIfNeeded(int challengeNum, Lucky lucky) throws IOException {
         final int MAX_WAIT_TIME = 15000; // 최대 대기 시간 15초
@@ -239,11 +255,9 @@ public class SharedFileService {
             if (allGroupsHaveEnoughImages) {
                 break; // 모든 그룹에 4개 이상의 이미지가 있는 경우 병합을 시작
             }
-
             if (System.currentTimeMillis() - startTime > MAX_WAIT_TIME) {
                 throw new IOException("이미지 업로드 대기 시간이 초과되었습니다.");
             }
-
             try {
                 Thread.sleep(SLEEP_INTERVAL);
             } catch (InterruptedException e) {
@@ -301,26 +315,56 @@ public class SharedFileService {
             mergedFile.setLucky(lucky);
 
             sharedFileRepository.save(mergedFile); // 데이터베이스에 새 SharedFile 저장
+
+            // 디버깅 로그 추가
+            System.out.println("Merged image saved: " + mergedImageUrl);
         }
     }
 
-    // TODO: 방법 2: 병합을 서버 측에서 스케줄링
-    // 이미지 업로드 후 병합을 예약하는 메소드
-    public void scheduleMergeImages(int challengeNum, Lucky lucky) {
-        // 이미지 업로드 후 병합 예약
-        CompletableFuture.supplyAsync(() -> {
+//    // TODO: 방법 2: (비동기) 병합을 서버 측에서 스케줄링
+//    // 이미지 업로드 후 병합을 예약하는 메소드
+//    public void scheduleMergeImages(int challengeNum, Lucky lucky) {
+//        // 이미지 업로드 후 병합 예약
+//        CompletableFuture.supplyAsync(() -> {
+//            try {
+//                // 이미지 업로드가 완료될 때까지 대기
+//                waitForImageUploadCompletion(challengeNum, lucky);
+//
+//                // 모든 이미지가 업로드된 후 병합 수행
+//                mergeImagesIfNeeded(challengeNum, lucky);
+//            } catch (IOException e) {
+//                // 예외 처리 로직 추가
+//                e.printStackTrace();
+//            }
+//            return null;
+//        });
+//    }
+
+    // 병합 작업을 비동기적으로 예약하는 메서드
+    @Async
+    public CompletableFuture<Void> scheduleMergeImages(int challengeNum, Lucky lucky) {
+        String key = challengeNum + "_" + lucky.getLuckyId();
+
+        // 병합 작업이 이미 진행 중인 경우 종료
+        if (mergeTasks.putIfAbsent(key, true) != null) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        CompletableFuture.runAsync(() -> {
             try {
                 // 이미지 업로드가 완료될 때까지 대기
                 waitForImageUploadCompletion(challengeNum, lucky);
-
                 // 모든 이미지가 업로드된 후 병합 수행
                 mergeImagesIfNeeded(challengeNum, lucky);
             } catch (IOException e) {
-                // 예외 처리 로직 추가
-                e.printStackTrace();
+                e.printStackTrace();  // Or use appropriate logging
+            } finally {
+                // 병합 작업이 완료되면 플래그를 제거
+                mergeTasks.remove(key);
             }
-            return null;
         });
+
+        return CompletableFuture.completedFuture(null);
     }
 
     // 이미지 업로드가 완료될 때까지 대기하는 메소드
@@ -365,6 +409,77 @@ public class SharedFileService {
             }
         }
     }
+
+//    // 병합이 필요한 경우 이미지를 병합하는 메서드
+//    private void mergeImagesIfNeeded(int challengeNum, Lucky lucky) throws IOException {
+//        Map<String, List<SharedFile>> groupedFiles = new HashMap<>();
+//        Pattern pattern = Pattern.compile("screenshot_(\\d+)");
+//
+//        List<SharedFile> sharedFiles;
+//
+//        lock.lock();
+//        try {
+//            sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
+//        } finally {
+//            lock.unlock();
+//        }
+//
+//        for (SharedFile sharedFile : sharedFiles) {
+//            String fileName = sharedFile.getFileName();
+//            Matcher matcher = pattern.matcher(fileName);
+//
+//            if (matcher.find()) {
+//                String group = matcher.group(1);
+//                groupedFiles.computeIfAbsent(group, k -> new ArrayList<>()).add(sharedFile);
+//            }
+//        }
+//
+//        List<String> sortedKeys = new ArrayList<>(groupedFiles.keySet());
+//        Collections.sort(sortedKeys);
+//
+//        for (String key : sortedKeys) {
+//            List<SharedFile> sharedFilesInGroup = groupedFiles.get(key);
+//
+//            Set<String> uniqueImageUrls = sharedFilesInGroup.stream()
+//                    .map(SharedFile::getFileName)
+//                    .collect(Collectors.toSet());
+//
+//            if (uniqueImageUrls.size() < 4) {
+//                throw new IOException("충분한 수의 고유 이미지를 찾을 수 없습니다.");
+//            }
+//
+//            List<BufferedImage> selectedImages = uniqueImageUrls.stream()
+//                    .limit(4)
+//                    .map(url -> {
+//                        try {
+//                            return ImageIO.read(new URL(url));
+//                        } catch (Exception e) {
+//                            throw new RuntimeException(e);
+//                        }
+//                    })
+//                    .collect(Collectors.toList());
+//
+//            while (selectedImages.size() < 4) {
+//                BufferedImage emptyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
+//                selectedImages.add(emptyImage);
+//            }
+//
+//            String uuid = UUID.randomUUID().toString();
+//            String baseName = "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_" + key + ".png";
+//            BufferedImage mergedImage = ImageMerger.mergeImages(selectedImages);
+//
+//            String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, baseName);
+//
+//            SharedFile mergedFile = new SharedFile();
+//            mergedFile.setChallengeNum(challengeNum);
+//            mergedFile.setCreateDate(System.currentTimeMillis());
+//            mergedFile.setFileName(mergedImageUrl);
+//            mergedFile.setFileType(FileType.IMAGE);
+//            mergedFile.setLucky(lucky);
+//
+//            sharedFileRepository.save(mergedFile);
+//        }
+//    }
 
     // 병합된 이미지를 S3에 업로드하는 메서드
     public String uploadMergedImageToS3(BufferedImage mergedImage, String bucketName, String fileObjKeyName) throws IOException {
@@ -416,4 +531,57 @@ public class SharedFileService {
         return randomResults;
     }
 
+    @Async
+    public void processAndUploadCutAudio(MultipartFile answerFile, String targetWord, Long challengeId, Lucky lucky, Member member, WhisperTranscriptionResponse.word target, Challenge challenge) {
+        try {
+            // 임시 파일 경로 설정
+            Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
+            Files.createDirectories(tempDir);  // Ensure the directory exists
+            Path inputFile = tempDir.resolve(answerFile.getOriginalFilename());
+            Files.copy(answerFile.getInputStream(), inputFile, StandardCopyOption.REPLACE_EXISTING); // 임시 저장소로 저장
+
+            // 출력 파일을 저장할 디렉토리 생성
+            Path outputDir = tempDir.resolve("split-audio/럭키_" + lucky.getLuckyId());
+            Files.createDirectories(outputDir);
+
+            String outputFileName = String.format("멤버_%d_챌린지_%d_%s_VOICE_%d.mp3", member.getMemberId(), challengeId, targetWord, challenge.getChallengeType().getVoiceTypeOrdinal());
+            Path outputFile = outputDir.resolve(outputFileName);
+            ffmpegService.cutAudioClip(inputFile.toString(), outputFile.toString(), target.getStart(), target.getEnd());
+
+            // 잘린 파일을 MultipartFile로 변환
+            MultipartFile multipartFile = new CustomMultipartFile(outputFile.toFile());
+
+            // 잘린 파일을 S3에 업로드
+            String s3Path = "split-audio/럭키_" + lucky.getLuckyId() + "/" + outputFileName;
+            awsS3Service.uploadAudioFile(multipartFile, s3Path);
+
+            // 임시 파일 삭제
+            Files.deleteIfExists(inputFile);
+            Files.deleteIfExists(outputFile);
+        } catch (Exception e) {
+            log.error("Error processing and uploading cut audio file", e);
+        }
+    }
+
+
+    // 병합한 음성파일 db에 저장
+    @Transactional
+    public void uploadMergeVoice(Lucky lucky, String voiceUrl, FileType fileType){
+        if (fileType != FileType.AUDIO) {
+            throw new IllegalArgumentException("Invalid file type: " + fileType);
+        }
+
+        SharedFile sharedFile = new SharedFile();
+        sharedFile.setFileName(voiceUrl);
+        sharedFile.setFileType(FileType.AUDIO);
+        sharedFile.setCreateDate(System.currentTimeMillis());
+        sharedFile.setLucky(lucky);
+        sharedFileRepository.save(sharedFile);
+        System.out.println("SharedFile 저장 성공: " + sharedFile.getSharedFileId());
+    }
+
+    @Transactional(readOnly = true)
+    public SharedFile getMergeVoice(Lucky lucky, FileType fileType) {
+        return sharedFileRepository.findByLuckyAndFileType(lucky, fileType);
+    }
 }
