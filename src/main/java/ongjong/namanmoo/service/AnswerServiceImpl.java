@@ -349,10 +349,11 @@ public class AnswerServiceImpl implements AnswerService {
         Answer familyPhotoAnswer = memberAnswerList.get(random.nextInt(memberAnswerList.size()));
         String familyPhoto = familyPhotoAnswer.getAnswerContent();
 
-        // 다른 사진 답변의 URL 수집
+        // 다른 사진 답변의 URL을 수집하고 null 값 제거
         List<String> allOtherPhotos = answersWithinDateRange.stream()
                 .filter(answer -> answer != familyPhotoAnswer && answer.getAnswerType() == AnswerType.PHOTO)
                 .map(Answer::getAnswerContent)
+                .filter(Objects::nonNull)
                 .toList();
 
         // 최대 9장의 다른 사진을 랜덤으로 선택
