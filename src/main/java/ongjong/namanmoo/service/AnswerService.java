@@ -40,15 +40,15 @@ public interface AnswerService {
     // 챌린지와 멤버를 받아서 답변 리스트 반환
     List<Answer> findAnswersByChallenges(Challenge challenge, Member member);
 
-    List<MemberDto> getAnswersByMember(List<Member> members, int challengeNum1, int challengeNum2, Class<? extends MemberDto> dtoClass) throws Exception;
+    List<MemberDto> getAnswersByMember(Long luckyId, int challengeNum1, int challengeNum2, Class<? extends MemberDto> dtoClass) throws Exception;
 
-    List<MemberYouthAnswerDto> getYouthByMember(List<Member> members, int challengeNum1, int challengeNum2) throws Exception;
+    List<MemberYouthAnswerDto> getYouthByMember(Long luckyId, int challengeNum1, int challengeNum2) throws Exception;
 
-    List<MemberAppreciationDto> getAppreciationByMember(List<Member> members, int challengeNum1, int challengeNum2) throws Exception;
+    List<MemberAppreciationDto> getAppreciationByMember(Long luckyId, int challengeNum1, int challengeNum2) throws Exception;
 
     MemberDto createDto(Class<? extends MemberDto> dtoClass, Member member, String answer1, String answer2);
 
-    MemberPhotosAnswerDto getPhotoByMember(List<Member> members) throws Exception;
+    MemberPhotosAnswerDto getPhotos(Long luckyId) throws Exception;
 
     // facetime에 대한 answerList를 반환
     MemberFacetimeDto getFacetimeAnswerList(Long luckyId) throws Exception ;

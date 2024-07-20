@@ -302,6 +302,10 @@ public class ChallengeController {
 //            // 이미지 업로드가 완료된 후에 병합을 예약합니다.
 //            sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
 
+//            // TODO: 비동기 시도...
+//            // 비디오 업로드 후 이미지 병합 작업 스케줄링
+//            sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
+
             return new ApiResponse<>("200", "Video uploaded successfully", Map.of("url", uploadedUrl));
         } else {
             return new ApiResponse<>("400", "Invalid file type: " + answerFile.getContentType(), null);
