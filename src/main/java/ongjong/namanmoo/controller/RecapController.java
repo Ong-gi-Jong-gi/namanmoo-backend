@@ -92,7 +92,6 @@ public class RecapController {
     // recap 과거 사진
     // challengeNum => 13: 나의 어렸을 때 장래희망
     // cahllengeNum => 28 : 자신의 어렸을 적 사진 ( 23 : 학생 때 졸업사진 , 9: 가장 마음에 드는 본인 사진)
-
     @GetMapping("/youth")
     public ApiResponse<List<MemberYouthAnswerDto>> getYouth(@RequestParam("luckyId") Long luckyId) throws Exception{
         List<Member> members = memberService.getMembersByLuckyId(luckyId);
@@ -107,7 +106,6 @@ public class RecapController {
         List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(members, 25, 27);
         return new ApiResponse<>("200", "Success", appreciationList);
     }
-
 
     // recap 가족사진
     @GetMapping("/photos")
