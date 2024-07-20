@@ -16,4 +16,6 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
     Optional<Answer> findByMemberAndCreateDate(Member member, String createDate);
     boolean existsByMemberAndCreateDateAndAnswerContentIsNotNull(Member member, String createDate);
     List<Answer> findByChallengeAndMemberFamily(Challenge challenge, Family family);
+    List<Answer> findByMemberFamilyAndCreateDateBetween(Family family, String startDate, String endDate);
+    List<Answer> findByCreateDateAndMemberFamily(String createDate, Family family);
 }
