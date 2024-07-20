@@ -10,4 +10,5 @@ public class LuckyStatusDto {
     private Integer status;
     @JsonProperty("isBubble")
     private boolean isBubble;
+    private String luckyId;
 }

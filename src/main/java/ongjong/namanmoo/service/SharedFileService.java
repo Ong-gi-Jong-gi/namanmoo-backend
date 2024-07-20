@@ -7,8 +7,11 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.*;
 import ongjong.namanmoo.domain.challenge.Challenge;
+import ongjong.namanmoo.dto.openAI.WhisperTranscriptionResponse;
+import ongjong.namanmoo.global.security.util.CustomMultipartFile;
 import ongjong.namanmoo.repository.LuckyRepository;
 import ongjong.namanmoo.repository.SharedFileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +25,10 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +38,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class SharedFileService {
 
@@ -42,6 +50,8 @@ public class SharedFileService {
     private LuckyRepository luckyRepository;
     @Autowired
     private SharedFileRepository sharedFileRepository;
+    @Autowired
+    private FFmpegService ffmpegService;
 
     private final AmazonS3 amazonS3Client;
     private final String bucket;
@@ -519,6 +529,38 @@ public class SharedFileService {
         }
 
         return randomResults;
+    }
+
+    @Async
+    public void processAndUploadCutAudio(MultipartFile answerFile, String targetWord, Long challengeId, Lucky lucky, Member member, WhisperTranscriptionResponse.word target, Challenge challenge) {
+        try {
+            // 임시 파일 경로 설정
+            Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
+            Files.createDirectories(tempDir);  // Ensure the directory exists
+            Path inputFile = tempDir.resolve(answerFile.getOriginalFilename());
+            Files.copy(answerFile.getInputStream(), inputFile, StandardCopyOption.REPLACE_EXISTING); // 임시 저장소로 저장
+
+            // 출력 파일을 저장할 디렉토리 생성
+            Path outputDir = tempDir.resolve("split-audio/럭키_" + lucky.getLuckyId());
+            Files.createDirectories(outputDir);
+
+            String outputFileName = String.format("멤버_%d_챌린지_%d_%s_VOICE_%d.mp3", member.getMemberId(), challengeId, targetWord, challenge.getChallengeType().getVoiceTypeOrdinal());
+            Path outputFile = outputDir.resolve(outputFileName);
+            ffmpegService.cutAudioClip(inputFile.toString(), outputFile.toString(), target.getStart(), target.getEnd());
+
+            // 잘린 파일을 MultipartFile로 변환
+            MultipartFile multipartFile = new CustomMultipartFile(outputFile.toFile());
+
+            // 잘린 파일을 S3에 업로드
+            String s3Path = "split-audio/럭키_" + lucky.getLuckyId() + "/" + outputFileName;
+            awsS3Service.uploadAudioFile(multipartFile, s3Path);
+
+            // 임시 파일 삭제
+            Files.deleteIfExists(inputFile);
+            Files.deleteIfExists(outputFile);
+        } catch (Exception e) {
+            log.error("Error processing and uploading cut audio file", e);
+        }
     }
 
 
