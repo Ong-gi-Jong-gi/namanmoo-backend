@@ -137,8 +137,8 @@ public class ChallengeServiceImpl implements ChallengeService {
         if (luckies.isEmpty()) {
             return new CurrentChallengeDto(isDone, null); // luckies 리스트가 비어있을 경우 null 반환
         }
-        String strChallengeDate = DateUtil.getInstance().timestampToString(challengeDate);
-        luckyService.luckyDeadOrAlive(strChallengeDate);
+
+        luckyService.luckyDeadOrAlive(String.valueOf(challengeDate));
         boolean validLuckyExists = luckies.stream()
                 .anyMatch(Lucky::isRunning);
         if (!validLuckyExists) {
