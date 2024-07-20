@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -32,7 +33,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class SharedFileService {
-
 
     @Autowired
     private MemberService memberService;
@@ -71,6 +71,7 @@ public class SharedFileService {
     }
 
     // 이미지 업로드 메서드
+    @Transactional
     public Map<String, String> uploadImageFile(Challenge challenge, MultipartFile photo, FileType fileType) throws Exception {
         Map<String, String> response = new HashMap<>();
 
@@ -341,7 +342,9 @@ public class SharedFileService {
 
         CompletableFuture.runAsync(() -> {
             try {
+                // 이미지 업로드가 완료될 때까지 대기
                 waitForImageUploadCompletion(challengeNum, lucky);
+                // 모든 이미지가 업로드된 후 병합 수행
                 mergeImagesIfNeeded(challengeNum, lucky);
             } catch (IOException e) {
                 e.printStackTrace();  // Or use appropriate logging
@@ -518,4 +521,25 @@ public class SharedFileService {
         return randomResults;
     }
 
+
+    // 병합한 음성파일 db에 저장
+    @Transactional
+    public void uploadMergeVoice(Lucky lucky, String voiceUrl, FileType fileType){
+        if (fileType != FileType.AUDIO) {
+            throw new IllegalArgumentException("Invalid file type: " + fileType);
+        }
+
+        SharedFile sharedFile = new SharedFile();
+        sharedFile.setFileName(voiceUrl);
+        sharedFile.setFileType(FileType.AUDIO);
+        sharedFile.setCreateDate(System.currentTimeMillis());
+        sharedFile.setLucky(lucky);
+        sharedFileRepository.save(sharedFile);
+        System.out.println("SharedFile 저장 성공: " + sharedFile.getSharedFileId());
+    }
+
+    @Transactional(readOnly = true)
+    public SharedFile getMergeVoice(Lucky lucky, FileType fileType) {
+        return sharedFileRepository.findByLuckyAndFileType(lucky, fileType);
+    }
 }
