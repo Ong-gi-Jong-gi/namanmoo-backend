@@ -14,6 +14,7 @@ import ongjong.namanmoo.repository.SharedFileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -66,6 +67,7 @@ public class SharedFileService {
         this.region = region;
     }
 
+    @Transactional
     public Map<String, String> uploadImageFile(Challenge challenge, MultipartFile photo, FileType fileType) throws Exception {
         Map<String, String> response = new HashMap<>();
 
@@ -301,6 +303,9 @@ public class SharedFileService {
             mergedFile.setLucky(lucky);
 
             sharedFileRepository.save(mergedFile); // 데이터베이스에 새 SharedFile 저장
+
+            // 디버깅 로그 추가
+            System.out.println("Merged image saved: " + mergedImageUrl);
         }
     }
 
@@ -416,4 +421,25 @@ public class SharedFileService {
         return randomResults;
     }
 
+
+    // 병합한 음성파일 db에 저장
+    @Transactional
+    public void uploadMergeVoice(Lucky lucky, String voiceUrl, FileType fileType){
+        if (fileType != FileType.AUDIO) {
+            throw new IllegalArgumentException("Invalid file type: " + fileType);
+        }
+
+        SharedFile sharedFile = new SharedFile();
+        sharedFile.setFileName(voiceUrl);
+        sharedFile.setFileType(FileType.AUDIO);
+        sharedFile.setCreateDate(System.currentTimeMillis());
+        sharedFile.setLucky(lucky);
+        sharedFileRepository.save(sharedFile);
+        System.out.println("SharedFile 저장 성공: " + sharedFile.getSharedFileId());
+    }
+
+    @Transactional(readOnly = true)
+    public SharedFile getMergeVoice(Lucky lucky, FileType fileType) {
+        return sharedFileRepository.findByLuckyAndFileType(lucky, fileType);
+    }
 }

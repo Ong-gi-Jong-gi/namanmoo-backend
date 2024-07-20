@@ -15,7 +15,10 @@ import ongjong.namanmoo.dto.openAI.TranscriptionRequest;
 import ongjong.namanmoo.dto.openAI.WhisperTranscriptionResponse;
 import ongjong.namanmoo.global.security.util.CustomMultipartFile;
 import ongjong.namanmoo.service.*;
+import org.springframework.beans.factory.annotation.Value;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -68,17 +71,20 @@ public class ChallengeController {
 
     // 오늘의 챌린지 조회
     @GetMapping("/today")
-    public ApiResponse<CurrentChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+    public ResponseEntity<ApiResponse<CurrentChallengeDto>> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         if(String.valueOf(challengeDate).length() != 13){
-            return new ApiResponse<>("404", "Challenge date must be a 13-number", null);
+            ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("404", "Challenge date must be a 13-number", null);
+            return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
         }
         Member member = memberService.findMemberByLoginId(); // 로그인한 member
         CurrentChallengeDto currentChallenge = challengeService.findChallengesByMemberId(challengeDate, member);
 
         if (currentChallenge == null || currentChallenge.getChallengeInfo() == null) {
-            return new ApiResponse<>("404", "Challenge not found", currentChallenge);
+            ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("404", "Challenge not found", currentChallenge);
+            return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
         }
-        return new ApiResponse<>("200", "Challenge found successfully", currentChallenge);
+        ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("200", "Challenge found successfully", currentChallenge);
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 
     // 챌린지 리스트 조회
@@ -202,7 +208,7 @@ public class ChallengeController {
     // 사진 챌린지 답변 저장
     @PostMapping("/photo")
     public ApiResponse<ModifyAnswerDto> savePhotoAnswer(@RequestParam("challengeId") Long challengeId,
-                                                        @RequestParam("answerFile") MultipartFile answerFile) throws Exception {
+                                                        @RequestParam("answer") MultipartFile answerFile) throws Exception {
         ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.PHOTO);
         if (!challengeResponse.getStatus().equals("200")) {
             return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
@@ -354,9 +360,14 @@ public class ChallengeController {
     public ApiResponse<Map<String, String>> saveVoiceAnswer(
             @RequestParam("challengeId") Long challengeId,
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
-        // challengeId RequestParam으로 변경해서 테스트
-        if (answerFile == null || answerFile.isEmpty()) {
-            return new ApiResponse<>("400", "Answer file is missing", null);
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.PHOTO);
+        if (!challengeResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
+        }
+        Challenge challenge = challengeResponse.getData();
+        ApiResponse<Void> fileResponse = validateFile(answerFile);
+        if (!fileResponse.getStatus().equals("200")) {
+            return new ApiResponse<>(fileResponse.getStatus(), fileResponse.getMessage(), null);
         }
 
         // S3에 파일 업로드
@@ -381,7 +392,6 @@ public class ChallengeController {
 
         // 단어 리스트에서 특정 단어 검색 및 자르기
         List<WhisperTranscriptionResponse.word> words = transcriptionResponse.getWords();
-        Challenge challenge = challengeService.findChallengeById(challengeId);
         String targetWord = getTargetWordForChallengeType(challenge.getChallengeType());
         WhisperTranscriptionResponse.word target = findTargetWord(words, targetWord);
         if (target == null){

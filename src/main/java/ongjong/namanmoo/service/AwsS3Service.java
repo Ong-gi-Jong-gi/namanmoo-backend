@@ -3,8 +3,11 @@ package ongjong.namanmoo.service;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
@@ -12,13 +15,11 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 
 @Slf4j
 @Service
@@ -212,6 +213,44 @@ public class AwsS3Service {
 
         removeNewFile(uploadFile);
         return uploadFileUrl;
+    }
+
+    // 오디오 파일 목록을 S3에서 조회하여 반환
+    public List<String> listAudioFiles(Long luckyId) {
+        // 럭키 아이디에 따라 특정 디렉토리 설정
+        String prefix = "split-audio/럭키_" + luckyId + "/";
+
+        // S3 버킷에서 특정 프리픽스를 가지는 객체들을 나열하기 위한 요청 객체 생성
+        ListObjectsV2Request req = new ListObjectsV2Request().withBucketName(bucket).withPrefix(prefix);
+        // 각 객체 목록 요청을 실행하고 결과를 받음
+        ListObjectsV2Result result;
+        result = amazonS3Client.listObjectsV2(req);
+
+        // 결과에서 객체 목록을 추출하여 각 객체의 키를 리스트로 변환
+        return result.getObjectSummaries().stream()
+                .map(S3ObjectSummary::getKey)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * S3에서 파일을 다운로드하여 로컬 파일로 저장하는 메소드.
+     *
+     * @param s3Path    S3 경로
+     * @param localFile 로컬 파일 객체
+     */
+    public void downloadFile(String s3Path, File localFile) {
+        try (S3Object s3Object = amazonS3Client.getObject(new GetObjectRequest(bucket, s3Path));
+             InputStream inputStream = s3Object.getObjectContent();
+             FileOutputStream outputStream = new FileOutputStream(localFile)) {
+
+            byte[] readBuf = new byte[1024];
+            int readLen;
+            while ((readLen = inputStream.read(readBuf)) > 0) {
+                outputStream.write(readBuf, 0, readLen);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to download file from S3", e);
+        }
     }
 
 }

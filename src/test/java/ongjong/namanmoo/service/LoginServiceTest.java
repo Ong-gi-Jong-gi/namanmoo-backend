@@ -66,7 +66,7 @@ class LoginServiceTest {
                 .name("Member1")
                 .nickname("Nickname1")
                 .logInRole(LogInRole.USER)
-                .role(String.valueOf(MemberRole.SON))
+                .role("아들")
                 .build());
         clear();
     }

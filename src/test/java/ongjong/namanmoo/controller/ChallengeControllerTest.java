@@ -99,7 +99,7 @@ public class ChallengeControllerTest {
         when(familyService.findFamilyId()).thenReturn(familyId);
         when(luckyService.findCurrentLucky(familyId)).thenReturn(lucky);
 
-        // Set up a mock SecurityContext
+        // 보안설정 우회 , 테스트에서 인증된 사용자로 요청을 보냄
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 new User("testuser", "password", Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))),
@@ -135,7 +135,7 @@ public class ChallengeControllerTest {
         when(memberService.findMemberByLoginId()).thenReturn(mockMember);
         when(challengeService.findChallengesByMemberId(challengeDate, mockMember)).thenReturn(mockChallengeDto);
 
-        // Set up a mock SecurityContext
+        // 보안설정 우회 , 테스트에서 인증된 사용자로 요청을 보냄
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 new User("testuser", "password", Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))),
@@ -150,6 +150,7 @@ public class ChallengeControllerTest {
                         .with(csrf())  // Include CSRF token
                         .header(HttpHeaders.AUTHORIZATION, "Bearer dummy-token")
                         .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("200"))
                 .andExpect(jsonPath("$.message").value("Challenge found successfully"))
                 .andExpect(jsonPath("$.data.isDone").value(false))
@@ -165,7 +166,7 @@ public class ChallengeControllerTest {
     public void testGetChallenge_InvalidDateLength() throws Exception {
         Long invalidChallengeDate = 123L; // 13자리 숫자가 아닌 경우
 
-        // Set up a mock SecurityContext
+        // 보안설정 우회 , 테스트에서 인증된 사용자로 요청을 보냄
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 new User("testuser", "password", Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))),
@@ -180,6 +181,7 @@ public class ChallengeControllerTest {
                         .with(csrf())  // Include CSRF token
                         .header(HttpHeaders.AUTHORIZATION, "Bearer dummy-token")
                         .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value("404"))
                 .andExpect(jsonPath("$.message").value("Challenge date must be a 13-number"));
     }
@@ -194,7 +196,7 @@ public class ChallengeControllerTest {
         when(memberService.findMemberByLoginId()).thenReturn(mockMember);
         when(challengeService.findChallengesByMemberId(challengeDate, mockMember)).thenReturn(mockChallengeDto);
 
-        // Set up a mock SecurityContext
+        // 보안설정 우회 , 테스트에서 인증된 사용자로 요청을 보냄
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 new User("testuser", "password", Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))),
@@ -209,9 +211,12 @@ public class ChallengeControllerTest {
                         .with(csrf())  // Include CSRF token
                         .header(HttpHeaders.AUTHORIZATION, "Bearer dummy-token")
                         .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value("404"))
                 .andExpect(jsonPath("$.message").value("Challenge not found"));
     }
+
+
 
 
 }
