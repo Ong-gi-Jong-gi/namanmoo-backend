@@ -15,6 +15,8 @@ import ongjong.namanmoo.dto.openAI.TranscriptionRequest;
 import ongjong.namanmoo.dto.openAI.WhisperTranscriptionResponse;
 import ongjong.namanmoo.service.*;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -57,25 +59,35 @@ public class ChallengeController {
             return new ApiResponse<>("404", "Lucky Not Found", null);
         }
         CurrentLuckyDto currentLuckyDto = new CurrentLuckyDto(DateUtil.getInstance().stringToTimestamp(lucky.getChallengeStartDate(),DateUtil.FORMAT_4));
-        return new ApiResponse<>("200", "Success",currentLuckyDto);
+        return new ApiResponse<>("200", "Success", currentLuckyDto);
     }
 
     // 오늘의 챌린지 조회
     @GetMapping("/today")
-    public ApiResponse<CurrentChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+    public ResponseEntity<ApiResponse<CurrentChallengeDto>> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+        if(String.valueOf(challengeDate).length() != 13){
+            ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("404", "Challenge date must be a 13-number", null);
+            return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
+        }
         Member member = memberService.findMemberByLoginId(); // 로그인한 member
         CurrentChallengeDto currentChallenge = challengeService.findChallengesByMemberId(challengeDate, member);
 
         if (currentChallenge == null || currentChallenge.getChallengeInfo() == null) {
-            return new ApiResponse<>("404", "Challenge not found", currentChallenge);
+            ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("404", "Challenge not found", currentChallenge);
+            return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
         }
-        return new ApiResponse<>("200", "Challenge found successfully", currentChallenge);
+        ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("200", "Challenge found successfully", currentChallenge);
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 
     // 챌린지 리스트 조회
     @GetMapping("/list")        // 챌린지 리스트는 lucky가 여러개 일때를 고려하여 죽은 럭키 개수 * 30 +1 부터 챌린지가 보여져야한다.
     public ApiResponse<List<ChallengeListDto>> getChallengeList(@RequestParam("challengeDate") Long challengeDate) throws Exception {
-        List<Challenge> challenges = challengeService.findChallenges(challengeDate); //
+        if(String.valueOf(challengeDate).length() != 13){
+            return new ApiResponse<>("404", "Challenge date must be a 13-number", null);
+        }
+
+        List<Challenge> challenges = challengeService.findChallenges(challengeDate);
 
         if (challenges == null || challenges.isEmpty()) {
             return new ApiResponse<>("400", "No challenges found for the family", null);
@@ -361,6 +373,7 @@ public class ChallengeController {
         TranscriptionRequest transcriptionRequest = new TranscriptionRequest();
         transcriptionRequest.setFile(answerFile);
         WhisperTranscriptionResponse transcriptionResponse = openAIClientService.createTranscription(transcriptionRequest);
+
 
         // Map 형태로 답변 URL 반환
         Map<String, String> responseData = new HashMap<>();
