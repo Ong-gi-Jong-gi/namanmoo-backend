@@ -352,7 +352,7 @@ public class ChallengeController {
     public ApiResponse<Map<String, String>> saveVoiceAnswer(
             @RequestParam("challengeId") Long challengeId,
             @RequestPart("answer") MultipartFile answerFile) throws Exception {
-        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.PHOTO);
+        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.VOICE1, ChallengeType.VOICE2, ChallengeType.VOICE3, ChallengeType.VOICE4);
         if (!challengeResponse.getStatus().equals("200")) {
             return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
         }
