@@ -351,6 +351,7 @@ public class AnswerServiceImpl implements AnswerService {
 
         // 다른 사진 답변의 URL을 수집하고 null 값 제거
         List<String> allOtherPhotos = answersWithinDateRange.stream()
+                .filter(answer -> !challenge19Answers.contains(answer))
                 .filter(answer -> answer != familyPhotoAnswer && answer.getAnswerType() == AnswerType.PHOTO)
                 .map(Answer::getAnswerContent)
                 .filter(Objects::nonNull)
