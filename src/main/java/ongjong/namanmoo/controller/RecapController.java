@@ -103,25 +103,22 @@ public class RecapController {
 
     @GetMapping("/youth")
     public ApiResponse<List<MemberYouthAnswerDto>> getYouth(@RequestParam("luckyId") Long luckyId) throws Exception{
-        List<Member> members = memberService.getMembersByLuckyId(luckyId);
-        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(members, 13, 28);
+        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(luckyId, 13, 28);
         return new ApiResponse<>("200", "Youth photos retrieved successfully", memberAnswerDtoList);
     }
 
     // recap 미안한점 고마운점
     @GetMapping("/appreciations")
     public ApiResponse<List<MemberAppreciationDto>> getAppreciations(@RequestParam("luckyId") Long luckyId) throws Exception {
-        List<Member> members = memberService.getMembersByLuckyId(luckyId);
-        List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(members, 25, 27);
+        List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(luckyId, 25, 27);
         return new ApiResponse<>("200", "Success", appreciationList);
     }
 
 
     // recap 가족사진
     @GetMapping("/photos")
-    public ApiResponse<MemberPhotosAnswerDto> getPhotos(@RequestParam("luckyId") Long luckyId) throws Exception{
-        List<Member> members = memberService.getMembersByLuckyId(luckyId);
-        MemberPhotosAnswerDto photosAnswerDto = answerService.getPhotoByMember(members);
+    public ApiResponse<MemberPhotosAnswerDto> getPhotos(@RequestParam("luckyId") Long luckyId) throws Exception {
+        MemberPhotosAnswerDto photosAnswerDto = answerService.getPhotos(luckyId);
         return new ApiResponse<>("200", "Success", photosAnswerDto);
     }
 
