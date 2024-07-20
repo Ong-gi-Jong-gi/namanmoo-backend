@@ -141,11 +141,7 @@ public class AnswerServiceImpl implements AnswerService {
         DateUtil dateUtil = DateUtil.getInstance();
 
         // answer 값을 가져가기 전에 answer가 존재하는지 확인
-        if (answer.isPresent()) {
-            return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
-        } else {
-            return null;
-        }
+        return answer.map(value -> dateUtil.stringToTimestamp(value.getCreateDate(), "yyyy.MM.dd")).orElse(null);
     }
 
     // 가족 구성원들의 답변 유무 검사
@@ -389,7 +385,7 @@ public class AnswerServiceImpl implements AnswerService {
         // FACETIME 답변만 필터링
         List<Answer> facetimeAnswers = answersWithinDateRange.stream()
                 .filter(answer -> answer.getChallenge().getChallengeType() == ChallengeType.FACETIME)
-                .collect(Collectors.toList());
+                .toList();
 
         // 가져온 FACETIME 답변이 없으면 null 반환
         if (facetimeAnswers.isEmpty()) {
