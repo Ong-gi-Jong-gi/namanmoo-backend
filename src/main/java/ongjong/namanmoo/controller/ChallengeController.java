@@ -65,20 +65,17 @@ public class ChallengeController {
 
     // 오늘의 챌린지 조회
     @GetMapping("/today")
-    public ResponseEntity<ApiResponse<CurrentChallengeDto>> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+    public ApiResponse<CurrentChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         if(String.valueOf(challengeDate).length() != 13){
-            ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("404", "Challenge date must be a 13-number", null);
-            return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
+            return new ApiResponse<>("404", "Challenge date must be a 13-number", null);
         }
         Member member = memberService.findMemberByLoginId(); // 로그인한 member
         CurrentChallengeDto currentChallenge = challengeService.findChallengesByMemberId(challengeDate, member);
 
         if (currentChallenge == null || currentChallenge.getChallengeInfo() == null) {
-            ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("404", "Challenge not found", currentChallenge);
-            return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
+            return new ApiResponse<>("404", "Challenge not found", currentChallenge);
         }
-        ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("200", "Challenge found successfully", currentChallenge);
-        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
+        return new ApiResponse<>("200", "Challenge found successfully", currentChallenge);
     }
 
     // 챌린지 리스트 조회
