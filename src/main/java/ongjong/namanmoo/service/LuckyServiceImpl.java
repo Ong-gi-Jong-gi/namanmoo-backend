@@ -234,7 +234,6 @@ public class LuckyServiceImpl implements LuckyService {
                 DateUtil dateUtil = DateUtil.getInstance();
                 // 현재 진행되어야할 challengenum를 반환
                 int currentChallengeNumber = Math.toIntExact(dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.timestampToString(Long.valueOf(challengeDate))));
-                log.info("challengeCurrentDate:{}",currentChallengeNumber);
                 if (luckyLifetime < currentChallengeNumber) {
                     lucky.setRunning(false);
                     luckyRepository.save(lucky);
