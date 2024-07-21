@@ -55,7 +55,7 @@ public class RecapController {
     @GetMapping("/ranking")
     public ApiResponse<MemberRankingListDto> getRanking(@RequestParam("luckyId") Long luckyId){
         Lucky lucky = luckyService.getLucky(luckyId);
-        Integer totalCount = lucky.getStatus();
+        Integer totalCount = lucky.getStatus(); // todo answer content값이 null인 걸 찾는걸로 수정해야할듯
         Integer luckyStatus = luckyService.calculateLuckyStatus(lucky);
         List<MemberAndCountDto> memberAndCountList = memberService.getMemberAndCount(lucky);
         MemberRankingListDto responseDto = new MemberRankingListDto(totalCount,luckyStatus,memberAndCountList);
