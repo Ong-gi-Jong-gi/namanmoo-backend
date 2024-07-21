@@ -51,14 +51,12 @@ public class ChallengeController {
             // 1. 캐릭터 생성 시도
             boolean isLuckyCreated = luckyService.createLucky(familyId, challengeDate);
             if (!isLuckyCreated) {
-                log.info("Lucky creation failed");
                 throw new RuntimeException("Lucky creation failed");
             }
 
             // 2. 답변 생성 시도
             boolean isAnswerCreated = answerService.createAnswer(familyId, challengeDate);
             if (!isAnswerCreated) {
-                log.info("Answer creation failed");
                 throw new RuntimeException("Answer creation failed");
             }
 

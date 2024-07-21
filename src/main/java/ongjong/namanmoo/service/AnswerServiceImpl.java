@@ -57,7 +57,6 @@ public class AnswerServiceImpl implements AnswerService {
 
         // 주어진 challengeDate와 familyId로 기존 답변 조회
         List<Answer> existingAnswer = answerRepository.findByCreateDateAndMemberFamily(givenChallengeDate, family.get());
-
         // 이미 존재하는 답변이 있는 경우 예외 발생
         if (!existingAnswer.isEmpty()) {
             throw new RuntimeException("Answer already exists for the given challenge date");
@@ -70,14 +69,11 @@ public class AnswerServiceImpl implements AnswerService {
         if (members.size() != family.get().getMaxFamilySize()) {
             throw new RuntimeException("Family size does not match the expected number of members");
         }
-        log.info("answer create");
         // 각 회원마다 모든 챌린지에 대해 답변 생성
         int count = 0;      // member의 번호를 의미
         for (Member member : members) {
-            log.info("currnet member: " + member.getMemberId());
             String strChallengeDate = dateUtil.timestampToString(challengeDate);        // timestamp인 challengedate를 string "yyyy.MM.dd" 으로 변환
             for (Challenge challenge : challenges) {                            // 현재 챌린지의 개수 만큼 answer 생성 -> 챌린지의 개수가 30개가 넘었을 경우 stop
-                log.info("currnet challenge: " + challenge.getChallengeId());
                 if (challenge.getChallengeType() == ChallengeType.GROUP_PARENT){            // 만약 member가 아빠 일경우, challenge가 CGROUP이면 ANSWER 생성 X
                     if (member.getRole().equals("아들") || member.getRole().equals("딸")){
                         continue;
