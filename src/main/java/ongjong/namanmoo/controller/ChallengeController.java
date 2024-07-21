@@ -1,6 +1,5 @@
 package ongjong.namanmoo.controller;
 
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.*;
@@ -42,7 +41,7 @@ public class ChallengeController {
     private final OpenAIClientService openAIClientService;
 
 
-    @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
+    @PostMapping // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     @Transactional
     public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
         Long challengeDate = request.getChallengeDate();
@@ -50,11 +49,12 @@ public class ChallengeController {
 
         try {
             // Answer와 Lucky 생성 시도
-            if (!answerService.createAnswer(familyId, challengeDate)) {
-                return new ApiResponse<>("404", "Challenge create fail", null);
-            }
-            if (!luckyService.createLucky(familyId, challengeDate)) {
-                return new ApiResponse<>("404", "Challenge create fail", null);
+            boolean isAnswerCreated = answerService.createAnswer(familyId, challengeDate);
+            boolean isLuckyCreated = luckyService.createLucky(familyId, challengeDate);
+
+            // 두 함수 모두 true를 반환하지 않는 경우에 에러 메시지 반환
+            if (!isAnswerCreated || !isLuckyCreated) {
+                throw new Exception("Challenge create fail");
             }
         } catch (Exception e) {
             // 예외 발생 시 404 상태 코드와 예외 메시지 반환
