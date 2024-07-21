@@ -36,17 +36,18 @@ public class LuckyServiceImpl implements LuckyService {
 
     // 캐릭터 생성
     @Override
-    public boolean createLucky(Long familyId, Long challengeDate) {
+    public boolean createLucky(Long familyId, Long challengeDate) throws Exception {
         Optional<Family> familyOptional = familyRepository.findById(familyId);
 
         // Family가 존재하지 않으면 false 반환
         if (familyOptional.isEmpty()) {
-            return false;
+            throw new Exception("Family not found");
         }
 
         List<Lucky> luckyList = luckyRepository.findByFamilyFamilyId(familyId);
         // 모든 lucky의 running이 false인지 확인
         boolean allNotRunning = luckyList.stream().noneMatch(Lucky::isRunning);
+        log.info("allNotRunning: " + allNotRunning);
         if (allNotRunning) {
             Family family = familyOptional.get();
             Lucky lucky = new Lucky();
@@ -59,7 +60,7 @@ public class LuckyServiceImpl implements LuckyService {
             luckyRepository.save(lucky);
             return true;
         } else {
-            return false;
+            throw new RuntimeException("Lucky already exists and is running");
         }
     }
 

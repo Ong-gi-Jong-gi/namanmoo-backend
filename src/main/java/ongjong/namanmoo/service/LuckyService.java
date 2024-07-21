@@ -20,7 +20,7 @@ public interface LuckyService {
     LuckyStatusDto getLuckyStatus(String createDate);
 
     // 캐릭터 생성
-    boolean createLucky(Long familyId, Long challengeDate);
+    boolean createLucky(Long familyId, Long challengeDate) throws Exception;
 
     // 행운이 상태 계산
     Integer calculateLuckyStatus(Lucky lucky);

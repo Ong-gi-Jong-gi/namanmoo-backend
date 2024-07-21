@@ -43,23 +43,33 @@ public class ChallengeController {
 
     @PostMapping // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     @Transactional
-    public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
+    public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) {
         Long challengeDate = request.getChallengeDate();
         Long familyId = familyService.findFamilyId();
 
-        boolean isAnswerCreated = answerService.createAnswer(familyId, challengeDate);
-        // createAnswer가 false를 반환하면 메소드를 종료하고 에러 메시지를 반환
-        if (!isAnswerCreated) {
-            return new ApiResponse<>("404", "Answer already exists for the given challenge date", null);
-        }
+        try {
+            // 1. 캐릭터 생성 시도
+            boolean isLuckyCreated = luckyService.createLucky(familyId, challengeDate);
+            if (!isLuckyCreated) {
+                log.info("Lucky creation failed");
+                throw new RuntimeException("Lucky creation failed");
+            }
 
-        boolean isLuckyCreated = luckyService.createLucky(familyId, challengeDate);
-        // createLucky가 false를 반환하면 메소드를 종료하고 에러 메시지를 반환
-        if (!isLuckyCreated) {
-            return new ApiResponse<>("404", "Lucky creation failed", null);
-        }
+            // 2. 답변 생성 시도
+            boolean isAnswerCreated = answerService.createAnswer(familyId, challengeDate);
+            if (!isAnswerCreated) {
+                log.info("Answer creation failed");
+                throw new RuntimeException("Answer creation failed");
+            }
 
-        return new ApiResponse<>("200", "Challenge created successfully", null);
+            // 성공적으로 생성된 경우
+            return new ApiResponse<>("200", "Challenge created successfully", null);
+
+        } catch (Exception e) {
+            // 예외 발생 시 트랜잭션 롤백
+            log.error("Challenge creation failed", e);
+            return new ApiResponse<>("404", e.getMessage(), null);
+        }
     }
 
     // 현재 진행중인 챌린지 시작 날짜를 반환
