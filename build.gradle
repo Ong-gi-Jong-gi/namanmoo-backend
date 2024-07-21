@@ -62,6 +62,9 @@ dependencies {
 
 	//ffmpeg
 	implementation ('net.bramp.ffmpeg:ffmpeg:0.8.0')
+
+	// fcm
+	implementation 'com.google.firebase:firebase-admin:9.3.0'
 }
 
 tasks.named('test') {
