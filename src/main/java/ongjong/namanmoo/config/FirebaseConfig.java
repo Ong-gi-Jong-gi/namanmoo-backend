@@ -12,16 +12,17 @@ import java.io.InputStream;
 
 @Configuration
 public class FirebaseConfig {
-    private static final String FIREBASE_CONFIG_PATH = "mooluck-fcm-firebase-adminsdk.json";
+    @Value("${firebase.config.path}")
+    private String firebaseConfigPath;
 
     @Bean
     public FirebaseApp initializeFirebase() throws IOException {
         // FirebaseApp 인스턴스가 이미 존재하는지 확인
         if (FirebaseApp.getApps().isEmpty()) {
-            InputStream serviceAccount = getClass().getClassLoader().getResourceAsStream(FIREBASE_CONFIG_PATH);
+            InputStream serviceAccount = getClass().getClassLoader().getResourceAsStream(firebaseConfigPath);
 
             if (serviceAccount == null) {
-                throw new RuntimeException("Firebase config file not found" + FIREBASE_CONFIG_PATH);
+                throw new RuntimeException("Firebase config file not found" + firebaseConfigPath);
             }
 
             FirebaseOptions options = new FirebaseOptions.Builder()

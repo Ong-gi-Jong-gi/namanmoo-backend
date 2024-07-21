@@ -62,4 +62,4 @@ ffprobe:
 
 firebase:
   config:
-    path: classpath:mooluck-fcm-firebase-adminsdk.json
+    path: ${FIREBASE_CONFIG_PATH}

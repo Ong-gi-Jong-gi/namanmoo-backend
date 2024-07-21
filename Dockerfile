@@ -1,6 +1,10 @@
 # jdk17 Image Start
 FROM openjdk:17-slim
 
+# Firebase Secret 파일 인자 추가
+ARG FIREBASE_JSON_FILENAME=mooluck-fcm-firebase-adminsdk.json
+COPY $FIREBASE_JSON_FILENAME /app/$FIREBASE_JSON_FILENAME
+
 # 인자 설정 - JAR_FILE
 ARG JAR_FILE=build/libs/*.jar
 
