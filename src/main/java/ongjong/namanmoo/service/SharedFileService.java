@@ -249,18 +249,18 @@ public class SharedFileService {
                 }
             }
 
-//            // 모든 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
-//            boolean allGroupsHaveEnoughImages = groupedFiles.values().stream().allMatch(list -> list.size() >= 4);
-//
-//            if (allGroupsHaveEnoughImages) {
-//                break; // 모든 그룹에 4개 이상의 이미지가 있는 경우 병합을 시작
-//            }
-            // 어떠한 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
-            boolean anyGroupHasEnoughImages = groupedFiles.values().stream().anyMatch(list -> list.size() >= 4);
+            // 모든 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
+            boolean allGroupsHaveEnoughImages = groupedFiles.values().stream().allMatch(list -> list.size() >= 4);
 
-            if (anyGroupHasEnoughImages || System.currentTimeMillis() - startTime > MAX_WAIT_TIME) {
-                break; // 어떠한 그룹에 4개 이상의 이미지가 있거나, 최대 대기 시간이 지나면 병합을 시작합니다.
+            if (allGroupsHaveEnoughImages) {
+                break; // 모든 그룹에 4개 이상의 이미지가 있는 경우 병합을 시작
             }
+//            // 어떠한 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
+//            boolean anyGroupHasEnoughImages = groupedFiles.values().stream().anyMatch(list -> list.size() >= 4);
+//
+//            if (anyGroupHasEnoughImages || System.currentTimeMillis() - startTime > MAX_WAIT_TIME) {
+//                break; // 어떠한 그룹에 4개 이상의 이미지가 있거나, 최대 대기 시간이 지나면 병합을 시작합니다.
+//            }
             if (System.currentTimeMillis() - startTime > MAX_WAIT_TIME) {
                 throw new IOException("이미지 업로드 대기 시간이 초과되었습니다.");
             }
