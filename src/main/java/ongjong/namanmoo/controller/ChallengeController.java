@@ -47,18 +47,21 @@ public class ChallengeController {
         Long challengeDate = request.getChallengeDate();
         Long familyId = familyService.findFamilyId();
 
-        boolean isAnswerCreated = answerService.createAnswer(familyId, challengeDate);
-        // createAnswer가 false를 반환하면 메소드를 종료하고 에러 메시지를 반환
-        if (!isAnswerCreated) {
-            return new ApiResponse<>("404", "Answer already exists for the given challenge date", null);
+        try {
+            // Answer와 Lucky 생성 시도
+            boolean isAnswerCreated = answerService.createAnswer(familyId, challengeDate);
+            boolean isLuckyCreated = luckyService.createLucky(familyId, challengeDate);
+
+            // 두 함수 모두 true를 반환하지 않는 경우에 에러 메시지 반환
+            if (!isAnswerCreated || !isLuckyCreated) {
+                throw new Exception("Challenge create fail");
+            }
+        } catch (Exception e) {
+            // 예외 발생 시 404 상태 코드와 예외 메시지 반환
+            return new ApiResponse<>("404", e.getMessage(), null);
         }
 
-        boolean isLuckyCreated = luckyService.createLucky(familyId, challengeDate);
-        // createLucky가 false를 반환하면 메소드를 종료하고 에러 메시지를 반환
-        if (!isLuckyCreated) {
-            return new ApiResponse<>("404", "Lucky creation failed", null);
-        }
-
+        // 성공적으로 생성된 경우 200 상태 코드 반환
         return new ApiResponse<>("200", "Challenge created successfully", null);
     }
 
