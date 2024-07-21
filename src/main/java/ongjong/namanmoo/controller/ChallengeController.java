@@ -1,6 +1,5 @@
 package ongjong.namanmoo.controller;
 
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.*;
@@ -17,6 +16,7 @@ import ongjong.namanmoo.service.*;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,14 +40,34 @@ public class ChallengeController {
     private final SharedFileService sharedFileService;
     private final OpenAIClientService openAIClientService;
 
-    @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
-    public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
+
+    @PostMapping // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
+    @Transactional
+    public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) {
         Long challengeDate = request.getChallengeDate();
         Long familyId = familyService.findFamilyId();
-        if (!luckyService.createLucky(familyId, challengeDate) || !answerService.createAnswer(familyId, challengeDate)) {
-            return new ApiResponse<>("404", "Challenge not found", null);
+
+        try {
+            // 1. 캐릭터 생성 시도
+            boolean isLuckyCreated = luckyService.createLucky(familyId, challengeDate);
+            if (!isLuckyCreated) {
+                throw new RuntimeException("Lucky creation failed");
+            }
+
+            // 2. 답변 생성 시도
+            boolean isAnswerCreated = answerService.createAnswer(familyId, challengeDate);
+            if (!isAnswerCreated) {
+                throw new RuntimeException("Answer creation failed");
+            }
+
+            // 성공적으로 생성된 경우
+            return new ApiResponse<>("200", "Challenge created successfully", null);
+
+        } catch (Exception e) {
+            // 예외 발생 시 트랜잭션 롤백
+            log.error("Challenge creation failed", e);
+            return new ApiResponse<>("404", e.getMessage(), null);
         }
-        return new ApiResponse<>("200", "Challenge created successfully", null);
     }
 
     // 현재 진행중인 챌린지 시작 날짜를 반환
@@ -64,20 +84,17 @@ public class ChallengeController {
 
     // 오늘의 챌린지 조회
     @GetMapping("/today")
-    public ResponseEntity<ApiResponse<CurrentChallengeDto>> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+    public ApiResponse<CurrentChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
         if(String.valueOf(challengeDate).length() != 13){
-            ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("404", "Challenge date must be a 13-number", null);
-            return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
+            return new ApiResponse<>("404", "Challenge date must be a 13-number", null);
         }
         Member member = memberService.findMemberByLoginId(); // 로그인한 member
         CurrentChallengeDto currentChallenge = challengeService.findChallengesByMemberId(challengeDate, member);
 
         if (currentChallenge == null || currentChallenge.getChallengeInfo() == null) {
-            ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("404", "Challenge not found", currentChallenge);
-            return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
+            return new ApiResponse<>("404", "Challenge not found", currentChallenge);
         }
-        ApiResponse<CurrentChallengeDto> apiResponse = new ApiResponse<>("200", "Challenge found successfully", currentChallenge);
-        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
+        return new ApiResponse<>("200", "Challenge found successfully", currentChallenge);
     }
 
     // 챌린지 리스트 조회
@@ -119,7 +136,9 @@ public class ChallengeController {
 
         // 챌린지 조회 시 조회수 증가
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        if (currentLucky != null){
+            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        }
 
         return new ApiResponse<>("200", "Normal challenge found successfully", normalChallengeDto);
     }
@@ -155,7 +174,9 @@ public class ChallengeController {
 
         // 챌린지 조회 시 조회수 증가
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        if (currentLucky != null){
+            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        }
 
         GroupChallengeDto groupChallengeDto = challengeService.filterChallengesByMemberRole(challenge, challengeDate, isComplete, allAnswers);
         return new ApiResponse<>("200", "Group Challenge found successfully", groupChallengeDto);
@@ -192,8 +213,9 @@ public class ChallengeController {
 
         // 챌린지 조회 시 조회수 증가
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
-
+        if (currentLucky != null){
+            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        }
         PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, isComplete, challengeDate, allAnswers);
         return new ApiResponse<>("200", "Photo Challenge found successfully", photoChallengeDto);
     }
@@ -310,7 +332,6 @@ public class ChallengeController {
     @GetMapping("/face/result")
     public ApiResponse<Map<Integer, List<String>>> getFaceTimeAnswer(
             @RequestParam("challengeId") Long challengeId) throws Exception {
-
         ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.FACETIME);
         if (!challengeResponse.getStatus().equals("200")) {
             return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
@@ -322,9 +343,13 @@ public class ChallengeController {
         if (family == null) {
             return new ApiResponse<>("404", "Family not found for the current member", null);
         }
-        Lucky lucky = luckyService.findCurrentLucky(family.getFamilyId());
 
-        // 응답 데이터 생성
+        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
+        if (currentLucky != null){
+            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+            // 응답 데이터 생성
+        }
+        Lucky lucky = luckyService.findMatchingLucky(challengeId,member);
         Map<Integer, List<String>> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), lucky.getLuckyId());
 
         return new ApiResponse<>("200", "FaceTime Challenge results found successfully", results);
@@ -346,7 +371,9 @@ public class ChallengeController {
 
         // 챌린지 조회 시 조회수 증가
         Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        if (currentLucky != null){
+            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        }
 
         VoiceChallengeDto voiceChallengeDto = new VoiceChallengeDto(challenge, isComplete, challengeDate, allAnswers);
         return new ApiResponse<>("200", "Voice Challenge found successfully", voiceChallengeDto);
