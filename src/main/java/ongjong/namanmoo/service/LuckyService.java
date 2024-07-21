@@ -3,7 +3,6 @@ package ongjong.namanmoo.service;
 
 
 import ongjong.namanmoo.domain.Lucky;
-import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.dto.lucky.LuckyListDto;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
 
@@ -44,7 +43,4 @@ public interface LuckyService {
     void increaseChallengeViews(Long luckyId, Integer challengeNum);
 
     void luckyDeadOrAlive(String challengeDate) throws Exception;
-
-    // 해당 challengeId에 맞는 lucky를 찾기
-    Lucky findMatchingLucky(Long challengeId, Member member) throws Exception;
 }
