@@ -141,7 +141,11 @@ public class AnswerServiceImpl implements AnswerService {
         DateUtil dateUtil = DateUtil.getInstance();
 
         // answer 값을 가져가기 전에 answer가 존재하는지 확인
-        return answer.map(value -> dateUtil.stringToTimestamp(value.getCreateDate(), "yyyy.MM.dd")).orElse(null);
+        if (answer.isPresent()) {
+            return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
+        } else {
+            return null;
+        }
     }
 
     // 가족 구성원들의 답변 유무 검사
@@ -349,12 +353,10 @@ public class AnswerServiceImpl implements AnswerService {
         Answer familyPhotoAnswer = memberAnswerList.get(random.nextInt(memberAnswerList.size()));
         String familyPhoto = familyPhotoAnswer.getAnswerContent();
 
-        // 다른 사진 답변의 URL을 수집하고 null 값 제거
+        // 다른 사진 답변의 URL 수집
         List<String> allOtherPhotos = answersWithinDateRange.stream()
-                .filter(answer -> !challenge19Answers.contains(answer))
                 .filter(answer -> answer != familyPhotoAnswer && answer.getAnswerType() == AnswerType.PHOTO)
                 .map(Answer::getAnswerContent)
-                .filter(Objects::nonNull)
                 .toList();
 
         // 최대 9장의 다른 사진을 랜덤으로 선택
@@ -387,7 +389,7 @@ public class AnswerServiceImpl implements AnswerService {
         // FACETIME 답변만 필터링
         List<Answer> facetimeAnswers = answersWithinDateRange.stream()
                 .filter(answer -> answer.getChallenge().getChallengeType() == ChallengeType.FACETIME)
-                .toList();
+                .collect(Collectors.toList());
 
         // 가져온 FACETIME 답변이 없으면 null 반환
         if (facetimeAnswers.isEmpty()) {

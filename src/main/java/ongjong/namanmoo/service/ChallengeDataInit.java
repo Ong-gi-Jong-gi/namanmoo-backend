@@ -37,7 +37,7 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(10, "가족이 가장 듬직했던 순간이 있나요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(11, "요즘 고민이 있다면 무엇일까요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(12, "가족과 가장 닮은 점, 혹은 닮고 싶은 점이 있나요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(13, "나의 어렸을 때 장래희망은 ◯◯였다.", ChallengeType.NORMAL));
+        challenges.add(createChallenge(13, "나의 어렸을 때 장래희망은 {}였다.", ChallengeType.NORMAL));
         challenges.add(createChallenge(14, "가족과 함께한 휴가나 여행 사진을 공유해 주세요.", ChallengeType.PHOTO));
         challenges.add(createChallenge(15, "어렸을 때 가장 좋아했던 놀이 또는 게임은 무엇인가요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(16, "어릴 적 가장 기억에 남는 생일 선물은 무엇이었나요?", ChallengeType.NORMAL));
@@ -73,7 +73,7 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(40, "가족이 가장 듬직했던 순간이 있나요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(41, "요즘 고민이 있다면 무엇일까요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(42, "가족과 가장 닮은 점, 혹은 닮고 싶은 점이 있나요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(43, "나의 어렸을 때 장래희망은 ◯◯였다.", ChallengeType.NORMAL));
+        challenges.add(createChallenge(43, "나의 어렸을 때 장래희망은 {}였다.", ChallengeType.NORMAL));
         challenges.add(createChallenge(44, "가족과 함께한 휴가나 여행 사진을 공유해 주세요.", ChallengeType.PHOTO));
         challenges.add(createChallenge(45, "어렸을 때 가장 좋아했던 놀이 또는 게임은 무엇인가요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(46, "어릴 적 가장 기억에 남는 생일 선물은 무엇이었나요?", ChallengeType.NORMAL));
@@ -109,7 +109,7 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(70, "가족이 가장 듬직했던 순간이 있나요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(71, "요즘 고민이 있다면 무엇일까요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(72, "가족과 가장 닮은 점, 혹은 닮고 싶은 점이 있나요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(73, "나의 어렸을 때 장래희망은 ◯◯였다.", ChallengeType.NORMAL));
+        challenges.add(createChallenge(73, "나의 어렸을 때 장래희망은 {}였다.", ChallengeType.NORMAL));
         challenges.add(createChallenge(74, "가족과 함께한 휴가나 여행 사진을 공유해 주세요.", ChallengeType.PHOTO));
         challenges.add(createChallenge(75, "어렸을 때 가장 좋아했던 놀이 또는 게임은 무엇인가요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(76, "어릴 적 가장 기억에 남는 생일 선물은 무엇이었나요?", ChallengeType.NORMAL));

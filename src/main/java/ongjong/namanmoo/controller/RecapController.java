@@ -55,7 +55,7 @@ public class RecapController {
     @GetMapping("/ranking")
     public ApiResponse<MemberRankingListDto> getRanking(@RequestParam("luckyId") Long luckyId){
         Lucky lucky = luckyService.getLucky(luckyId);
-        Integer totalCount = lucky.getStatus(); // todo answer content값이 null인 걸 찾는걸로 수정해야할듯
+        Integer totalCount = lucky.getStatus();
         Integer luckyStatus = luckyService.calculateLuckyStatus(lucky);
         List<MemberAndCountDto> memberAndCountList = memberService.getMemberAndCount(lucky);
         MemberRankingListDto responseDto = new MemberRankingListDto(totalCount,luckyStatus,memberAndCountList);
@@ -131,13 +131,13 @@ public class RecapController {
         try {
             Lucky lucky = luckyService.getLucky(luckyId);
 
-//            // 이미 병합된 음성 파일이 있는지 확인 (일단 주석 처리)
-//            SharedFile mergeVoice = sharedFileService.getMergeVoice(lucky, FileType.AUDIO);
-//            if (mergeVoice != null) {
-//                Map<String, String> data = new HashMap<>();
-//                data.put("backgroundVoice", mergeVoice.getFileName());
-//                return new ApiResponse<>("200", "Already Voice Clips Merge Success", data);
-//            }
+            // 이미 병합된 음성 파일이 있는지 확인
+            SharedFile mergeVoice = sharedFileService.getMergeVoice(lucky, FileType.AUDIO);
+            if (mergeVoice != null) {
+                Map<String, String> data = new HashMap<>();
+                data.put("backgroundVoice", mergeVoice.getFileName());
+                return new ApiResponse<>("200", "Already Voice Clips Merge Success", data);
+            }
 
             // S3에서 해당 luckyId의 음성파일 목록을 가져옴
             List<String> audioPaths = awsS3Service.listAudioFiles(luckyId);
