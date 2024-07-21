@@ -19,4 +19,4 @@ ENV FFMPEG_PATH=/usr/bin/ffmpeg
 ENV FFPROBE_PATH=/usr/bin/ffprobe
 
 # 기본 프로파일 실행 명령어
-ENTRYPOINT ["java", "-jar", "mooluck-spring.jar", "-Dspring.profiles.active=docker", "-Duser.timezone=Asia/Seoul"]
+ENTRYPOINT ["java", "-Dfirebase.config.path=/app/mooluck-fcm-firebase-adminsdk.json", "-jar", "mooluck-spring.jar", "-Dspring.profiles.active=docker", "-Duser.timezone=Asia/Seoul"]
