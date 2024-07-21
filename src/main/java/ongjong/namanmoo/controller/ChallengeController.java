@@ -45,9 +45,18 @@ public class ChallengeController {
     public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
         Long challengeDate = request.getChallengeDate();
         Long familyId = familyService.findFamilyId();
-        if (!luckyService.createLucky(familyId, challengeDate) || !answerService.createAnswer(familyId, challengeDate)) {
-            return new ApiResponse<>("404", "Challenge not found", null);
+
+        try {
+            // Answer와 Lucky 생성 시도
+            if (!answerService.createAnswer(familyId, challengeDate) || !luckyService.createLucky(familyId, challengeDate)) {
+                return new ApiResponse<>("404", "Challenge create fail", null);
+            }
+        } catch (Exception e) {
+            // 예외 발생 시 404 상태 코드와 예외 메시지 반환
+            return new ApiResponse<>("404", e.getMessage(), null);
         }
+
+        // 성공적으로 생성된 경우 200 상태 코드 반환
         return new ApiResponse<>("200", "Challenge created successfully", null);
     }
 

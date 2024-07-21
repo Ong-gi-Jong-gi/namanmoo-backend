@@ -39,60 +39,74 @@ public class AnswerServiceImpl implements AnswerService {
     private final ChallengeService challengeService;
     private final MemberService memberService;
 
-    // 답변 생성칸 만들기
     @Override
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
 
         // 가족 ID로 해당 가족의 회원들을 조회 (멤버 오름차순으로 나오도록 수정)
         List<Member> members = memberRepository.findByFamilyFamilyIdOrderByMemberIdAsc(familyId);
         Optional<Family> family  = familyRepository.findById(familyId);
+
+        if (family.isEmpty()) {
+            throw new Exception("Family not found");
+        }
+
+        DateUtil dateUtil = DateUtil.getInstance();
+
+        // 주어진 challengeDate와 familyId로 기존 답변 조회
+        List<Answer> existingAnswer = answerRepository.findByCreateDateAndMemberFamily(dateUtil.timestampToString(challengeDate), family.get());
+
+        // 이미 존재하는 답변이 있는 경우 예외 발생
+        if (!existingAnswer.isEmpty()) {
+            throw new Exception("Answer already exists for the given challenge date");
+        }
+
         // 모든 챌린지를 조회
         List<Challenge> challenges = challengeService.findRunningChallenges();
 
-        // 가족이 다 방에 들어오지 않았을 경우 null 반환
+        // 가족이 다 방에 들어오지 않았을 경우 false 반환
         if (members.size() != family.get().getMaxFamilySize()) {
             return false;
         }
-        DateUtil dateUtil = DateUtil.getInstance();
+
         // 각 회원마다 모든 챌린지에 대해 답변 생성
-        int count = 0;      // member의 번호를 의미
+        int count = 0;  // member의 번호를 의미
         for (Member member : members) {
-            String strChallengeDate = dateUtil.timestampToString(challengeDate);        // timestamp인 challengedate를 string "yyyy.MM.dd" 으로 변환
-            for (Challenge challenge : challenges) {                            // 현재 챌린지의 개수 만큼 answer 생성 -> 챌린지의 개수가 30개가 넘었을 경우 stop
-                if (challenge.getChallengeType() == ChallengeType.GROUP_PARENT){            // 만약 member가 아빠 일경우, challenge가 CGROUP이면 ANSWER 생성 X
-                    if (member.getRole().equals("아들") || member.getRole().equals("딸")){
+            String strChallengeDate = dateUtil.timestampToString(challengeDate);  // timestamp인 challengedate를 string "yyyy.MM.dd" 으로 변환
+            for (Challenge challenge : challenges) {  // 현재 챌린지의 개수 만큼 answer 생성 -> 챌린지의 개수가 30개가 넘었을 경우 stop
+                if (challenge.getChallengeType() == ChallengeType.GROUP_PARENT) {  // 만약 member가 아빠 일경우, challenge가 CGROUP이면 ANSWER 생성 X
+                    if (member.getRole().equals("아들") || member.getRole().equals("딸")) {
                         continue;
                     }
                 }
-                if (challenge.getChallengeType() == ChallengeType.GROUP_CHILD){
-                    if (member.getRole().equals("아빠") || member.getRole().equals("엄마")){
+                if (challenge.getChallengeType() == ChallengeType.GROUP_CHILD) {
+                    if (member.getRole().equals("아빠") || member.getRole().equals("엄마")) {
                         continue;
                     }
                 }
-                if (challenge.getChallengeType() == ChallengeType.VOICE1){
-                    if (count%4 != 0){
+                if (challenge.getChallengeType() == ChallengeType.VOICE1) {
+                    if (count % 4 != 0) {
                         continue;
                     }
                 }
-                if (challenge.getChallengeType() == ChallengeType.VOICE2){
-                    if (count%4 != 1){
+                if (challenge.getChallengeType() == ChallengeType.VOICE2) {
+                    if (count % 4 != 1) {
                         continue;
                     }
                 }
-                if (challenge.getChallengeType() == ChallengeType.VOICE3){
-                    if (count%4 != 2){
+                if (challenge.getChallengeType() == ChallengeType.VOICE3) {
+                    if (count % 4 != 2) {
                         continue;
                     }
                 }
-                if (challenge.getChallengeType() == ChallengeType.VOICE4){
-                    if (count%4 != 3){
+                if (challenge.getChallengeType() == ChallengeType.VOICE4) {
+                    if (count % 4 != 3) {
                         continue;
                     }
                 }
 
                 Answer answer = getAnswer(member, challenge, strChallengeDate);
                 // challengeDate를 1일 증가
-                strChallengeDate = dateUtil.addDaysToStringDate(strChallengeDate,1);
+                strChallengeDate = dateUtil.addDaysToStringDate(strChallengeDate, 1);
                 // 생성된 Answer 저장
                 answerRepository.save(answer);
             }
@@ -349,7 +363,7 @@ public class AnswerServiceImpl implements AnswerService {
         Answer familyPhotoAnswer = memberAnswerList.get(random.nextInt(memberAnswerList.size()));
         String familyPhoto = familyPhotoAnswer.getAnswerContent();
 
-        // 다른 사진 답변의 URL을 수집하고 null 값 제거
+        // Challenge 19에 대한 답변을 제외한 다른 사진 답변의 URL을 수집하고 null 값 제거
         List<String> allOtherPhotos = answersWithinDateRange.stream()
                 .filter(answer -> !challenge19Answers.contains(answer))
                 .filter(answer -> answer != familyPhotoAnswer && answer.getAnswerType() == AnswerType.PHOTO)
