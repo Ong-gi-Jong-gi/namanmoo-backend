@@ -17,6 +17,7 @@ import ongjong.namanmoo.service.*;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,13 +43,17 @@ public class ChallengeController {
 
 
     @PostMapping     // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
+    @Transactional
     public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) throws Exception {
         Long challengeDate = request.getChallengeDate();
         Long familyId = familyService.findFamilyId();
 
         try {
             // Answer와 Lucky 생성 시도
-            if (!answerService.createAnswer(familyId, challengeDate) || !luckyService.createLucky(familyId, challengeDate)) {
+            if (!answerService.createAnswer(familyId, challengeDate)) {
+                return new ApiResponse<>("404", "Challenge create fail", null);
+            }
+            if (!luckyService.createLucky(familyId, challengeDate)) {
                 return new ApiResponse<>("404", "Challenge create fail", null);
             }
         } catch (Exception e) {

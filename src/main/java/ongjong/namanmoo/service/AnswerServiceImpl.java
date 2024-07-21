@@ -41,10 +41,9 @@ public class AnswerServiceImpl implements AnswerService {
 
     @Override
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
-
         // 가족 ID로 해당 가족의 회원들을 조회 (멤버 오름차순으로 나오도록 수정)
         List<Member> members = memberRepository.findByFamilyFamilyIdOrderByMemberIdAsc(familyId);
-        Optional<Family> family  = familyRepository.findById(familyId);
+        Optional<Family> family = familyRepository.findById(familyId);
 
         if (family.isEmpty()) {
             throw new Exception("Family not found");
