@@ -255,12 +255,6 @@ public class SharedFileService {
             if (allGroupsHaveEnoughImages) {
                 break; // 모든 그룹에 4개 이상의 이미지가 있는 경우 병합을 시작
             }
-//            // 어떠한 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
-//            boolean anyGroupHasEnoughImages = groupedFiles.values().stream().anyMatch(list -> list.size() >= 4);
-//
-//            if (anyGroupHasEnoughImages || System.currentTimeMillis() - startTime > MAX_WAIT_TIME) {
-//                break; // 어떠한 그룹에 4개 이상의 이미지가 있거나, 최대 대기 시간이 지나면 병합을 시작합니다.
-//            }
             if (System.currentTimeMillis() - startTime > MAX_WAIT_TIME) {
                 throw new IOException("이미지 업로드 대기 시간이 초과되었습니다.");
             }
@@ -283,13 +277,8 @@ public class SharedFileService {
                     .map(SharedFile::getFileName)
                     .collect(Collectors.toSet());
 
-//            // 만약 고유한 이미지 수가 4개 미만이면 예외를 던짐
-//            if (uniqueImageUrls.size() < 4) {
-//                throw new IOException("충분한 수의 고유 이미지를 찾을 수 없습니다.");
-//            }
-            // 만약 고유한 이미지 수가 4개 미만이면 이 그룹 무시하고 다음 그룹으로 넘어감
             if (uniqueImageUrls.size() < 4) {
-                continue;
+                throw new IOException("충분한 수의 고유 이미지를 찾을 수 없습니다.");
             }
 
             List<BufferedImage> selectedImages = uniqueImageUrls.stream()

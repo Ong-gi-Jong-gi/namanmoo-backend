@@ -41,34 +41,19 @@ public class AnswerServiceImpl implements AnswerService {
 
     // 답변 생성칸 만들기
     @Override
-    @Transactional
     public boolean createAnswer(Long familyId, Long challengeDate) throws Exception {
 
         // 가족 ID로 해당 가족의 회원들을 조회 (멤버 오름차순으로 나오도록 수정)
         List<Member> members = memberRepository.findByFamilyFamilyIdOrderByMemberIdAsc(familyId);
-        Optional<Family> family = familyRepository.findById(familyId);
-
-        if (family.isEmpty()) {
-            throw new Exception("Family not found");
-        }
-
-        DateUtil dateUtil = DateUtil.getInstance();
-        String givenChallengeDate = dateUtil.timestampToString(challengeDate);        // timestamp인 challengedate를 string "yyyy.MM.dd" 으로 변환
-
-        // 주어진 challengeDate와 familyId로 기존 답변 조회
-        List<Answer> existingAnswer = answerRepository.findByCreateDateAndMemberFamily(givenChallengeDate, family.get());
-        // 이미 존재하는 답변이 있는 경우 예외 발생
-        if (!existingAnswer.isEmpty()) {
-            throw new RuntimeException("Answer already exists for the given challenge date");
-        }
-
+        Optional<Family> family  = familyRepository.findById(familyId);
         // 모든 챌린지를 조회
         List<Challenge> challenges = challengeService.findRunningChallenges();
 
-        // 가족이 다 방에 들어오지 않았을 경우
+        // 가족이 다 방에 들어오지 않았을 경우 null 반환
         if (members.size() != family.get().getMaxFamilySize()) {
-            throw new RuntimeException("Family size does not match the expected number of members");
+            return false;
         }
+        DateUtil dateUtil = DateUtil.getInstance();
         // 각 회원마다 모든 챌린지에 대해 답변 생성
         int count = 0;      // member의 번호를 의미
         for (Member member : members) {
@@ -156,7 +141,11 @@ public class AnswerServiceImpl implements AnswerService {
         DateUtil dateUtil = DateUtil.getInstance();
 
         // answer 값을 가져가기 전에 answer가 존재하는지 확인
-        return answer.map(value -> dateUtil.stringToTimestamp(value.getCreateDate(), "yyyy.MM.dd")).orElse(null);
+        if (answer.isPresent()) {
+            return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
+        } else {
+            return null;
+        }
     }
 
     // 가족 구성원들의 답변 유무 검사
@@ -347,14 +336,14 @@ public class AnswerServiceImpl implements AnswerService {
 
         // 시작 날짜와 종료 날짜 계산
         String startDate = lucky.getChallengeStartDate();
-        String familyPortraitDate = DateUtil.getInstance().addDaysToStringDate(startDate, 21);
+        String challenge19Date = DateUtil.getInstance().addDaysToStringDate(startDate, 18);
         String endDate = DateUtil.getInstance().addDaysToStringDate(startDate, lucky.getLifetime().getDays());
 
         // Lucky 기간 동안의 모든 답변 가져오기
         List<Answer> answersWithinDateRange = answerRepository.findByMemberFamilyAndCreateDateBetween(lucky.getFamily(), startDate, endDate);
 
-        // 가족 사진에 대한 답변 가져오기
-        List<Answer> challenge19Answers = answerRepository.findByCreateDateAndMemberFamily(familyPortraitDate, lucky.getFamily());
+        // Challenge 19에 대한 답변 가져오기
+        List<Answer> challenge19Answers = answerRepository.findByCreateDateAndMemberFamily(challenge19Date, lucky.getFamily());
         List<Answer> memberAnswerList = challenge19Answers.stream()
                 .filter(answer -> members.contains(answer.getMember()))
                 .toList();
@@ -364,12 +353,10 @@ public class AnswerServiceImpl implements AnswerService {
         Answer familyPhotoAnswer = memberAnswerList.get(random.nextInt(memberAnswerList.size()));
         String familyPhoto = familyPhotoAnswer.getAnswerContent();
 
-        // 가족 사진에 대한 답변을 제외한 다른 사진 답변의 URL을 수집하고 null 값 제거
+        // 다른 사진 답변의 URL 수집
         List<String> allOtherPhotos = answersWithinDateRange.stream()
-                .filter(answer -> !challenge19Answers.contains(answer))
                 .filter(answer -> answer != familyPhotoAnswer && answer.getAnswerType() == AnswerType.PHOTO)
                 .map(Answer::getAnswerContent)
-                .filter(Objects::nonNull)
                 .toList();
 
         // 최대 9장의 다른 사진을 랜덤으로 선택
@@ -402,7 +389,7 @@ public class AnswerServiceImpl implements AnswerService {
         // FACETIME 답변만 필터링
         List<Answer> facetimeAnswers = answersWithinDateRange.stream()
                 .filter(answer -> answer.getChallenge().getChallengeType() == ChallengeType.FACETIME)
-                .toList();
+                .collect(Collectors.toList());
 
         // 가져온 FACETIME 답변이 없으면 null 반환
         if (facetimeAnswers.isEmpty()) {
