@@ -129,7 +129,7 @@ jobs:
               -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
               -e FFMPEG_PATH="${{ secrets.FFMPEG_PATH }}" \
               -e FFPROBE_PATH="${{ secrets.FFPROBE_PATH }}" \
-              -e FIREBASE_CONFIG_PATH="${{ secrets.FIREBASE_CONFIG_PATH }}" \
+              -e FIREBASE_CONFIG_PATH="/app/mooluck-fcm-firebase-adminsdk.json" \
               ${{ env.IMAGE_NAME }}
             sudo docker ps -a
             sudo docker system prune -f
