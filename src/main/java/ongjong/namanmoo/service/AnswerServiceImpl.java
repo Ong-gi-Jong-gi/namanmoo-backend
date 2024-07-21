@@ -102,6 +102,9 @@ public class AnswerServiceImpl implements AnswerService {
     }
 
     private Answer getAnswer(Member member, Challenge challenge, String strChallengeDate) {
+        // EnumSet으로 코드를 타입을 묶어 중복 코드 제거
+        EnumSet<ChallengeType> voiceTypes = EnumSet.of(ChallengeType.VOICE1, ChallengeType.VOICE2, ChallengeType.VOICE3, ChallengeType.VOICE4);
+        EnumSet<ChallengeType> groupTypes = EnumSet.of(ChallengeType.GROUP_CHILD,ChallengeType.GROUP_PARENT);
         Answer answer = new Answer(); // Answer 객체 생성
         answer.setMember(member);
         answer.setChallenge(challenge);
@@ -110,21 +113,13 @@ public class AnswerServiceImpl implements AnswerService {
 
         if (challenge.getChallengeType()== ChallengeType.NORMAL) {
             answer.setAnswerType(AnswerType.NORMAL);
-        } else if (challenge.getChallengeType()== ChallengeType.GROUP_CHILD) {
-            answer.setAnswerType(AnswerType.GROUP);
-        } else if (challenge.getChallengeType()== ChallengeType.GROUP_PARENT) {
+        } else if (groupTypes.contains(challenge.getChallengeType())) {
             answer.setAnswerType(AnswerType.GROUP);
         } else if (challenge.getChallengeType()== ChallengeType.FACETIME) {
             answer.setAnswerType(AnswerType.FACETIME);
         } else if (challenge.getChallengeType()== ChallengeType.PHOTO) {
             answer.setAnswerType(AnswerType.PHOTO);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE1) {
-            answer.setAnswerType(AnswerType.VOICE);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE2) {
-            answer.setAnswerType(AnswerType.VOICE);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE3) {
-            answer.setAnswerType(AnswerType.VOICE);
-        } else if (challenge.getChallengeType()== ChallengeType.VOICE4) {
+        } else if (voiceTypes.contains(challenge.getChallengeType())) {
             answer.setAnswerType(AnswerType.VOICE);
         }
         return answer;
@@ -146,11 +141,7 @@ public class AnswerServiceImpl implements AnswerService {
         DateUtil dateUtil = DateUtil.getInstance();
 
         // answer 값을 가져가기 전에 answer가 존재하는지 확인
-        if (answer.isPresent()) {
-            return dateUtil.stringToTimestamp(answer.get().getCreateDate(),"yyyy.MM.dd");
-        } else {
-            return null;
-        }
+        return answer.map(value -> dateUtil.stringToTimestamp(value.getCreateDate(), "yyyy.MM.dd")).orElse(null);
     }
 
     // 가족 구성원들의 답변 유무 검사
@@ -254,32 +245,52 @@ public class AnswerServiceImpl implements AnswerService {
     // 공통 로직을 처리하는 메서드
     // 각 member의 정보와 특정 두 번호에 해당하는 두 챌린지 답변을 묶어 반환
     @Transactional(readOnly = true)
-    public List<MemberDto> getAnswersByMember(List<Member> members, int challengeNum1, int challengeNum2, Class<? extends MemberDto> dtoClass) throws Exception {
+    public List<MemberDto> getAnswersByMember(Long luckyId, int challengeNum1, int challengeNum2, Class<? extends MemberDto> dtoClass) throws Exception {
+        // luckyId로 Lucky 객체 가져오기
+        Lucky lucky = luckyRepository.getLuckyByLuckyId(luckyId).orElseThrow(() -> new Exception("luckyId not found"));
+
+        // 시작 날짜와 종료 날짜 계산
+        String startDate = lucky.getChallengeStartDate();
+        String endDate = DateUtil.getInstance().addDaysToStringDate(startDate, lucky.getLifetime().getDays());
+
+        // luckyId로 가족 멤버 목록 가져오기
+        List<Member> members = memberRepository.findByFamilyFamilyId(lucky.getFamily().getFamilyId());
+
+        // Lucky 기간 동안의 모든 답변 가져오기
+        List<Answer> answersWithinDateRange = answerRepository.findByMemberFamilyAndCreateDateBetween(lucky.getFamily(), startDate, endDate);
+
+        // challengeNum1과 challengeNum2에 해당하는 날짜 계산
+        String dateCHN1 = DateUtil.getInstance().addDaysToStringDate(lucky.getChallengeStartDate(), challengeNum1 - 1);
+        String dateCHN2 = DateUtil.getInstance().addDaysToStringDate(lucky.getChallengeStartDate(), challengeNum2 - 1);
+
+        // challengeNum1과 challengeNum2에 해당하는 답변 필터링
+        List<Answer> challengeNum1Answers = answersWithinDateRange.stream()
+                .filter(a -> dateCHN1.equals(a.getCreateDate()))
+                .toList();
+        List<Answer> challengeNum2Answers = answersWithinDateRange.stream()
+                .filter(a -> dateCHN2.equals(a.getCreateDate()))
+                .toList();
+
         List<MemberDto> memberDtoList = new ArrayList<>();
-        Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
-        int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId()); // 이번 lucky에서 시작해야하는 challengeNum
 
-        Challenge challenge1 = challengeRepository.findByChallengeNum(startChallengeNum + challengeNum1)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new Exception("Challenge " + (startChallengeNum + challengeNum1) + " not found"));
-
-        Challenge challenge2 = challengeRepository.findByChallengeNum(startChallengeNum + challengeNum2)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new Exception("Challenge " + (startChallengeNum + challengeNum2) + " not found"));
-
+        // 각 멤버에 대해 DTO를 생성하여 리스트에 추가
         for (Member member : members) {
-            Answer challenge1Answer = answerRepository.findByChallengeAndMember(challenge1, member)
-                    .orElseThrow(() -> new Exception("Answer for Challenge " + (startChallengeNum + challengeNum1) + " not found"));
-            Answer challenge2Answer = answerRepository.findByChallengeAndMember(challenge2, member)
-                    .orElseThrow(() -> new Exception("Answer for Challenge " + (startChallengeNum + challengeNum2) + " not found"));
+            Answer challengeNum1Answer = challengeNum1Answers.stream()
+                    .filter(a -> a.getMember().equals(member))
+                    .findFirst()
+                    .orElseThrow(() -> new Exception("Answer for Challenge " + challengeNum1 + " not found"));
 
-            String answer1 = challenge1Answer.getAnswerContent();
-            String answer2 = challenge2Answer.getAnswerContent();
+            Answer challengeNum2Answer = challengeNum2Answers.stream()
+                    .filter(a -> a.getMember().equals(member))
+                    .findFirst()
+                    .orElseThrow(() -> new Exception("Answer for Challenge " + challengeNum2 + " not found"));
+
+            String answer1 = challengeNum1Answer.getAnswerContent();
+            String answer2 = challengeNum2Answer.getAnswerContent();
 
             memberDtoList.add(createDto(dtoClass, member, answer1, answer2));
         }
+
         return memberDtoList;
     }
 
@@ -294,68 +305,60 @@ public class AnswerServiceImpl implements AnswerService {
     }
 
     @Transactional(readOnly = true)
-    public List<MemberYouthAnswerDto> getYouthByMember(List<Member> members, int challengeNum1, int challengeNum2) throws Exception {
-        return (List<MemberYouthAnswerDto>) (List<?>) getAnswersByMember(members, challengeNum1, challengeNum2, MemberYouthAnswerDto.class);
+    public List<MemberYouthAnswerDto> getYouthByMember(Long luckyId, int challengeNum1, int challengeNum2) throws Exception {
+        return (List<MemberYouthAnswerDto>) (List<?>) getAnswersByMember(luckyId, challengeNum1, challengeNum2, MemberYouthAnswerDto.class);
     }
 
     @Transactional(readOnly = true)
-    public List<MemberAppreciationDto> getAppreciationByMember(List<Member> members, int challengeNum1, int challengeNum2) throws Exception {
-        return (List<MemberAppreciationDto>) (List<?>) getAnswersByMember(members, challengeNum1, challengeNum2, MemberAppreciationDto.class);
+    public List<MemberAppreciationDto> getAppreciationByMember(Long luckyId, int challengeNum1, int challengeNum2) throws Exception {
+        return (List<MemberAppreciationDto>) (List<?>) getAnswersByMember(luckyId, challengeNum1, challengeNum2, MemberAppreciationDto.class);
     }
 
     // 각 멤버의 photo 타입의 질문에 대한 사진을 랜덤으로 반환
     @Override
     @Transactional(readOnly = true)
-    public MemberPhotosAnswerDto getPhotoByMember(List<Member> members) throws Exception {
-        List<Answer> memberAnswerList = new ArrayList<>();
-        List<String> otherPhotos = new ArrayList<>();
-
+    public MemberPhotosAnswerDto getPhotos(Long luckyId) throws Exception {
+        // 현재 로그인한 사용자 가져오기
         Optional<Member> currentUser = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId());
-        if (currentUser.isEmpty()) {
+        if(currentUser.isEmpty()) {
             throw new Exception("Current user not found");
         }
 
-        int startChallengeNum = luckyService.findStartChallengeNum(currentUser.get().getFamily().getFamilyId());
+        // luckyId로 Lucky 객체 가져오기
+        Lucky lucky = luckyRepository.getLuckyByLuckyId(luckyId).orElseThrow(() -> new Exception("Lucky ID not found"));
 
-        // 1. Challenge 19 가져오기
-        Challenge challenge19 = challengeRepository.findByChallengeNum(startChallengeNum+19)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new Exception("Challenge 19 not found"));
+        // luckyId로 가족 멤버 목록 가져오기
+        List<Member> members = memberRepository.findByFamilyFamilyId(lucky.getFamily().getFamilyId());
 
-        // 2. 멤버들의 Challenge 19에 대한 답변 가져오기
-        for (Member member : members) {
-            Answer challenge19Answer = answerRepository.findByChallengeAndMember(challenge19, member)
-                    .orElseThrow(() -> new Exception("Answer for Challenge 19 not found"));
-            if(challenge19Answer.getAnswerContent() != null){
-                memberAnswerList.add(challenge19Answer);
-            }
-        }
-        // 3. memberAnswerList에서 랜덤하게 하나의 answer를 선택하여 familyPhoto로 설정
+        // 시작 날짜와 종료 날짜 계산
+        String startDate = lucky.getChallengeStartDate();
+        String challenge19Date = DateUtil.getInstance().addDaysToStringDate(startDate, 18);
+        String endDate = DateUtil.getInstance().addDaysToStringDate(startDate, lucky.getLifetime().getDays());
+
+        // Lucky 기간 동안의 모든 답변 가져오기
+        List<Answer> answersWithinDateRange = answerRepository.findByMemberFamilyAndCreateDateBetween(lucky.getFamily(), startDate, endDate);
+
+        // Challenge 19에 대한 답변 가져오기
+        List<Answer> challenge19Answers = answerRepository.findByCreateDateAndMemberFamily(challenge19Date, lucky.getFamily());
+        List<Answer> memberAnswerList = challenge19Answers.stream()
+                .filter(answer -> members.contains(answer.getMember()))
+                .toList();
+
+        // 가족 사진을 위한 랜덤한 답변 선택
         Random random = new Random();
         Answer familyPhotoAnswer = memberAnswerList.get(random.nextInt(memberAnswerList.size()));
         String familyPhoto = familyPhotoAnswer.getAnswerContent();
 
-        // 4. type이 photo이고 challengenum이 19번이 아닌 멤버들의 answer 중에서 모든 사진 URL을 담은 리스트 생성
-        List<String> allOtherPhotos = new ArrayList<>();
-        int number = luckyService.findCurrentLuckyLifetime(currentUser.get().getFamily().getFamilyId());
-        // 현재 진행한 challengeList
-        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum((currentUser.get().getFamily().getFamilyId())), number);
+        // 다른 사진 답변의 URL을 수집하고 null 값 제거
+        List<String> allOtherPhotos = answersWithinDateRange.stream()
+                .filter(answer -> !challenge19Answers.contains(answer))
+                .filter(answer -> answer != familyPhotoAnswer && answer.getAnswerType() == AnswerType.PHOTO)
+                .map(Answer::getAnswerContent)
+                .filter(Objects::nonNull)
+                .toList();
 
-        for (Member member : members) {
-            // 그룹챌린지를 고려한 새로운 리스트 적용
-            List<Challenge> newChallengeList = challengeService.groupChallengeExceptionRemove(challengeList,member);
-            for (Challenge challenge : newChallengeList) {
-                if (challenge.getChallengeNum() != startChallengeNum+19){
-                    Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge,member);
-                    if (answer.get().getAnswerType() == PHOTO && answer.get().getAnswerContent() != null){
-                        allOtherPhotos.add(answer.get().getAnswerContent());
-                    }
-                }
-            }
-        }
-
-        // 최대 9장의 사진을 랜덤으로 고른다.
+        // 최대 9장의 다른 사진을 랜덤으로 선택
+        List<String> otherPhotos = new ArrayList<>();
         int numPhotosToAdd = Math.min(9, allOtherPhotos.size());
         Set<Integer> chosenIndices = new HashSet<>();
         while (chosenIndices.size() < numPhotosToAdd) {
@@ -365,7 +368,8 @@ public class AnswerServiceImpl implements AnswerService {
             }
         }
 
-        return new MemberPhotosAnswerDto(familyPhoto,otherPhotos);
+        // MemberPhotosAnswerDto 객체를 생성하여 반환
+        return new MemberPhotosAnswerDto(familyPhoto, otherPhotos);
     }
 
     // facetime에 대한 answerList를 반환
@@ -376,36 +380,43 @@ public class AnswerServiceImpl implements AnswerService {
         Lucky lucky = luckyRepository.getLuckyByLuckyId(luckyId).orElseThrow(() -> new Exception("luckyId not found"));
         Family family = lucky.getFamily();
         List<Member> memberList = memberRepository.findByFamilyFamilyId(family.getFamilyId());
-        int challengeLength = luckyService.findCurrentLuckyLifetime(currentUser.get().getFamily().getFamilyId());
-        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum((currentUser.get().getFamily().getFamilyId())), challengeLength);
 
-        // 가져온 챌린지 중에 FACETIME 종류의 챌린지만 골라서 분리한 리스트
-        List<Challenge> faceTimeChallenges = challengeList.stream()
-                .filter(challenge -> challenge.getChallengeType() == ChallengeType.FACETIME)
-                .collect(Collectors.toList());
-        // 가져온 FACETIME 챌린지가 없으면 그냥 null 리턴
-        if(faceTimeChallenges.isEmpty()){
+        // Lucky의 시작 날짜와 기간을 기반으로 해당 기간 동안의 모든 답변을 가져오기
+        List<Answer> answersWithinDateRange = findAnswersWithinDateRange(family, lucky.getChallengeStartDate(), lucky.getLifetime().getDays());
+
+        // FACETIME 답변만 필터링
+        List<Answer> facetimeAnswers = answersWithinDateRange.stream()
+                .filter(answer -> answer.getChallenge().getChallengeType() == ChallengeType.FACETIME)
+                .toList();
+
+        // 가져온 FACETIME 답변이 없으면 null 반환
+        if (facetimeAnswers.isEmpty()) {
             return null;
         }
 
-        Collections.shuffle(faceTimeChallenges);  // 가져온 FACETIME 챌린지들을 무작위로 섞기
-        Challenge randomChallenge = faceTimeChallenges.get(0);  // 섞인 챌린지들 중 아무거나 하나 골라서 얻기
-        List<String> facetimeAnswerList = new ArrayList<>();   // 챌린지 답변을 담을 리스트를 만든다
-        String challengeDate = null;  // Challenge 날짜는 초기에 null로 설정
+        // ChallengeId 별로 그룹화
+        Map<Long, List<Answer>> answersGroupedByChallengeId = facetimeAnswers.stream()
+                .collect(Collectors.groupingBy(answer -> answer.getChallenge().getChallengeId()));
 
-        for(Member member : memberList){
-            Optional<Answer> answer = answerRepository.findByChallengeAndMember(randomChallenge ,member);
-            if (answer.isPresent()) {
-                facetimeAnswerList.add(answer.get().getAnswerContent());
-                // 현재 챌린지 날짜가 아직 설정되지 않았다면 챌린지 날짜를 이 답변에서 설정합니다.
-                if (challengeDate == null) {
-                    challengeDate = answer.get().getCreateDate();
-                }
-            }
+        // 그룹 중 무작위로 하나의 ChallengeId 선택
+        List<Long> challengeIds = new ArrayList<>(answersGroupedByChallengeId.keySet());
+        Collections.shuffle(challengeIds);
+        Long randomChallengeId = challengeIds.get(0);
+
+        // 선택된 ChallengeId에 해당하는 답변 리스트
+        List<Answer> selectedAnswers = answersGroupedByChallengeId.get(randomChallengeId);
+
+        List<String> facetimeAnswerList = new ArrayList<>();  // FACETIME 답변 내용을 담을 리스트
+        String challengeDate = selectedAnswers.get(0).getCreateDate();  // 임의로 선택된 FACETIME 답변의 생성 날짜
+
+        // 선택된 ChallengeId에 해당하는 모든 답변 내용 추가
+        for (Answer answer : selectedAnswers) {
+            facetimeAnswerList.add(answer.getAnswerContent());
         }
-        // 챌린지 날짜가 null이 아니면, DateUtil을 이용해서 문자열 형식의 날짜를 타임스탬프로 변환합니다.
-        long challengeTimestamp = challengeDate != null ? DateUtil.getInstance().stringToTimestamp(challengeDate, DateUtil.FORMAT_4) : 0L;
-        return new MemberFacetimeDto(challengeTimestamp, facetimeAnswerList);  // 만들어진 답변 리스트와 챌린지 날짜를 멤버에 담아서 반환합니다.
+
+        // 챌린지 날짜를 타임스탬프로 변환
+        long challengeTimestamp = DateUtil.getInstance().stringToTimestamp(challengeDate, DateUtil.FORMAT_4);
+        return new MemberFacetimeDto(challengeTimestamp, facetimeAnswerList);  // 만들어진 답변 리스트와 챌린지 날짜를 멤버에 담아서 반환
     }
 
     // 챌린지 상세조회 중복요소 매핑
@@ -418,13 +429,11 @@ public class AnswerServiceImpl implements AnswerService {
         return new ChallengeDetailsDto(challengeDate, isComplete, answers);
     }
 
-
     // 챌린지로 답변 찾기
     @Transactional(readOnly = true)
     public List<Answer> findAnswerByChallenge(Challenge challenge){
         return answerRepository.findByChallenge(challenge);
     }
-
 
     // 해당 챌린지와 매핑된 답변 중 로그인 하고 있는 맴버 가족의 답변리스트만을 반환
     @Transactional(readOnly = true)
@@ -438,6 +447,10 @@ public class AnswerServiceImpl implements AnswerService {
                 .collect(Collectors.toList());
     }
 
-
+    // 특정 기간 동안의 답변을 가져오는 함수
+    public List<Answer> findAnswersWithinDateRange(Family family, String startDate, int days) {
+        String endDate = DateUtil.getInstance().addDaysToStringDate(startDate, days);
+        return answerRepository.findByMemberFamilyAndCreateDateBetween(family, startDate, endDate);
+    }
 
 }

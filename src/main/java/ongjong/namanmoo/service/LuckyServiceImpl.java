@@ -6,13 +6,11 @@ import ongjong.namanmoo.domain.Family;
 import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
+import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.lucky.LuckyListDto;
 import ongjong.namanmoo.dto.lucky.LuckyStatusDto;
 import ongjong.namanmoo.global.security.util.SecurityUtil;
-import ongjong.namanmoo.repository.AnswerRepository;
-import ongjong.namanmoo.repository.FamilyRepository;
-import ongjong.namanmoo.repository.LuckyRepository;
-import ongjong.namanmoo.repository.MemberRepository;
+import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +32,7 @@ public class LuckyServiceImpl implements LuckyService {
     private final MemberRepository memberRepository;
     private final FamilyRepository familyRepository;
     private final AnswerRepository answerRepository;
+    private final ChallengeRepository challengeRepository;
 
     // 캐릭터 생성
     @Override
@@ -81,15 +80,15 @@ public class LuckyServiceImpl implements LuckyService {
         Instant instant = Instant.ofEpochMilli(timestamp);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd").withZone(ZoneId.systemDefault());
         String createDate = formatter.format(instant);
-        log.info("createDate: {}", createDate);
 
         Answer answer = answerRepository.findByMemberAndCreateDate(member, createDate)
                 .orElseThrow(() -> new RuntimeException("해당 멤버가 작성한 답변을 찾을 수 없습니다."));
 
         boolean isBubble = answer.isBubbleVisible();
         Integer luckyStatus = calculateLuckyStatus(lucky);
+        String luckyId = lucky.getLuckyId().toString();
 
-        return new LuckyStatusDto(luckyStatus, isBubble);
+        return new LuckyStatusDto(luckyStatus, isBubble, luckyId);
     }
 
     // 행운이 상태 계산
@@ -240,5 +239,38 @@ public class LuckyServiceImpl implements LuckyService {
                 }
             }
         }
+    }
+    // 해당 challengeId에 맞는 lucky를 찾기
+    @Override
+    public Lucky findMatchingLucky(Long challengeId, Member member) throws Exception {
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new RuntimeException("주어진 challengeId에 해당하는 챌린지를 찾을 수 없습니다."));
+        Answer answer = answerRepository.findByChallengeAndMember(challenge,member)
+                .orElseThrow(() -> new RuntimeException("해당 멤버가 작성한 답변을 찾을 수 없습니다."));
+        String answerCreateDate = answer.getCreateDate();
+
+        List<Lucky> luckyList = luckyRepository.findByFamilyFamilyId(member.getFamily().getFamilyId());
+
+        Long answerCreateDateTimeStamp = DateUtil.getInstance().stringToTimestamp(answerCreateDate,DateUtil.FORMAT_4);
+        String challengeStartDate1 =DateUtil.getInstance().addDaysToStringDate(answerCreateDate,-15);
+        Long challengeStartDateTimeStamp1 = DateUtil.getInstance().stringToTimestamp(challengeStartDate1,DateUtil.FORMAT_4);
+        for (Lucky lucky:luckyList){
+            String luckyStartDate = lucky.getChallengeStartDate();
+            Long luckyStartDateTimeStamp = DateUtil.getInstance().stringToTimestamp(luckyStartDate,DateUtil.FORMAT_4);
+            if (luckyStartDateTimeStamp >= challengeStartDateTimeStamp1 && luckyStartDateTimeStamp <= answerCreateDateTimeStamp){
+                return lucky;
+            }
+        }
+
+        String challengeStartDate2 =DateUtil.getInstance().addDaysToStringDate(answerCreateDate,-30);
+        Long challengeStartDateTimeStamp2 = DateUtil.getInstance().stringToTimestamp(challengeStartDate2,DateUtil.FORMAT_4);
+        for (Lucky lucky:luckyList){
+            String luckyStartDate = lucky.getChallengeStartDate();
+            Long luckyStartDateTimeStamp = DateUtil.getInstance().stringToTimestamp(luckyStartDate,DateUtil.FORMAT_4);
+            if (luckyStartDateTimeStamp >= challengeStartDateTimeStamp2 && luckyStartDateTimeStamp <= answerCreateDateTimeStamp){
+                return lucky;
+            }
+        }
+        return null;
     }
 }
