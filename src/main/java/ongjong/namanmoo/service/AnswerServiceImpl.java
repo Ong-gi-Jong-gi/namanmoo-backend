@@ -347,14 +347,14 @@ public class AnswerServiceImpl implements AnswerService {
 
         // 시작 날짜와 종료 날짜 계산
         String startDate = lucky.getChallengeStartDate();
-        String challenge19Date = DateUtil.getInstance().addDaysToStringDate(startDate, 18);
+        String familyPortraitDate = DateUtil.getInstance().addDaysToStringDate(startDate, 21);
         String endDate = DateUtil.getInstance().addDaysToStringDate(startDate, lucky.getLifetime().getDays());
 
         // Lucky 기간 동안의 모든 답변 가져오기
         List<Answer> answersWithinDateRange = answerRepository.findByMemberFamilyAndCreateDateBetween(lucky.getFamily(), startDate, endDate);
 
-        // Challenge 19에 대한 답변 가져오기
-        List<Answer> challenge19Answers = answerRepository.findByCreateDateAndMemberFamily(challenge19Date, lucky.getFamily());
+        // 가족 사진에 대한 답변 가져오기
+        List<Answer> challenge19Answers = answerRepository.findByCreateDateAndMemberFamily(familyPortraitDate, lucky.getFamily());
         List<Answer> memberAnswerList = challenge19Answers.stream()
                 .filter(answer -> members.contains(answer.getMember()))
                 .toList();
@@ -364,7 +364,7 @@ public class AnswerServiceImpl implements AnswerService {
         Answer familyPhotoAnswer = memberAnswerList.get(random.nextInt(memberAnswerList.size()));
         String familyPhoto = familyPhotoAnswer.getAnswerContent();
 
-        // Challenge 19에 대한 답변을 제외한 다른 사진 답변의 URL을 수집하고 null 값 제거
+        // 가족 사진에 대한 답변을 제외한 다른 사진 답변의 URL을 수집하고 null 값 제거
         List<String> allOtherPhotos = answersWithinDateRange.stream()
                 .filter(answer -> !challenge19Answers.contains(answer))
                 .filter(answer -> answer != familyPhotoAnswer && answer.getAnswerType() == AnswerType.PHOTO)
