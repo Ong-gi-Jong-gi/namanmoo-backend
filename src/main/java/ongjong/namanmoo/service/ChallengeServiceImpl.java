@@ -56,8 +56,8 @@ public class ChallengeServiceImpl implements ChallengeService {
         if (number == null) {
             return null;
         }
-        // TODO: 챌린지 리스트 다 보여주기 위해 일단은 최대 값인 lucky의 주기로 설정 -> 추후에 현재 날짜에 해당하는 챌린지 번호인 number로 변경 필요
-        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum(family.getFamilyId()), lucky.get().getLifetime().getDays());
+        // TODO: 챌린지 리스트 다 보여주기 위해 일단은 최대 값인 lucky의 주기로 설정 -> 추후에 현재 날짜에 해당하는 챌린지 번호인 number로 변경 필요 // startDate 확인 필요함
+        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum(family.getFamilyId())+1, lucky.get().getLifetime().getDays());
 
         // 멤버 역할에 맞지 않는 challenge는 리스트에서 제외
         return groupChallengeExceptionRemove(challengeList,member);
@@ -210,7 +210,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         // Calculating the total number of days for the currently running Lucky
         int runningLuckyLifetime = luckyService.findCurrentLuckyLifetime(family.getFamilyId());
 
-        return challengeRepository.findByChallengeNumBetween(startChallengeNum, startChallengeNum + runningLuckyLifetime);
+        return challengeRepository.findByChallengeNumBetween(startChallengeNum+1, startChallengeNum + runningLuckyLifetime);    //todo: answer 잘만들어지는지 확인
     }
 
     // groupChallenge 조회를 위한 dto  (부모와 자식의 challenge 질문 구분하기)
