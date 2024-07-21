@@ -59,3 +59,7 @@ ffmpeg:
   path: ${FFMPEG_PATH}
 ffprobe:
   path: ${FFPROBE_PATH}
+
+firebase:
+  config:
+    path: classpath:mooluck-fcm-firebase-adminsdk.json
