@@ -131,13 +131,13 @@ public class RecapController {
         try {
             Lucky lucky = luckyService.getLucky(luckyId);
 
-//            // 이미 병합된 음성 파일이 있는지 확인 (일단 주석 처리)
-//            SharedFile mergeVoice = sharedFileService.getMergeVoice(lucky, FileType.AUDIO);
-//            if (mergeVoice != null) {
-//                Map<String, String> data = new HashMap<>();
-//                data.put("backgroundVoice", mergeVoice.getFileName());
-//                return new ApiResponse<>("200", "Already Voice Clips Merge Success", data);
-//            }
+            // 이미 병합된 음성 파일이 있는지 확인
+            SharedFile mergeVoice = sharedFileService.getMergeVoice(lucky, FileType.AUDIO);
+            if (mergeVoice != null) {
+                Map<String, String> data = new HashMap<>();
+                data.put("backgroundVoice", mergeVoice.getFileName());
+                return new ApiResponse<>("200", "Already Voice Clips Merge Success", data);
+            }
 
             // S3에서 해당 luckyId의 음성파일 목록을 가져옴
             List<String> audioPaths = awsS3Service.listAudioFiles(luckyId);
@@ -173,7 +173,7 @@ public class RecapController {
             String outputPath = tempDir.resolve(outputFileName).toString();
 
             // 오디오 파일 병합(사이에 0.2초 침묵 삽입)
-            ffmpegService.mergeAudiosWithSilence(localFiles.stream().map(File::getPath).collect(Collectors.toList()), outputPath, 0.2);
+            ffmpegService.mergeAudiosWithSilence(localFiles.stream().map(File::getPath).collect(Collectors.toList()), outputPath, 0.1);
 
             // 병합된 파일 S3업로드
             outputFile = new File(outputPath);
