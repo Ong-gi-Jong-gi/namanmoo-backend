@@ -172,7 +172,7 @@ public class RecapController {
             String outputFileName = "merged_output_" + luckyId + ".mp3";
             String outputPath = tempDir.resolve(outputFileName).toString();
 
-            // 오디오 파일 병합(사이에 0.2초 침묵 삽입)
+            // 오디오 파일 병합(사이에 0.1초 침묵 삽입)
             ffmpegService.mergeAudiosWithSilence(localFiles.stream().map(File::getPath).collect(Collectors.toList()), outputPath, 0.1);
 
             // 병합된 파일 S3업로드
