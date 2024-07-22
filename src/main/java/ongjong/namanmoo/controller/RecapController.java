@@ -103,14 +103,14 @@ public class RecapController {
 
     @GetMapping("/youth")
     public ApiResponse<List<MemberYouthAnswerDto>> getYouth(@RequestParam("luckyId") Long luckyId) throws Exception{
-        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(luckyId, 13, 28);
+        List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(luckyId, 14, 1);
         return new ApiResponse<>("200", "Youth photos retrieved successfully", memberAnswerDtoList);
     }
 
     // recap 미안한점 고마운점
     @GetMapping("/appreciations")
     public ApiResponse<List<MemberAppreciationDto>> getAppreciations(@RequestParam("luckyId") Long luckyId) throws Exception {
-        List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(luckyId, 25, 27);
+        List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(luckyId, 27, 29);
         return new ApiResponse<>("200", "Success", appreciationList);
     }
 
