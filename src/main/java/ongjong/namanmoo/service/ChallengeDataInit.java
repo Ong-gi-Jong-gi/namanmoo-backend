@@ -32,8 +32,8 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(6, "가장 좋아하는 노래가 무엇인가요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(7, "가족 중 한 명이 갑자기 바퀴벌레 혹은 좀비가 된다면 당신의 반응은?", ChallengeType.NORMAL));
         challenges.add(createChallenge(8, "여행을 간다면 어디로 가고 싶나요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(9, "자녀가 가장 자랑스러운 순간은?", ChallengeType.GROUP_PARENT));
-        challenges.add(createChallenge(9, "부모님이 가장 멋있었던 적이 있다면?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(9, "첫 만남은 어디에서 또는 어떻게 이루어졌나요?", ChallengeType.GROUP_PARENT));
+        challenges.add(createChallenge(9, "부모님이 가장 잘 어울린다고 느껴진 순간이 있나요?", ChallengeType.GROUP_CHILD));
         challenges.add(createChallenge(10, "가장 마음에 드는 본인 사진을 올려보세요", ChallengeType.PHOTO));
         challenges.add(createChallenge(11, "가족이 가장 듬직했던 순간이 있나요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(12, "요즘 고민이 있다면 무엇일까요?", ChallengeType.NORMAL));
@@ -50,13 +50,13 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(20, "가족에게 한 가장 기억에 남는 거짓말은 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(21, "가장 좋아하는 가족사진을 올려보세요", ChallengeType.PHOTO));
         challenges.add(createChallenge(22, "가족에게 가장 서운했던 순간은?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(23, "가장 기억에 남는 가족 여행지와 그 이유는 무엇입니까?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(24, "가장 좋아하는 계절은 무엇인가요? 그 계절을 좋아하는 이유는 무엇인가요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(25, "학생 때 졸업 사진을 올려주세요", ChallengeType.PHOTO));
-        challenges.add(createChallenge(26, "가족 중에서 가장 요리를 잘 하는 사람은 누구인가요? 그분의 최고 요리는 무엇인가요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(27, "가족에게 고마운 점이 있다면 무엇입니까?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(28, "첫 만남은 어디에서 또는 어떻게 이루어졌나요?", ChallengeType.GROUP_PARENT));
-        challenges.add(createChallenge(28, "부모님이 가장 잘 어울린다고 느껴진 순간이 있나요?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(23, "자녀가 가장 자랑스러운 순간은?", ChallengeType.GROUP_PARENT));
+        challenges.add(createChallenge(23, "부모님이 가장 멋있었던 적이 있다면?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(24, "가장 기억에 남는 가족 여행지와 그 이유는 무엇입니까?", ChallengeType.NORMAL));
+        challenges.add(createChallenge(25, "가장 좋아하는 계절은 무엇인가요? 그 계절을 좋아하는 이유는 무엇인가요?", ChallengeType.NORMAL));
+        challenges.add(createChallenge(26, "학생 때 졸업 사진을 올려주세요", ChallengeType.PHOTO));
+        challenges.add(createChallenge(27, "가족 중에서 가장 요리를 잘 하는 사람은 누구인가요? 그분의 최고 요리는 무엇인가요?", ChallengeType.NORMAL));
+        challenges.add(createChallenge(28, "가족에게 고마운 점이 있다면 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(29, "가족에게 진심으로 미안하지만 사과하지 못한 일이 있다면 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(30, "인생네컷 챌린지!", ChallengeType.FACETIME));
         // 한 챌린지 주기 = 30일
@@ -68,8 +68,8 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(36, "가장 좋아하는 노래가 무엇인가요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(37, "가족 중 한 명이 갑자기 바퀴벌레 혹은 좀비가 된다면 당신의 반응은?", ChallengeType.NORMAL));
         challenges.add(createChallenge(38, "여행을 간다면 어디로 가고 싶나요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(39, "자녀가 가장 자랑스러운 순간은?", ChallengeType.GROUP_PARENT));
-        challenges.add(createChallenge(39, "부모님이 가장 멋있었던 적이 있다면?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(39, "첫 만남은 어디에서 또는 어떻게 이루어졌나요?", ChallengeType.GROUP_PARENT));
+        challenges.add(createChallenge(39, "부모님이 가장 잘 어울린다고 느껴진 순간이 있나요?", ChallengeType.GROUP_CHILD));
         challenges.add(createChallenge(40, "가장 마음에 드는 본인 사진을 올려보세요", ChallengeType.PHOTO));
         challenges.add(createChallenge(41, "가족이 가장 듬직했던 순간이 있나요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(42, "요즘 고민이 있다면 무엇일까요?", ChallengeType.NORMAL));
@@ -86,13 +86,13 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(50, "가족에게 한 가장 기억에 남는 거짓말은 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(51, "가장 좋아하는 가족사진을 올려보세요", ChallengeType.PHOTO));
         challenges.add(createChallenge(52, "가족에게 가장 서운했던 순간은?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(53, "가장 기억에 남는 가족 여행지와 그 이유는 무엇입니까?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(54, "가장 좋아하는 계절은 무엇인가요? 그 계절을 좋아하는 이유는 무엇인가요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(55, "학생 때 졸업 사진을 올려주세요", ChallengeType.PHOTO));
-        challenges.add(createChallenge(56, "가족 중에서 가장 요리를 잘 하는 사람은 누구인가요? 그분의 최고 요리는 무엇인가요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(57, "가족에게 고마운 점이 있다면 무엇입니까?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(58, "첫 만남은 어디에서 또는 어떻게 이루어졌나요?", ChallengeType.GROUP_PARENT));
-        challenges.add(createChallenge(58, "부모님이 가장 잘 어울린다고 느껴진 순간이 있나요?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(53, "자녀가 가장 자랑스러운 순간은?", ChallengeType.GROUP_PARENT));
+        challenges.add(createChallenge(53, "부모님이 가장 멋있었던 적이 있다면?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(54, "가장 기억에 남는 가족 여행지와 그 이유는 무엇입니까?", ChallengeType.NORMAL));
+        challenges.add(createChallenge(55, "가장 좋아하는 계절은 무엇인가요? 그 계절을 좋아하는 이유는 무엇인가요?", ChallengeType.NORMAL));
+        challenges.add(createChallenge(56, "학생 때 졸업 사진을 올려주세요", ChallengeType.PHOTO));
+        challenges.add(createChallenge(57, "가족 중에서 가장 요리를 잘 하는 사람은 누구인가요? 그분의 최고 요리는 무엇인가요?", ChallengeType.NORMAL));
+        challenges.add(createChallenge(58, "가족에게 고마운 점이 있다면 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(59, "가족에게 진심으로 미안하지만 사과하지 못한 일이 있다면 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(60, "인생네컷 챌린지!", ChallengeType.FACETIME));
         // 한 챌린지 주기 = 30일
@@ -104,8 +104,8 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(66, "가장 좋아하는 노래가 무엇인가요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(67, "가족 중 한 명이 갑자기 바퀴벌레 혹은 좀비가 된다면 당신의 반응은?", ChallengeType.NORMAL));
         challenges.add(createChallenge(68, "여행을 간다면 어디로 가고 싶나요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(69, "자녀가 가장 자랑스러운 순간은?", ChallengeType.GROUP_PARENT));
-        challenges.add(createChallenge(69, "부모님이 가장 멋있었던 적이 있다면?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(69, "첫 만남은 어디에서 또는 어떻게 이루어졌나요?", ChallengeType.GROUP_PARENT));
+        challenges.add(createChallenge(69, "부모님이 가장 잘 어울린다고 느껴진 순간이 있나요?", ChallengeType.GROUP_CHILD));
         challenges.add(createChallenge(70, "가장 마음에 드는 본인 사진을 올려보세요", ChallengeType.PHOTO));
         challenges.add(createChallenge(71, "가족이 가장 듬직했던 순간이 있나요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(72, "요즘 고민이 있다면 무엇일까요?", ChallengeType.NORMAL));
@@ -122,13 +122,13 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(80, "가족에게 한 가장 기억에 남는 거짓말은 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(81, "가장 좋아하는 가족사진을 올려보세요", ChallengeType.PHOTO));
         challenges.add(createChallenge(82, "가족에게 가장 서운했던 순간은?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(83, "가장 기억에 남는 가족 여행지와 그 이유는 무엇입니까?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(84, "가장 좋아하는 계절은 무엇인가요? 그 계절을 좋아하는 이유는 무엇인가요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(85, "학생 때 졸업 사진을 올려주세요", ChallengeType.PHOTO));
-        challenges.add(createChallenge(86, "가족 중에서 가장 요리를 잘 하는 사람은 누구인가요? 그분의 최고 요리는 무엇인가요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(87, "가족에게 고마운 점이 있다면 무엇입니까?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(88, "첫 만남은 어디에서 또는 어떻게 이루어졌나요?", ChallengeType.GROUP_PARENT));
-        challenges.add(createChallenge(88, "부모님이 가장 잘 어울린다고 느껴진 순간이 있나요?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(83, "자녀가 가장 자랑스러운 순간은?", ChallengeType.GROUP_PARENT));
+        challenges.add(createChallenge(83, "부모님이 가장 멋있었던 적이 있다면?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(84, "가장 기억에 남는 가족 여행지와 그 이유는 무엇입니까?", ChallengeType.NORMAL));
+        challenges.add(createChallenge(85, "가장 좋아하는 계절은 무엇인가요? 그 계절을 좋아하는 이유는 무엇인가요?", ChallengeType.NORMAL));
+        challenges.add(createChallenge(86, "학생 때 졸업 사진을 올려주세요", ChallengeType.PHOTO));
+        challenges.add(createChallenge(87, "가족 중에서 가장 요리를 잘 하는 사람은 누구인가요? 그분의 최고 요리는 무엇인가요?", ChallengeType.NORMAL));
+        challenges.add(createChallenge(88, "가족에게 고마운 점이 있다면 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(89, "가족에게 진심으로 미안하지만 사과하지 못한 일이 있다면 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(90, "인생네컷 챌린지!", ChallengeType.FACETIME));
         // 한 챌린지 주기 = 30
@@ -140,8 +140,8 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(96, "가장 좋아하는 노래가 무엇인가요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(97, "가족 중 한 명이 갑자기 바퀴벌레 혹은 좀비가 된다면 당신의 반응은?", ChallengeType.NORMAL));
         challenges.add(createChallenge(98, "여행을 간다면 어디로 가고 싶나요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(99, "자녀가 가장 자랑스러운 순간은?", ChallengeType.GROUP_PARENT));
-        challenges.add(createChallenge(99, "부모님이 가장 멋있었던 적이 있다면?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(99, "첫 만남은 어디에서 또는 어떻게 이루어졌나요?", ChallengeType.GROUP_PARENT));
+        challenges.add(createChallenge(99, "부모님이 가장 잘 어울린다고 느껴진 순간이 있나요?", ChallengeType.GROUP_CHILD));
         challenges.add(createChallenge(100, "가장 마음에 드는 본인 사진을 올려보세요", ChallengeType.PHOTO));
         challenges.add(createChallenge(101, "가족이 가장 듬직했던 순간이 있나요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(102, "요즘 고민이 있다면 무엇일까요?", ChallengeType.NORMAL));
@@ -158,13 +158,13 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(110, "가족에게 한 가장 기억에 남는 거짓말은 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(111, "가장 좋아하는 가족사진을 올려보세요", ChallengeType.PHOTO));
         challenges.add(createChallenge(112, "가족에게 가장 서운했던 순간은?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(113, "가장 기억에 남는 가족 여행지와 그 이유는 무엇입니까?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(114, "가장 좋아하는 계절은 무엇인가요? 그 계절을 좋아하는 이유는 무엇인가요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(115, "학생 때 졸업 사진을 올려주세요", ChallengeType.PHOTO));
-        challenges.add(createChallenge(116, "가족 중에서 가장 요리를 잘 하는 사람은 누구인가요? 그분의 최고 요리는 무엇인가요?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(117, "가족에게 고마운 점이 있다면 무엇입니까?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(118, "첫 만남은 어디에서 또는 어떻게 이루어졌나요?", ChallengeType.GROUP_PARENT));
-        challenges.add(createChallenge(118, "부모님이 가장 잘 어울린다고 느껴진 순간이 있나요?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(113, "자녀가 가장 자랑스러운 순간은?", ChallengeType.GROUP_PARENT));
+        challenges.add(createChallenge(113, "부모님이 가장 멋있었던 적이 있다면?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(114, "가장 기억에 남는 가족 여행지와 그 이유는 무엇입니까?", ChallengeType.NORMAL));
+        challenges.add(createChallenge(115, "가장 좋아하는 계절은 무엇인가요? 그 계절을 좋아하는 이유는 무엇인가요?", ChallengeType.NORMAL));
+        challenges.add(createChallenge(116, "학생 때 졸업 사진을 올려주세요", ChallengeType.PHOTO));
+        challenges.add(createChallenge(117, "가족 중에서 가장 요리를 잘 하는 사람은 누구인가요? 그분의 최고 요리는 무엇인가요?", ChallengeType.NORMAL));
+        challenges.add(createChallenge(118, "가족에게 고마운 점이 있다면 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(119, "가족에게 진심으로 미안하지만 사과하지 못한 일이 있다면 무엇입니까?", ChallengeType.NORMAL));
         challenges.add(createChallenge(120, "인생네컷 챌린지!", ChallengeType.FACETIME));
 
