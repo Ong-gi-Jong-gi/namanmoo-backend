@@ -336,15 +336,15 @@ public class AnswerServiceImpl implements AnswerService {
 
         // 시작 날짜와 종료 날짜 계산
         String startDate = lucky.getChallengeStartDate();
-        String challenge19Date = DateUtil.getInstance().addDaysToStringDate(startDate, 18);
+        String familyPortraitDate = DateUtil.getInstance().addDaysToStringDate(startDate, 18);
         String endDate = DateUtil.getInstance().addDaysToStringDate(startDate, lucky.getLifetime().getDays());
 
         // Lucky 기간 동안의 모든 답변 가져오기
         List<Answer> answersWithinDateRange = answerRepository.findByMemberFamilyAndCreateDateBetween(lucky.getFamily(), startDate, endDate);
 
         // Challenge 19에 대한 답변 가져오기
-        List<Answer> challenge19Answers = answerRepository.findByCreateDateAndMemberFamily(challenge19Date, lucky.getFamily());
-        List<Answer> memberAnswerList = challenge19Answers.stream()
+        List<Answer> familyPortraitAnswers = answerRepository.findByCreateDateAndMemberFamily(familyPortraitDate, lucky.getFamily());
+        List<Answer> memberAnswerList = familyPortraitAnswers.stream()
                 .filter(answer -> members.contains(answer.getMember()))
                 .toList();
 
