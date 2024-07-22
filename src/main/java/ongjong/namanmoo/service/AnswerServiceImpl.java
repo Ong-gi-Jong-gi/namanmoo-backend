@@ -347,16 +347,16 @@ public class AnswerServiceImpl implements AnswerService {
 
         // 시작 날짜와 종료 날짜 계산
         String startDate = lucky.getChallengeStartDate();
-        String familyPortraitDate = DateUtil.getInstance().addDaysToStringDate(startDate, 21);
+        String familyPortraitDate = DateUtil.getInstance().addDaysToStringDate(startDate, 20);
         String endDate = DateUtil.getInstance().addDaysToStringDate(startDate, lucky.getLifetime().getDays());
 
         // Lucky 기간 동안의 모든 답변 가져오기
         List<Answer> answersWithinDateRange = answerRepository.findByMemberFamilyAndCreateDateBetween(lucky.getFamily(), startDate, endDate);
 
         // 가족 사진에 대한 답변 가져오기
-        List<Answer> challenge19Answers = answerRepository.findByCreateDateAndMemberFamily(familyPortraitDate, lucky.getFamily());
-        List<Answer> memberAnswerList = challenge19Answers.stream()
-                .filter(answer -> members.contains(answer.getMember()))
+        List<Answer> familyPortraitAnswers = answerRepository.findByCreateDateAndMemberFamily(familyPortraitDate, lucky.getFamily());
+        List<Answer> memberAnswerList = familyPortraitAnswers.stream()
+                .filter(answer -> members.contains(answer.getMember()) && Optional.ofNullable(answer.getAnswerContent()).isPresent())
                 .toList();
 
         // 가족 사진을 위한 랜덤한 답변 선택
@@ -366,10 +366,9 @@ public class AnswerServiceImpl implements AnswerService {
 
         // 가족 사진에 대한 답변을 제외한 다른 사진 답변의 URL을 수집하고 null 값 제거
         List<String> allOtherPhotos = answersWithinDateRange.stream()
-                .filter(answer -> !challenge19Answers.contains(answer))
-                .filter(answer -> answer != familyPhotoAnswer && answer.getAnswerType() == AnswerType.PHOTO)
+                .filter(answer -> !familyPortraitAnswers.contains(answer))
+                .filter(answer -> answer != familyPhotoAnswer && answer.getAnswerType() == AnswerType.PHOTO && Optional.ofNullable(answer.getAnswerContent()).isPresent())
                 .map(Answer::getAnswerContent)
-                .filter(Objects::nonNull)
                 .toList();
 
         // 최대 9장의 다른 사진을 랜덤으로 선택
