@@ -31,8 +31,8 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(5, "함께 먹고 싶은 음식 사진을 올려보세요. 이번 주에 가장 맛있었던 것도 좋아요.", ChallengeType.PHOTO));
         challenges.add(createChallenge(6, "가장 좋아하는 노래가 무엇인가요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(7, "가족 중 한 명이 갑자기 바퀴벌레 혹은 좀비가 된다면 당신의 반응은?", ChallengeType.NORMAL));
-        challenges.add(createChallenge(8, "자녀의 성장 과정 중에서 가장 기억에 남는 순간이 있나요?", ChallengeType.GROUP_PARENT));
-        challenges.add(createChallenge(8, "부모님에게 가장 자랑하고 싶었던 일이 있나요?", ChallengeType.GROUP_CHILD));
+        challenges.add(createChallenge(8, "자녀가 가장 자랑스러웠던 순간이 있나요?", ChallengeType.GROUP_PARENT));
+        challenges.add(createChallenge(8, "부모님이 가장 멋있었던 순간이 있나요?", ChallengeType.GROUP_CHILD));
         challenges.add(createChallenge(9, "여행을 간다면 어디로 가고 싶나요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(10, "가장 마음에 드는 본인 사진을 올려보세요", ChallengeType.PHOTO));
         challenges.add(createChallenge(11, "가족이 가장 듬직했던 순간이 있나요?", ChallengeType.NORMAL));

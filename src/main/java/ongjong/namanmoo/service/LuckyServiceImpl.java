@@ -101,15 +101,22 @@ public class LuckyServiceImpl implements LuckyService {
         int challengeDays = lucky.getLifetime().getDays(); // 챌린지 주기 추출
 
         // 비율 계산을 위한 분모 계산 (가족 최대 인원 수 x 챌린지 주기)
-        int denominator = maxFamilySize * challengeDays;
+//        int denominator = maxFamilySize * challengeDays;
 
         // 비율 계산
-        double percentage = (double) familyContribution / denominator * 100;
+//        double percentage = (double) familyContribution / denominator * 100;
 
         // 행운이 상태 결정
-        if (percentage >= 75) { // 75% (30일 주기일 때 90개)
+//        if (percentage >= 75) { // 75% (30일 주기일 때 90개)
+//            return 3; // 행목
+//        } else if (percentage >= 25) { // 25% (30일 주기일 때 30개)
+//            return 2; // 행운
+//        } else {
+//            return 1; // 새싹
+//        }
+        if (familyContribution >= 38) { // 75% (30일 주기일 때 90개)
             return 3; // 행목
-        } else if (percentage >= 25) { // 25% (30일 주기일 때 30개)
+        } else if (familyContribution > 35) { // 25% (30일 주기일 때 30개)
             return 2; // 행운
         } else {
             return 1; // 새싹
