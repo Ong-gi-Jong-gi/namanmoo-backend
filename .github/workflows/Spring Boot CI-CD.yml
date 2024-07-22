@@ -42,7 +42,7 @@ jobs:
 
       # Save Firebase Admin SDK Key to File
       - name: Save Firebase Admin SDK Key to File
-        run: echo '${{ secrets.FIREBASE_ADMINSDK_JSON }}' > src/main/resources/mooluck-fcm-firebase-adminsdk.json
+        run: echo '${{ secrets.FIREBASE_ADMINSDK_JSON }}' > mooluck-fcm-firebase-adminsdk.json
 
       # Docker Buildx 설정
       - name: Docker Setup Buildx
@@ -62,7 +62,7 @@ jobs:
       # Docker 이미지 빌드 및 푸시
       - name: Build and push Docker image
         run: |
-          docker build . -t ${{ env.IMAGE_NAME }} --build-arg FIREBASE_CONFIG_FILE=src/main/resources/mooluck-fcm-firebase-adminsdk.json
+          docker build . -t ${{ env.IMAGE_NAME }} --build-arg FIREBASE_CONFIG_FILE=mooluck-fcm-firebase-adminsdk.json
           docker push ${{ env.IMAGE_NAME }}
 #          docker build . --file Dockerfile -t ${{ env.IMAGE_NAME }}
 
