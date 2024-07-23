@@ -107,14 +107,15 @@ public class LuckyServiceImpl implements LuckyService {
         // 비율 계산
         double percentage = (double) familyContribution / denominator * 100;
 
-        // 행운이 상태 결정
-        if (percentage >= 75) { // 75% (30일 주기일 때 90개)
-            return 3; // 행목
-        } else if (percentage >= 25) { // 25% (30일 주기일 때 30개)
-            return 2; // 행운
-        } else {
-            return 1; // 새싹
-        }
+//        // 행운이 상태 결정
+//        if (percentage >= 75) { // 75% (30일 주기일 때 90개)
+//            return 3; // 행목
+//        } else if (percentage >= 25) { // 25% (30일 주기일 때 30개)
+//            return 2; // 행운
+//        } else {
+//            return 1; // 새싹
+//        }
+        return 3;
     }
 
     // 시연용 행운이
