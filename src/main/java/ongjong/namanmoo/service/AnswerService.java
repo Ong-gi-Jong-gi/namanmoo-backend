@@ -25,6 +25,9 @@ public interface AnswerService {
     // 가족 구성원들의 답변 유무 검사
     boolean isAnyAnswerComplete(Challenge challenge, Family family);
 
+    // 가족 구성원들의 답변 수정 유무 검사 (FaceChallenge 조회에서 사용)
+    boolean isAnyAnswerModified(Challenge challenge, Family family);
+
     // 답변 수정
     Answer modifyAnswer(Long challengeId, String answerContent) throws Exception;
 

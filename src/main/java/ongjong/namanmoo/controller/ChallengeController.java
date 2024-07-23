@@ -262,7 +262,7 @@ public class ChallengeController {
         assert family != null;
 
         // isComplete 계산 로직
-        boolean isComplete = answerService.isAnyAnswerComplete(challenge, family);
+        boolean isComplete = answerService.isAnyAnswerModified(challenge, family);
 
         // 화상 통화 챌린지 정보 DTO 생성
         FaceChallengeDto challengeDto = new FaceChallengeDto(challenge, timestamp, isComplete, inviteCode);
