@@ -173,6 +173,19 @@ public class AnswerServiceImpl implements AnswerService {
         return false;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isAnyAnswerModified(Challenge challenge, Family family) {
+        List<Member> members = family.getMembers();
+        for (Member member : members) {
+            Optional<Answer> answer = answerRepository.findByChallengeAndMember(challenge, member);
+            if (answer.isPresent() && answer.get().getModifiedDate() != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // 답변 수정
     @Override
     public Answer modifyAnswer(Long challengeId, String answerContent) throws Exception{        // 로그인한 맴버가 수정한 답변을 저장한다.
