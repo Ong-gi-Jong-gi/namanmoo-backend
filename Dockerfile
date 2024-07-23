@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y ffmpeg
 ENV TZ=Asia/Seoul
 ENV FFMPEG_PATH=/usr/bin/ffmpeg
 ENV FFPROBE_PATH=/usr/bin/ffprobe
-ENV FIREBASE_CONFIG_PATH=/app/resources/mooluck-fcm-firebase-adminsdk-cjwp5-cd30150b1a.json
+#ENV FIREBASE_CONFIG_PATH=/app/resources/mooluck-fcm-firebase-adminsdk-cjwp5-cd30150b1a.json
 
 # 기본 프로파일 실행 명령어
 ENTRYPOINT ["java", "-jar", "mooluck-spring.jar", "-Dspring.profiles.active=docker", "-Duser.timezone=Asia/Seoul"]

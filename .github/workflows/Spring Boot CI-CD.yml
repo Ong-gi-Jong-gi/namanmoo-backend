@@ -56,14 +56,15 @@ jobs:
         run: echo "IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.PROJECT_NAME }}:$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
 
       # Docker 이미지 빌드 및 푸시
-#      - name: Build and push Docker image
-#        run: |
-#          docker build . --no-cache --file Dockerfile -t ${{ env.IMAGE_NAME }}
-#          docker push ${{ env.IMAGE_NAME }}
-      - name: Build Docker image
-        run: docker build . --file Dockerfile -t ${{ env.IMAGE_NAME }}
-      - name: Push Docker image
-        run: docker push ${{ env.IMAGE_NAME }}
+      - name: Build and push Docker image
+        run: |
+          docker build . --no-cache --file Dockerfile -t ${{ env.IMAGE_NAME }}
+          docker push ${{ env.IMAGE_NAME }}
+
+#      - name: Build Docker image
+#        run: docker build . --file Dockerfile -t ${{ env.IMAGE_NAME }}
+#      - name: Push Docker image
+#        run: docker push ${{ env.IMAGE_NAME }}
 
       #          docker build . --file Dockerfile -t ${{ env.IMAGE_NAME }}
 
@@ -130,8 +131,8 @@ jobs:
               -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
               -e FFMPEG_PATH="${{ secrets.FFMPEG_PATH }}" \
               -e FFPROBE_PATH="${{ secrets.FFPROBE_PATH }}" \
-              -e FIREBASE_CONFIG_PATH="/app/resources/mooluck-fcm-firebase-adminsdk-cjwp5-cd30150b1a.json" \
-              ${{ env.IMAGE_NAME }}
+#              -e FIREBASE_CONFIG_PATH="/app/resources/mooluck-fcm-firebase-adminsdk-cjwp5-cd30150b1a.json" \
+#              ${{ env.IMAGE_NAME }}
             sudo docker ps -a
             sudo docker system prune -f
             set +x
