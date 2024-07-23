@@ -60,12 +60,6 @@ jobs:
         run: |
           docker build . --no-cache --file Dockerfile -t ${{ env.IMAGE_NAME }}
           docker push ${{ env.IMAGE_NAME }}
-
-#      - name: Build Docker image
-#        run: docker build . --file Dockerfile -t ${{ env.IMAGE_NAME }}
-#      - name: Push Docker image
-#        run: docker push ${{ env.IMAGE_NAME }}
-
       #          docker build . --file Dockerfile -t ${{ env.IMAGE_NAME }}
 
       # 이미지 이름을 파일에 저장
@@ -132,7 +126,7 @@ jobs:
               -e FFMPEG_PATH="${{ secrets.FFMPEG_PATH }}" \
               -e FFPROBE_PATH="${{ secrets.FFPROBE_PATH }}" \
 #              -e FIREBASE_CONFIG_PATH="/app/resources/mooluck-fcm-firebase-adminsdk-cjwp5-cd30150b1a.json" \
-#              ${{ env.IMAGE_NAME }}
+              ${{ env.IMAGE_NAME }}
             sudo docker ps -a
             sudo docker system prune -f
             set +x
