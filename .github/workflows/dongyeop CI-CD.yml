@@ -106,7 +106,7 @@ jobs:
             set -x
             sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
             sudo docker pull ${{ env.IMAGE_NAME }}
-            EXISTING_CONTAINER=$(sudo docker ps -a -q --filter name=${{ env.PROJECT_NAME }})
+            EXISTING_CONTAINER=$(sudo docker ps -a -q --filter name=dongyeoppi)
             if [ -n "$EXISTING_CONTAINER" ]; then
               sudo docker stop $EXISTING_CONTAINER
               sudo docker rm $EXISTING_CONTAINER
