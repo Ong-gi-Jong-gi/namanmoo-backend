@@ -44,4 +44,4 @@ src/main/resources/env.properties
 /src/main/java/ongjong/namanmoo/config/PropertyConfig.java
 /src/main/java/ongjong/namanmoo/config/ServiceProperties.java
 
-src/main/resources/mooluck-fcm-firebase-adminsdk.json
+/src/main/resources/mooluck-fcm-firebase-adminsdk-cjwp5-cd30150b1a.json

@@ -19,11 +19,6 @@ import java.util.concurrent.ExecutionException;
 @Service
 public class FCMService {
     private static final Logger logger = LoggerFactory.getLogger(FCMService.class);
-    private final MemberRepository memberRepository;
-
-    public FCMService(MemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
-    }
 
     public void send(final NotificationRequest notificationRequest) throws InterruptedException, ExecutionException {
         Message message = Message.builder()
@@ -36,23 +31,5 @@ public class FCMService {
 
         String response = FirebaseMessaging.getInstance().sendAsync(message).get();
         logger.info("Sent message: " + response);
-    }
-
-    public void saveToken(HttpSession session, String token) {
-        session.setAttribute("FCM_TOKEN", token);
-    }
-
-    public String getToken(HttpSession session) {
-        return (String) session.getAttribute("FCM_TOKEN");
-    }
-
-    @Transactional
-    public String saveMemberToken(HttpSession session, String token) throws Exception {
-        // 해당 아이디 가진 유저가 존재하는지 검사
-        Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId())
-                .orElseThrow(() -> new RuntimeException("로그인한 멤버를 찾을 수 없습니다."));
-
-        saveToken(session, token);
-        return "토큰이 성공적으로 저장되었습니다.";
     }
 }

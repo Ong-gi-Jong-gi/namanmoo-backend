@@ -7,10 +7,15 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class NotificationRequest {
     private String title;
     private String message;
     private String token;
 
+    @Builder
+    public NotificationRequest(String title, String message, String token) {
+        this.title = title;
+        this.message = message;
+        this.token = token;
+    }
 }

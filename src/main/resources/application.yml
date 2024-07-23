@@ -61,5 +61,5 @@ ffprobe:
   path: ${FFPROBE_PATH}
 
 firebase:
-  config:
-    path: classpath:mooluck-fcm-firebase-adminsdk.json
+  project-id: mooluck-fcm
+  key-path: mooluck-fcm-firebase-adminsdk-cjwp5-cd30150b1a.json

@@ -2,11 +2,14 @@ package ongjong.namanmoo.controller;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
+import ongjong.namanmoo.dto.ApiResponse;
 import ongjong.namanmoo.dto.fcm.NotificationRequest;
 import ongjong.namanmoo.dto.fcm.TokenRequest;
 import ongjong.namanmoo.service.FCMService;
+import ongjong.namanmoo.service.FCMTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.security.core.token.TokenService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,43 +19,35 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 @RestController
 public class NotificationController {
-    private final FCMService fcmService;
+    @Autowired
+    private FCMService fcmService;
 
     @Autowired
-    public NotificationController(FCMService fcmService) {
-        this.fcmService = fcmService;
+    private FCMTokenService fcmTokenService;
+
+    // FCM 토큰 저장
+    @PostMapping("/save-token")
+    public ApiResponse<String> saveToken(HttpSession session, @RequestBody TokenRequest tokenRequest) {
+        fcmTokenService.saveToken(session, tokenRequest.getToken());
+        return new ApiResponse<>("200", "Token saved successfully", null);
     }
 
+    // 알림 전송
     @PostMapping("/send-notification")
-    public String sendNotification(HttpSession session, @RequestBody NotificationRequest notificationRequest) {
+    public ApiResponse<String> sendNotification(HttpSession session, @RequestBody NotificationRequest notificationRequest) {
         try {
-            String token = fcmService.getToken(session);
+            String token = fcmTokenService.getToken(session);
             if (token == null) {
-                return "FCM 토큰이 세션에 저장되어 있지 않습니다.";
+                return new ApiResponse<>("404", "FCM token is not stored in the session", null);
             }
 
-            notificationRequest.setToken(token); // 세션에서 가져온 토큰 설정
+            notificationRequest.setToken(token); // 세션에서 토큰 설정
+            log.info("Sending notification to token: {}", token);
             fcmService.send(notificationRequest);
-            return "Notification has been sent.";
+            return new ApiResponse<>("200", "Notification has been sent.", null);
         } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-            return "Error sending notification: " + e.getMessage();
+            log.error("Error sending notification", e);
+            return new ApiResponse<>("500", "Error sending notification: " + e.getMessage(), null);
         }
-    }
-
-    @PostMapping("/save-token")
-    public String saveToken(HttpSession session, @RequestBody TokenRequest tokenRequest) {
-        fcmService.saveToken(session, tokenRequest.getToken());
-        log.info("Token: {}", tokenRequest.getToken());
-        return "Token has been saved successfully.";
-    }
-
-    @PostMapping("/get-token")
-    public String getToken(HttpSession session) {
-        String token = fcmService.getToken(session);
-        if (token == null) {
-            return "No token found in session.";
-        }
-        return token;
     }
 }
