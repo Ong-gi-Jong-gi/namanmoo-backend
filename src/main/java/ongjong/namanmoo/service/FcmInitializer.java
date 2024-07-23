@@ -14,6 +14,7 @@ import java.io.InputStream;
 
 @Component
 @Slf4j
+// fcm
 public class FcmInitializer {
     @Value("${firebase.key-path}")
     private String firebaseKeyPath;
