@@ -42,6 +42,7 @@ public class RecapController {
     private final AwsS3Service awsS3Service;
     private final FFmpegService ffmpegService;
     private final SharedFileService sharedFileService;
+    private final AnswerServiceImpl answerServiceImpl;
 
     // 행운이 리스트
     @GetMapping("/list")
@@ -85,10 +86,10 @@ public class RecapController {
         mostViewedData.put("challengeTitle", mostViewedChallenge != null ? mostViewedChallenge.getChallengeTitle() : "");
 
         // 모두가 가장 빨리 답한 챌린지
-        Challenge fastestAnsweredChallenge = challengeService.findFastestAnsweredChallenge(lucky);
+        Challenge fastestAnsweredChallenge = answerService.findFastestAnsweredChallenge(lucky);
         Map<String, Object> fastestAnsweredData = new HashMap<>();
         fastestAnsweredData.put("topic", "fastestAnswered");
-        fastestAnsweredData.put("topicResult", fastestAnsweredChallenge != null ? challengeService.calculateLatestResponseTime(lucky, fastestAnsweredChallenge) : 0);
+        fastestAnsweredData.put("topicResult", fastestAnsweredChallenge != null ? answerService.calculateLatestResponseTime(answerService.findAnswersByChallenges(fastestAnsweredChallenge, memberService.findMemberByLoginId())) : 0);
         fastestAnsweredData.put("challengeId", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeId() : "");
         fastestAnsweredData.put("challengeType", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeType() : "");
         fastestAnsweredData.put("challengeNumber", fastestAnsweredChallenge != null ? fastestAnsweredChallenge.getChallengeNum() : "");
