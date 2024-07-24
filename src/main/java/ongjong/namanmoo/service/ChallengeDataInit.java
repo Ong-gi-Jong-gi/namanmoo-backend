@@ -40,8 +40,8 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(13, "나의 어렸을 때 장래희망은 ◯◯였다.", ChallengeType.NORMAL));
         challenges.add(createChallenge(14, "가족과 함께한 휴가나 여행 사진을 공유해 주세요.", ChallengeType.PHOTO));
         challenges.add(createChallenge(15, "도전! 한 소절!/우리 지금 만나, 당장 만나/우리 지금 만나-리쌍", ChallengeType.VOICE1));
-        challenges.add(createChallenge(15, "도전! 한 소절!/너무나 많이 사랑한 죄/사랑앓이-FT아일랜드", ChallengeType.VOICE2));
-        challenges.add(createChallenge(15, "도전! 한 소절!/행복하자 우리 행복하자 아프지 말고/양화대교-자이언티", ChallengeType.VOICE3));
+        challenges.add(createChallenge(15, "도전! 한 소절!/행복하자 우리 행복하자 아프지 말고/양화대교-자이언티", ChallengeType.VOICE2));
+        challenges.add(createChallenge(15, "도전! 한 소절!/너무나 많이 사랑한 죄/사랑앓이-FT아일랜드", ChallengeType.VOICE3));
         challenges.add(createChallenge(15, "도전! 한 소절!/난 너를 사랑해 이 세상은 너뿐이야/붉은 노을-빅뱅", ChallengeType.VOICE4));
         challenges.add(createChallenge(16, "어렸을 때 가장 좋아했던 놀이 또는 게임은 무엇인가요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(17, "가족과 가장 닮은 점, 혹은 닮고 싶은 점이 있나요?", ChallengeType.NORMAL));
@@ -76,8 +76,8 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(43, "나의 어렸을 때 장래희망은 ◯◯였다.", ChallengeType.NORMAL));
         challenges.add(createChallenge(44, "가족과 함께한 휴가나 여행 사진을 공유해 주세요.", ChallengeType.PHOTO));
         challenges.add(createChallenge(45, "도전! 한 소절!/우리 지금 만나, 당장 만나/우리 지금 만나-리쌍", ChallengeType.VOICE1));
-        challenges.add(createChallenge(45, "도전! 한 소절!/너무나 많이 사랑한 죄/사랑앓이-FT아일랜드", ChallengeType.VOICE2));
-        challenges.add(createChallenge(45, "도전! 한 소절!/행복하자 우리 행복하자 아프지 말고/양화대교-자이언티", ChallengeType.VOICE3));
+        challenges.add(createChallenge(45, "도전! 한 소절!/행복하자 우리 행복하자 아프지 말고/양화대교-자이언티", ChallengeType.VOICE2));
+        challenges.add(createChallenge(45, "도전! 한 소절!/너무나 많이 사랑한 죄/사랑앓이-FT아일랜드", ChallengeType.VOICE3));
         challenges.add(createChallenge(45, "도전! 한 소절!/난 너를 사랑해 이 세상은 너뿐이야/붉은 노을-빅뱅", ChallengeType.VOICE4));
         challenges.add(createChallenge(46, "어렸을 때 가장 좋아했던 놀이 또는 게임은 무엇인가요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(47, "가족과 가장 닮은 점, 혹은 닮고 싶은 점이 있나요?", ChallengeType.NORMAL));
@@ -112,8 +112,8 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(73, "나의 어렸을 때 장래희망은 ◯◯였다.", ChallengeType.NORMAL));
         challenges.add(createChallenge(74, "가족과 함께한 휴가나 여행 사진을 공유해 주세요.", ChallengeType.PHOTO));
         challenges.add(createChallenge(75, "도전! 한 소절!/우리 지금 만나, 당장 만나/우리 지금 만나-리쌍", ChallengeType.VOICE1));
-        challenges.add(createChallenge(75, "도전! 한 소절!/너무나 많이 사랑한 죄/사랑앓이-FT아일랜드", ChallengeType.VOICE2));
-        challenges.add(createChallenge(75, "도전! 한 소절!/행복하자 우리 행복하자 아프지 말고/양화대교-자이언티", ChallengeType.VOICE3));
+        challenges.add(createChallenge(75, "도전! 한 소절!/행복하자 우리 행복하자 아프지 말고/양화대교-자이언티", ChallengeType.VOICE2));
+        challenges.add(createChallenge(75, "도전! 한 소절!/너무나 많이 사랑한 죄/사랑앓이-FT아일랜드", ChallengeType.VOICE3));
         challenges.add(createChallenge(75, "도전! 한 소절!/난 너를 사랑해 이 세상은 너뿐이야/붉은 노을-빅뱅", ChallengeType.VOICE4));
         challenges.add(createChallenge(76, "어렸을 때 가장 좋아했던 놀이 또는 게임은 무엇인가요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(77, "가족과 가장 닮은 점, 혹은 닮고 싶은 점이 있나요?", ChallengeType.NORMAL));
@@ -148,8 +148,8 @@ public class ChallengeDataInit {
         challenges.add(createChallenge(103, "나의 어렸을 때 장래희망은 ◯◯였다.", ChallengeType.NORMAL));
         challenges.add(createChallenge(104, "가족과 함께한 휴가나 여행 사진을 공유해 주세요.", ChallengeType.PHOTO));
         challenges.add(createChallenge(105, "도전! 한 소절!/우리 지금 만나, 당장 만나/우리 지금 만나-리쌍", ChallengeType.VOICE1));
-        challenges.add(createChallenge(105, "도전! 한 소절!/너무나 많이 사랑한 죄/사랑앓이-FT아일랜드", ChallengeType.VOICE2));
-        challenges.add(createChallenge(105, "도전! 한 소절!/행복하자 우리 행복하자 아프지 말고/양화대교-자이언티", ChallengeType.VOICE3));
+        challenges.add(createChallenge(105, "도전! 한 소절!/행복하자 우리 행복하자 아프지 말고/양화대교-자이언티", ChallengeType.VOICE2));
+        challenges.add(createChallenge(105, "도전! 한 소절!/너무나 많이 사랑한 죄/사랑앓이-FT아일랜드", ChallengeType.VOICE3));
         challenges.add(createChallenge(105, "도전! 한 소절!/난 너를 사랑해 이 세상은 너뿐이야/붉은 노을-빅뱅", ChallengeType.VOICE4));
         challenges.add(createChallenge(106, "어렸을 때 가장 좋아했던 놀이 또는 게임은 무엇인가요?", ChallengeType.NORMAL));
         challenges.add(createChallenge(107, "가족과 가장 닮은 점, 혹은 닮고 싶은 점이 있나요?", ChallengeType.NORMAL));
