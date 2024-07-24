@@ -125,12 +125,12 @@ public class LuckyServiceImpl implements LuckyService {
         Long betweenLuckyAnswer = DateUtil.getInstance().getDateDifference(luckyStartDate, answerCreateDate);
         if (betweenLuckyAnswer == 1) {
             return 1; // 1일 and (미참여 or 참여) : 새싹
-        } else if (betweenLuckyAnswer == 15 && answerContent == null) {
-            return 1; // 15일 and 미참여 : 새싹
+//        } else if (betweenLuckyAnswer == 15 && answerContent == null) {
+//            return 1; // 15일 and 미참여 : 새싹
         } else if (betweenLuckyAnswer == 15) {
             return 2; // 15일 and 참여 : 행운이
-        } else if (betweenLuckyAnswer == 30 && answerContent == null) {
-            return 2; // 30일 and 미참여 : 행운이
+//        } else if (betweenLuckyAnswer == 30 && answerContent == null) {
+//            return 2; // 30일 and 미참여 : 행운이
         } else {
             return 3; // 나머지 엑스텀프
         }

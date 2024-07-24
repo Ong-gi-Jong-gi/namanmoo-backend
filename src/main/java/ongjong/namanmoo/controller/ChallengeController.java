@@ -113,6 +113,7 @@ public class ChallengeController {
         Member member = memberService.findMemberByLoginId(); // 로그인한 멤버 찾기
         List<ChallengeListDto> challengeList = challenges.stream()
                 .map(challenge -> {
+                    
                     boolean isComplete = answerService.findIsCompleteAnswer(challenge, member);
                     return new ChallengeListDto(challenge, isComplete);
                 })
