@@ -10,6 +10,7 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.extern.slf4j.Slf4j;
+import net.coobird.thumbnailator.Thumbnails;
 import ongjong.namanmoo.domain.*;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.openAI.WhisperTranscriptionResponse;
@@ -424,7 +425,12 @@ public class SharedFileService {
 
     // 병합된 이미지를 S3에 업로드하는 메서드
     public String uploadMergedImageToS3(BufferedImage mergedImage, String bucketName, String fileObjKeyName) throws IOException {
+
+        // 최적화된 이미지로 변환
+//        BufferedImage optimizedImage = optimizeImage(mergedImage);
+
         ByteArrayOutputStream os = new ByteArrayOutputStream();
+//        ImageIO.write(optimizedImage, "png", os);
         ImageIO.write(mergedImage, "png", os);
         byte[] buffer = os.toByteArray();
         InputStream is = new ByteArrayInputStream(buffer);
@@ -451,6 +457,43 @@ public class SharedFileService {
             throw e;
         }
     }
+
+//    /**
+//     * 이미지를 최적화하는 메소드.
+//     *
+//     * @param originalImage 최적화할 원본 이미지
+//     * @return 최적화된 이미지
+//     * @throws IOException 이미지 최적화 중 발생하는 예외
+//     */
+//    private BufferedImage optimizeImage(BufferedImage originalImage) throws IOException {
+//        int originalWidth = originalImage.getWidth();
+//        int originalHeight = originalImage.getHeight();
+//
+//        // 원하는 최대 크기 설정
+//        int maxWidth = (int) (originalWidth * 0.85);
+//        int maxHeight = (int) (originalHeight * 0.85);
+//
+//        // 원본 비율 유지하며 크기 조정
+//        double aspectRatio = (double) originalWidth / originalHeight;
+//        int newWidth = maxWidth;
+//        int newHeight = (int) (maxWidth / aspectRatio);
+//        if (newHeight > maxHeight) {
+//            newHeight = maxHeight;
+//            newWidth = (int) (maxHeight * aspectRatio);
+//        }
+//
+//        // 이미지 리사이즈 및 압축
+//        BufferedImage optimizedImage = Thumbnails.of(originalImage)
+//                .size(newWidth, newHeight)  // 비율 유지하면서 리사이즈
+//                .outputQuality(0.75)  // 이미지 품질 설정 (0.0 ~ 1.0)
+//                .asBufferedImage();
+//
+//        log.info("Original Image Dimensions: {}x{}", originalImage.getWidth(), originalImage.getHeight());
+//        log.info("Optimized Image Dimensions: {}x{}", optimizedImage.getWidth(), optimizedImage.getHeight());
+//
+//
+//        return optimizedImage;
+//    }
 
     // 특정 챌린지와 럭키 번호에 대한 이미지 결과를 가져오는 메서드
     public Map<Integer, List<String>> getFaceChallengeResults(int challengeNum, Long luckyId) {
