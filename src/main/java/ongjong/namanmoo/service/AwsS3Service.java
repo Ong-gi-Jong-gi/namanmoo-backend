@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -131,7 +134,11 @@ public class AwsS3Service {
      * @return String 고유한 파일 이름
      */
     private String generateFileName(File uploadFile, String fileType) {
-        return fileType + "/" + UUID.randomUUID() + "_" + uploadFile.getName();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS")
+                .withZone(ZoneId.systemDefault());
+        String formattedDate = formatter.format(Instant.now());
+
+        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
     }
 
     /**
