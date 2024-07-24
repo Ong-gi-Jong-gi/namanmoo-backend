@@ -97,13 +97,14 @@ public class SharedFileService {
             throw new IllegalArgumentException("Invalid file type: " + fileType);
         }
 
-        // S3에 파일 업로드 및 URL 저장
-        String uploadedUrl = awsS3Service.uploadFileWithRetry(photo, 3);
-
-        Optional<Lucky> optionalLucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(family.getFamilyId());
-        Lucky lucky = optionalLucky.orElseThrow(() -> new RuntimeException("Running Lucky not found for family"));
-
         try {
+            // S3에 파일 업로드 및 URL 저장
+            String uploadedUrl = awsS3Service.uploadFile(photo);
+//            String uploadedUrl = awsS3Service.uploadFileWithRetry(photo, 3);
+
+            Optional<Lucky> optionalLucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(family.getFamilyId());
+            Lucky lucky = optionalLucky.orElseThrow(() -> new RuntimeException("Running Lucky not found for family"));
+
             // SharedFile 엔티티 저장
             SharedFile sharedFile = new SharedFile();
             sharedFile.setFileName(uploadedUrl);
@@ -112,13 +113,15 @@ public class SharedFileService {
             sharedFile.setCreateDate(System.currentTimeMillis());
             sharedFile.setLucky(lucky); // Lucky 엔티티 설정
             sharedFileRepository.save(sharedFile);
-            log.info("SharedFile 저장 성공: {}", sharedFile.getSharedFileId());
-        } catch (Exception e) {
-            log.error("SharedFile 저장 실패", e);
-        }
+            log.info("SharedFile saved successfully: {}", sharedFile.getSharedFileId());
 
-        response.put("url", uploadedUrl);
-        response.put("message", "Photo uploaded successfully");
+            response.put("url", uploadedUrl);
+            response.put("message", "Photo uploaded successfully");
+
+        } catch (Exception e) {
+            log.error("Error occurred while uploading image file", e);
+            throw e;
+        }
 
         return response;
     }
