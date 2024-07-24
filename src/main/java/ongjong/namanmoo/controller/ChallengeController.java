@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -39,7 +40,6 @@ public class ChallengeController {
     private final AwsS3Service awsS3Service;
     private final SharedFileService sharedFileService;
     private final OpenAIClientService openAIClientService;
-
 
     @PostMapping // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     @Transactional
@@ -298,6 +298,9 @@ public class ChallengeController {
         if (Objects.requireNonNull(answerFile.getContentType()).startsWith("image/")) {
             fileType = FileType.IMAGE;
             Map<String, String> response = sharedFileService.uploadImageFile(challenge, answerFile, fileType);
+            // TODO: 방법 2: 병합을 서버 측에서 스케줄링 (첫번째 cut만 생성됨)
+            // 이미지 업로드가 완료된 후에 병합을 예약합니다.
+            sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
             return new ApiResponse<>("200", response.get("message"), response);
         } else if (answerFile.getContentType().startsWith("video/")) {
             fileType = FileType.VIDEO;
@@ -308,17 +311,9 @@ public class ChallengeController {
             // Answer 업데이트
             answerService.modifyAnswer(challengeId, uploadedUrl);
 
-//            // TODO: 원래 하던 코드 (4번째 cut 사진이 병합이 안되는 현상 발생)
-//            // 그룹별 4개의 이미지가 모였는지 확인 및 병합
-//            sharedFileService.checkAndMergeImages(challenge.getChallengeNum(), lucky);
-
-            // TODO: 방법 1: 이미지 업로드와 병합 분리 (4번째 cut 1장 만들어짐) -> 채택!
-            // 이미지 업로드가 완료된 후에 병합을 시도합니다.
-            sharedFileService.mergeImagesIfNeeded(challenge.getChallengeNum(), lucky);
-
-//            // TODO: 방법 2: 병합을 서버 측에서 스케줄링 (첫번째 cut만 생성됨)
-//            // 이미지 업로드가 완료된 후에 병합을 예약합니다.
-//            sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
+//            // TODO: 방법 1: 이미지 업로드와 병합 분리 (4번째 cut 1장 만들어짐) -> 채택!
+//            // 이미지 업로드가 완료된 후에 병합을 시도합니다.
+//            sharedFileService.mergeImagesIfNeeded(challenge.getChallengeNum(), lucky);
 
 //            // TODO: 비동기 시도...
 //            // 비디오 업로드 후 이미지 병합 작업 스케줄링
@@ -351,10 +346,21 @@ public class ChallengeController {
         if (matchedLucky != null && matchedLucky.isRunning()){
             luckyService.increaseChallengeViews(matchedLucky.getLuckyId(), challenge.getChallengeNum());
         }
-
         assert matchedLucky != null;
+
         Map<Integer, List<String>> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), matchedLucky.getLuckyId());
 
+        // 병합 이미지가 하나도 없는지 확인
+        boolean areMergedImagesPresent = results.values().stream().anyMatch(list -> !list.isEmpty());
+
+        if (!areMergedImagesPresent) {
+            // 병합된 이미지가 하나도 없다면, 다시 병합 작업을 예약
+            sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), matchedLucky);
+
+            // 이 시점에서 API는 "202 Accepted"와 같은 상태 코드를 반환하여 작업이 진행 중임을 클라이언트에 알려주는 것이 좋습니다.
+            // 다만, 병합 작업이 완료되기까지 사용자가 잠시 기다려야 하며, 병합이 완료된 결과를 가져오려면 나중에 다시 요청해야 한다는 점을 알려주세요.
+            return new ApiResponse<>("202", "Merging operation has been scheduled. Please try again later.", null);
+        }
 
         return new ApiResponse<>("200", "FaceTime Challenge results found successfully", results);
     }
