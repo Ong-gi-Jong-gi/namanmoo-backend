@@ -85,7 +85,6 @@ public class SharedFileService {
         this.region = region;
     }
 
-    // 이미지 업로드 메서드
     @Transactional
     public Map<String, String> uploadImageFile(Challenge challenge, MultipartFile photo, FileType fileType) throws Exception {
         Map<String, String> response = new HashMap<>();
@@ -111,7 +110,7 @@ public class SharedFileService {
             sharedFile.setFileType(FileType.IMAGE);
             sharedFile.setChallengeNum(challenge.getChallengeNum());
             sharedFile.setCreateDate(System.currentTimeMillis());
-            sharedFile.setLucky(lucky); // Lucky 엔티티 설정
+            sharedFile.setLucky(lucky);
             sharedFileRepository.save(sharedFile);
             log.info("SharedFile saved successfully: {}", sharedFile.getSharedFileId());
 
@@ -138,11 +137,12 @@ public class SharedFileService {
     }
 
     @Async
-    public void scheduleMergeImagesAsync(int challengeNum, Lucky lucky) {
-        CompletableFuture.runAsync(() -> {
+    public CompletableFuture<Void> scheduleMergeImagesAsync(int challengeNum, Lucky lucky) {
+        return CompletableFuture.runAsync(() -> {
             try {
                 scheduleMergeImages(challengeNum, lucky);
             } catch (Exception e) {
+                log.error("Error occurred while scheduling image merge", e);
                 throw new RuntimeException(e);
             }
         });
