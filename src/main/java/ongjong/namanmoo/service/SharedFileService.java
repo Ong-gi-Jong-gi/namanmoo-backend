@@ -311,7 +311,8 @@ public class SharedFileService {
 
             // UUID 생성 및 파일 이름 설정
             String uuid = UUID.randomUUID().toString();
-            String baseName = "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_" + key + ".png";
+//            String baseName = "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_" + key + ".png";
+            String baseName = "merged-images/" + "life4cut_"+ challengeNum + "_" + lucky.getLuckyId() + "_cut_" + key + ".png";
             BufferedImage mergedImage = ImageMerger.mergeImages(selectedImages);
 
             // 병합된 이미지를 S3에 업로드
