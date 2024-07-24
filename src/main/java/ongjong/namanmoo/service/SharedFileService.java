@@ -1,5 +1,7 @@
 package ongjong.namanmoo.service;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -249,18 +251,19 @@ public class SharedFileService {
                 }
             }
 
-            // 모든 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
-            boolean allGroupsHaveEnoughImages = groupedFiles.values().stream().allMatch(list -> list.size() >= 4);
-
-            if (allGroupsHaveEnoughImages) {
-                break; // 모든 그룹에 4개 이상의 이미지가 있는 경우 병합을 시작
-            }
-//            // 어떠한 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
-//            boolean anyGroupHasEnoughImages = groupedFiles.values().stream().anyMatch(list -> list.size() >= 4);
+//            // 모든 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
+//            boolean allGroupsHaveEnoughImages = groupedFiles.values().stream().allMatch(list -> list.size() >= 4);
 //
-//            if (anyGroupHasEnoughImages || System.currentTimeMillis() - startTime > MAX_WAIT_TIME) {
-//                break; // 어떠한 그룹에 4개 이상의 이미지가 있거나, 최대 대기 시간이 지나면 병합을 시작합니다.
+//            if (allGroupsHaveEnoughImages) {
+//                break; // 모든 그룹에 4개 이상의 이미지가 있는 경우 병합을 시작
 //            }
+            // 어떠한 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
+            boolean anyGroupHasEnoughImages = groupedFiles.values().stream().anyMatch(list -> list.size() >= 4);
+
+            if (anyGroupHasEnoughImages || System.currentTimeMillis() - startTime > MAX_WAIT_TIME) {
+                break; // 어떠한 그룹에 4개 이상의 이미지가 있거나, 최대 대기 시간이 지나면 병합을 시작합니다.
+            }
+
             if (System.currentTimeMillis() - startTime > MAX_WAIT_TIME) {
                 throw new IOException("이미지 업로드 대기 시간이 초과되었습니다.");
             }
@@ -311,7 +314,8 @@ public class SharedFileService {
 
             // UUID 생성 및 파일 이름 설정
             String uuid = UUID.randomUUID().toString();
-            String baseName = "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_" + key + ".png";
+//            String baseName = "merged-images/" + uuid + "_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_" + key + ".png";
+            String baseName = "merged-images/" + "life4cut_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_" + key + ".png";
             BufferedImage mergedImage = ImageMerger.mergeImages(selectedImages);
 
             // 병합된 이미지를 S3에 업로드
@@ -501,13 +505,25 @@ public class SharedFileService {
         ObjectMetadata meta = new ObjectMetadata();
         meta.setContentLength(buffer.length);
         meta.setContentType("image/png");
+        try {
+            log.info("파일 업로드 시작: {}", fileObjKeyName);
+            amazonS3Client.putObject(new PutObjectRequest(bucketName, fileObjKeyName, is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
+            log.info("파일 업로드 완료: {}", fileObjKeyName);
 
-        amazonS3Client.putObject(new PutObjectRequest(bucketName, fileObjKeyName, is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
-
-        // 선택: amazonS3Client.getUrl(bucketName, fileObjKeyName).toString(); 또는 String.format을 사용
-        return amazonS3Client.getUrl(bucketName, fileObjKeyName).toString();
-        // 또는
-        // return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, fileObjKeyName);
+            // 선택: amazonS3Client.getUrl(bucketName, fileObjKeyName).toString(); 또는 String.format을 사용
+            return amazonS3Client.getUrl(bucketName, fileObjKeyName).toString();
+            // 또는
+            // return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, fileObjKeyName);
+        } catch (AmazonServiceException e) {
+            log.error("Amazon 서비스 예외 발생: {}", e.getMessage(), e);
+            throw e;
+        } catch (SdkClientException e) {
+            log.error("SDK 클라이언트 예외 발생: {}", e.getMessage(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error("알 수 없는 예외 발생: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     // 특정 챌린지와 럭키 번호에 대한 이미지 결과를 가져오는 메서드

@@ -1,6 +1,7 @@
 package ongjong.namanmoo.service;
 
 import ongjong.namanmoo.domain.Family;
+import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
@@ -44,6 +45,10 @@ public interface AnswerService {
     List<Answer> findAnswersByChallenges(Challenge challenge, Member member);
 
     List<MemberDto> getAnswersByMember(Long luckyId, int challengeNum1, int challengeNum2, Class<? extends MemberDto> dtoClass) throws Exception;
+
+    Challenge findFastestAnsweredChallenge(Lucky lucky) throws Exception;
+
+    long calculateLatestResponseTime(List<Answer> answers);
 
     List<MemberYouthAnswerDto> getYouthByMember(Long luckyId, int challengeNum1, int challengeNum2) throws Exception;
 

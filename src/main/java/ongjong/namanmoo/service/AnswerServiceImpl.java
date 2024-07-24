@@ -14,6 +14,8 @@ import ongjong.namanmoo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -321,6 +323,94 @@ public class AnswerServiceImpl implements AnswerService {
 
         return memberDtoList;
     }
+
+    // 모든 가족 구성원이 가장 빠르게 답한 챌린지를 반환
+    @Override
+    public Challenge findFastestAnsweredChallenge(Lucky lucky) throws Exception {
+        Family family = lucky.getFamily();
+
+        // Lucky 기간 동안의 모든 답변 가져오기
+        String startDate = lucky.getChallengeStartDate();
+        String endDate = DateUtil.getInstance().addDaysToStringDate(startDate, lucky.getLifetime().getDays());
+        List<Answer> answersWithinDateRange = answerRepository.findByMemberFamilyAndCreateDateBetween(family, startDate, endDate);
+
+        // createDate를 기준으로 그룹화
+        Map<String, List<Answer>> answersByCreateDate = answersWithinDateRange.stream()
+                .collect(Collectors.groupingBy(Answer::getCreateDate));
+
+        Challenge fastestChallenge = null;
+        long shortestTime = Long.MAX_VALUE;
+
+        for (Map.Entry<String, List<Answer>> entry : answersByCreateDate.entrySet()) {
+            List<Answer> answers = entry.getValue();
+
+            // 모든 가족 구성원이 해당 챌린지에 대해 답변했는지 확인
+            if (answers.size() == family.getMembers().size() &&
+                    answers.stream().allMatch(answer ->
+                            answer.getAnswerContent() != null && !answer.getAnswerContent().isEmpty() &&
+                                    answer.getModifiedDate() != null && !answer.getModifiedDate().isEmpty())) {
+
+                // 각 챌린지에 대해 답변 확인 및 가장 늦은 응답 시간 계산
+                long timeToAnswer = calculateLatestResponseTime(answers);
+                log.info("Create Date: " + entry.getKey() + ", Time to answer: " + timeToAnswer);
+
+                if (timeToAnswer < shortestTime) {
+                    shortestTime = timeToAnswer;
+                    fastestChallenge = answers.get(0).getChallenge();
+                }
+            }
+        }
+
+        log.info("Fastest Challenge ID: " + (fastestChallenge != null ? fastestChallenge.getChallengeId() : "None"));
+        return fastestChallenge;
+    }
+
+    // 챌린지에 달린 답변 중, 가장 늦게 달린 답변 시간을 계산
+    public long calculateLatestResponseTime(List<Answer> answers) {
+        long latestTime = Long.MIN_VALUE; // 해당 챌린지의 가장 늦은 응답시간을 저장할 변수
+
+        SimpleDateFormat format4 = new SimpleDateFormat(DateUtil.FORMAT_4);
+        SimpleDateFormat format9 = new SimpleDateFormat(DateUtil.FORMAT_9);
+
+        for (Answer answer : answers) {
+            try {
+                String createDate = answer.getCreateDate();
+                String modifiedDate = answer.getModifiedDate();
+
+                if (createDate == null || modifiedDate == null) {
+                    log.warn("답변 ID: {}에서 Null 타임스탬프를 찾았습니다.", answer.getAnswerId());
+                    continue;
+                }
+
+                Date createTime = format4.parse(createDate);
+                Date modifiedTime = format9.parse(modifiedDate);
+                log.info("답변 수정 시간: {}, 답변 생성 시간: {}", modifiedTime.getTime(), createTime.getTime());
+
+                long responseTime = Math.abs(modifiedTime.getTime() - createTime.getTime()); // 응답 시간 계산
+                log.info("응답 시간: {}", responseTime);
+
+                if (responseTime > latestTime) {
+                    latestTime = responseTime;
+                }
+            } catch (ParseException e) {
+                log.error("답변 ID: {}의 날짜 파싱 에러", answer.getAnswerId(), e);
+            }
+        }
+
+        if (latestTime == Long.MIN_VALUE) {
+            return Long.MAX_VALUE;
+        }
+        long totalSeconds = latestTime / 1000;
+        long totalMinutes = totalSeconds / 60;
+        long totalHours = totalMinutes / 60;
+        long days = totalHours / 24;
+        long seconds = totalSeconds % 60;
+        long minutes = totalMinutes % 60;
+        long hours = totalHours % 24;
+        log.info("가장 늦은 응답 시간: " + days + "일 " + hours + "시간 " + minutes + "분 " + seconds + "초");
+        return latestTime;
+    }
+
 
     // DTO 생성 로직을 처리하는 메서드
     public MemberDto createDto(Class<? extends MemberDto> dtoClass, Member member, String answer1, String answer2) {

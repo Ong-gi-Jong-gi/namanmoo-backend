@@ -36,10 +36,6 @@ public interface ChallengeService {
 
     Challenge findMostViewedChallenge(Lucky lucky) throws Exception;
 
-    Challenge findFastestAnsweredChallenge(Lucky lucky) throws Exception;
-
-    long calculateLatestResponseTime(Lucky lucky, Challenge challenge) throws Exception ;
-
     // groupChallenge 조회를 위한 dto  (부모와 자식의 challenge 질문 구분하기)
     GroupChallengeDto filterChallengesByMemberRole(Challenge challenge, Long timeStamp, boolean isComplete, List<Answer> answers);
 }
