@@ -356,10 +356,6 @@ public class ChallengeController {
         if (!areMergedImagesPresent) {
             // 병합된 이미지가 하나도 없다면, 다시 병합 작업을 예약
             sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), matchedLucky);
-
-            // 이 시점에서 API는 "202 Accepted"와 같은 상태 코드를 반환하여 작업이 진행 중임을 클라이언트에 알려주는 것이 좋습니다.
-            // 다만, 병합 작업이 완료되기까지 사용자가 잠시 기다려야 하며, 병합이 완료된 결과를 가져오려면 나중에 다시 요청해야 한다는 점을 알려주세요.
-            return new ApiResponse<>("202", "Merging operation has been scheduled. Please try again later.", null);
         }
 
         return new ApiResponse<>("200", "FaceTime Challenge results found successfully", results);
