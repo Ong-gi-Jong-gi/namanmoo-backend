@@ -167,7 +167,9 @@ public class AwsS3Service {
      * @throws IOException 파일 변환 중 발생하는 예외
      */
     private Optional<File> convertFile(MultipartFile file) throws IOException {
-        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+//        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        String fileName = file.getOriginalFilename();
+        assert fileName != null;
         File convertFile = new File(fileName);
 
         if (convertFile.createNewFile()) {
