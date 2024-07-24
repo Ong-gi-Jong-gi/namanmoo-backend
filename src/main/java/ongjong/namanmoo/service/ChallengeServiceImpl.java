@@ -384,7 +384,7 @@ public class ChallengeServiceImpl implements ChallengeService {
                 // 해당 챌린지에 대해 모든 가족 구성원이 답변 내용을 입력했는지 확인
                 boolean allMembersAnswered = true;
                 for (Answer answer : answers) {
-                    if (answer.getAnswerContent() == null || answer.getAnswerContent().isEmpty()) {
+                    if (answer.getAnswerContent() == null || answer.getAnswerContent().isEmpty() || answer.getModifiedDate() == null || answer.getModifiedDate().isEmpty()) {
                         allMembersAnswered = false;
                         break;
                     }
