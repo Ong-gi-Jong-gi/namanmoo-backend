@@ -209,6 +209,32 @@ public class AwsS3Service {
         amazonS3Client.deleteObject(bucket, fileName);
     }
 
+    // 업로드 실패 시 재시도 로직 추가
+    public String uploadFileWithRetry(MultipartFile multipartFile, int retries) throws IOException, InterruptedException {
+        File uploadFile = convertFile(multipartFile)
+                .orElseThrow(() -> new IllegalArgumentException("Incorrect conversion from MultipartFile to File"));
+
+        String fileType = determineFileType(multipartFile);
+        String fileName = generateFileName(uploadFile, fileType);
+
+        for (int i = 0; i < retries; i++) {
+            try {
+                amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, uploadFile)
+                        .withCannedAcl(CannedAccessControlList.PublicRead));
+
+                String uploadedUrl = getS3FileURL(fileName);
+                log.info("Successfully uploaded file to S3 on retry " + i + ": {}", uploadedUrl);
+
+                removeNewFile(uploadFile); // Remember to clean up local file after upload
+                return uploadedUrl;
+            } catch (Exception ex) {
+                log.warn("업로드에 실패하였습니다. 재시도하는중... (시도: {}/{})", i + 1, retries);
+                Thread.sleep(3000);  // waiting for 3 seconds before the next retry
+            }
+        }
+        throw new RuntimeException("Failed to upload file after " + retries + " retries.");
+    }
+
     // 오디오 파일 고정 경로 생성
     public String uploadAudioFile(MultipartFile multipartFile, String s3Path) throws IOException {
         log.info("Converting MultipartFile to File...");

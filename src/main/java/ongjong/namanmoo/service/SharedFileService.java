@@ -19,6 +19,7 @@ import ongjong.namanmoo.repository.SharedFileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,6 +42,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
+@EnableAsync
 @Service
 public class SharedFileService {
 
@@ -96,7 +98,7 @@ public class SharedFileService {
         }
 
         // S3에 파일 업로드 및 URL 저장
-        String uploadedUrl = awsS3Service.uploadFile(photo);
+        String uploadedUrl = awsS3Service.uploadFileWithRetry(photo, 3);
 
         Optional<Lucky> optionalLucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(family.getFamilyId());
         Lucky lucky = optionalLucky.orElseThrow(() -> new RuntimeException("Running Lucky not found for family"));
@@ -110,16 +112,37 @@ public class SharedFileService {
             sharedFile.setCreateDate(System.currentTimeMillis());
             sharedFile.setLucky(lucky); // Lucky 엔티티 설정
             sharedFileRepository.save(sharedFile);
-            // 저장이 성공했는지 확인하는 로그
-            System.out.println("SharedFile 저장 성공: " + sharedFile.getSharedFileId());
+            log.info("SharedFile 저장 성공: {}", sharedFile.getSharedFileId());
         } catch (Exception e) {
-            e.printStackTrace();  // Or use appropriate logging
+            log.error("SharedFile 저장 실패", e);
         }
 
         response.put("url", uploadedUrl);
         response.put("message", "Photo uploaded successfully");
 
         return response;
+    }
+
+    @Async
+    public CompletableFuture<Map<String, String>> uploadImageFileAsync(Challenge challenge, MultipartFile photo, FileType fileType) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return uploadImageFile(challenge, photo, fileType);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Async
+    public void scheduleMergeImagesAsync(int challengeNum, Lucky lucky) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                scheduleMergeImages(challengeNum, lucky);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
 //    // TODO: 방법 1: (동기) 이미지 업로드와 병합 분리
@@ -255,7 +278,7 @@ public class SharedFileService {
                 // 모든 이미지가 업로드된 후 병합 수행
                 mergeImagesIfNeeded(challengeNum, lucky);
             } catch (IOException e) {
-                e.printStackTrace();  // Or use appropriate logging
+                log.error("이미지 병합 작업 실패", e);
             } finally {
                 // 병합 작업이 완료되면 플래그를 제거
                 mergeTasks.remove(key);

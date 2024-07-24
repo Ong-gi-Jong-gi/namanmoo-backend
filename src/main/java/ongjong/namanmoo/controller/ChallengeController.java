@@ -14,6 +14,7 @@ import ongjong.namanmoo.dto.openAI.TranscriptionRequest;
 import ongjong.namanmoo.dto.openAI.WhisperTranscriptionResponse;
 import ongjong.namanmoo.service.*;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -294,32 +296,24 @@ public class ChallengeController {
         }
         Lucky lucky = luckyService.findCurrentLucky(family.getFamilyId());
 
-        FileType fileType;
         if (Objects.requireNonNull(answerFile.getContentType()).startsWith("image/")) {
-            fileType = FileType.IMAGE;
-            Map<String, String> response = sharedFileService.uploadImageFile(challenge, answerFile, fileType);
-            // TODO: 방법 2: 병합을 서버 측에서 스케줄링 (첫번째 cut만 생성됨)
-            // 이미지 업로드가 완료된 후에 병합을 예약합니다.
-            sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
-            return new ApiResponse<>("200", response.get("message"), response);
+            FileType fileType = FileType.IMAGE;
+            CompletableFuture<Map<String, String>> uploadFuture = sharedFileService.uploadImageFileAsync(challenge, answerFile, fileType);
+            uploadFuture.thenRun(() -> sharedFileService.scheduleMergeImagesAsync(challenge.getChallengeNum(), lucky));
+            return new ApiResponse<>("200", "Image upload scheduled successfully", null);
         } else if (answerFile.getContentType().startsWith("video/")) {
-            fileType = FileType.VIDEO;
+            FileType fileType = FileType.VIDEO;
 
-            // S3에 파일 업로드 및 URL 저장
-            String uploadedUrl = awsS3Service.uploadFile(answerFile);
-
-            // Answer 업데이트
-            answerService.modifyAnswer(challengeId, uploadedUrl);
-
-//            // TODO: 방법 1: 이미지 업로드와 병합 분리 (4번째 cut 1장 만들어짐) -> 채택!
-//            // 이미지 업로드가 완료된 후에 병합을 시도합니다.
-//            sharedFileService.mergeImagesIfNeeded(challenge.getChallengeNum(), lucky);
-
-//            // TODO: 비동기 시도...
-//            // 비디오 업로드 후 이미지 병합 작업 스케줄링
-//            sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
-
-            return new ApiResponse<>("200", "Video uploaded successfully", Map.of("url", uploadedUrl));
+            CompletableFuture.runAsync(() -> {
+                try {
+                    String uploadedUrl = awsS3Service.uploadFile(answerFile);
+                    answerService.modifyAnswer(challengeId, uploadedUrl);
+                    sharedFileService.scheduleMergeImagesAsync(challenge.getChallengeNum(), lucky);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            return new ApiResponse<>("200", "Video upload scheduled successfully", null);
         } else {
             return new ApiResponse<>("400", "Invalid file type: " + answerFile.getContentType(), null);
         }
