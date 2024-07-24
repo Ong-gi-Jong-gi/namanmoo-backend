@@ -136,9 +136,9 @@ public class ChallengeController {
         NormalChallengeDto normalChallengeDto = new NormalChallengeDto(challenge, details.isComplete(), details.getChallengeDate(), details.getAnswers());
 
         // 챌린지 조회 시 조회수 증가
-        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        if (currentLucky != null){
-            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        Lucky matchedLucky = luckyService.findMatchingLucky(challengeId, member);
+        if (matchedLucky != null && matchedLucky.isRunning()){
+            luckyService.increaseChallengeViews(matchedLucky.getLuckyId(), challenge.getChallengeNum());
         }
 
         return new ApiResponse<>("200", "Normal challenge found successfully", normalChallengeDto);
@@ -174,9 +174,9 @@ public class ChallengeController {
         List<Answer> allAnswers = answerService.findAnswersByChallenges(challenge, member);     // 특정 그룹 챌린지에 매핑된 answer list 찾기
 
         // 챌린지 조회 시 조회수 증가
-        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        if (currentLucky != null){
-            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        Lucky matchedLucky = luckyService.findMatchingLucky(challengeId, member);
+        if (matchedLucky != null && matchedLucky.isRunning()){
+            luckyService.increaseChallengeViews(matchedLucky.getLuckyId(), challenge.getChallengeNum());
         }
 
         GroupChallengeDto groupChallengeDto = challengeService.filterChallengesByMemberRole(challenge, challengeDate, isComplete, allAnswers);
@@ -213,10 +213,11 @@ public class ChallengeController {
         List<Answer> allAnswers = answerService.findAnswersByChallenges(challenge, member);     // 특정 사진 챌린지에 매핑된 answer list 찾기
 
         // 챌린지 조회 시 조회수 증가
-        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        if (currentLucky != null){
-            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        Lucky matchedLucky = luckyService.findMatchingLucky(challengeId, member);
+        if (matchedLucky != null && matchedLucky.isRunning()){
+            luckyService.increaseChallengeViews(matchedLucky.getLuckyId(), challenge.getChallengeNum());
         }
+
         PhotoChallengeDto photoChallengeDto = new PhotoChallengeDto(challenge, isComplete, challengeDate, allAnswers);
         return new ApiResponse<>("200", "Photo Challenge found successfully", photoChallengeDto);
     }
@@ -345,13 +346,15 @@ public class ChallengeController {
             return new ApiResponse<>("404", "Family not found for the current member", null);
         }
 
-        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        if (currentLucky != null){
-            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
-            // 응답 데이터 생성
+        // 챌린지 조회 시 조회수 증가
+        Lucky matchedLucky = luckyService.findMatchingLucky(challengeId, member);
+        if (matchedLucky != null && matchedLucky.isRunning()){
+            luckyService.increaseChallengeViews(matchedLucky.getLuckyId(), challenge.getChallengeNum());
         }
-        Lucky lucky = luckyService.findMatchingLucky(challengeId,member);
-        Map<Integer, List<String>> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), lucky.getLuckyId());
+
+        assert matchedLucky != null;
+        Map<Integer, List<String>> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), matchedLucky.getLuckyId());
+
 
         return new ApiResponse<>("200", "FaceTime Challenge results found successfully", results);
     }
@@ -371,9 +374,9 @@ public class ChallengeController {
         List<Answer> allAnswers = answerService.findAnswersByChallenges(challenge, member);     // 특정 음성 챌린지에 매핑된 answer list 찾기
 
         // 챌린지 조회 시 조회수 증가
-        Lucky currentLucky = luckyService.findCurrentLucky(member.getFamily().getFamilyId());
-        if (currentLucky != null){
-            luckyService.increaseChallengeViews(currentLucky.getLuckyId(), challenge.getChallengeNum());
+        Lucky matchedLucky = luckyService.findMatchingLucky(challengeId, member);
+        if (matchedLucky != null && matchedLucky.isRunning()){
+            luckyService.increaseChallengeViews(matchedLucky.getLuckyId(), challenge.getChallengeNum());
         }
 
         VoiceChallengeDto voiceChallengeDto = new VoiceChallengeDto(challenge, isComplete, challengeDate, allAnswers);
