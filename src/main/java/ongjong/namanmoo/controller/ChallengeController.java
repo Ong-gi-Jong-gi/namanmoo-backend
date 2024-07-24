@@ -463,9 +463,9 @@ public class ChallengeController {
             case VOICE1:
                 return "우리";
             case VOICE2:
-                return "많이";
-            case VOICE3:
                 return "행복하자";
+            case VOICE3:
+                return "많이";
             case VOICE4:
                 return "사랑해";
             default:
