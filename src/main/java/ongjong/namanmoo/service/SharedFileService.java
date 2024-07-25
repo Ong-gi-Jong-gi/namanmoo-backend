@@ -295,7 +295,7 @@ public class SharedFileService {
 
     // 이미지 업로드가 완료될 때까지 대기하는 메소드
     private void waitForImageUploadCompletion(int challengeNum, Lucky lucky) throws IOException {
-        final int MAX_WAIT_TIME = 20000; // 최대 대기 시간 20초
+        final int MAX_WAIT_TIME = 22000; // 최대 대기 시간 22초
         final int SLEEP_INTERVAL = 3000; // 3초 간격으로 재시도
         long startTime = System.currentTimeMillis();
 
