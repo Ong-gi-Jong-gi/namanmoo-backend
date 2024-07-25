@@ -93,6 +93,29 @@ public class AwsS3Service {
     }
 
     /**
+     * MultipartFile을 S3에 업로드하고 업로드된 파일의 URL을 반환하는 메소드.
+     *
+     * @param multipartFile 업로드할 MultipartFile
+     * @return 업로드된 파일의 URL
+     * @throws IOException 파일 변환 또는 업로드 중 발생하는 예외
+     */
+    public String uploadOriginalFile(MultipartFile multipartFile) throws IOException {
+        log.info("Converting MultipartFile to File...");
+        File uploadFile = convertFile(multipartFile)
+                .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
+
+        String fileType = determineFileType(multipartFile);
+        String fileName = generateFileName(uploadFile, fileType);
+
+        log.info("Uploading file to S3: {}", fileName);
+        String uploadFileUrl = uploadFileToS3(uploadFile, fileName);
+        log.info("File uploaded to S3: {}", uploadFileUrl);
+
+        removeNewFile(uploadFile);
+        return uploadFileUrl;
+    }
+
+    /**
      * 이미지를 최적화하는 메소드.
      *
      * @param originalFile 최적화할 원본 이미지 파일
@@ -171,7 +194,10 @@ public class AwsS3Service {
     private Optional<File> convertFile(MultipartFile file) throws IOException {
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 //        String fileName = file.getOriginalFilename();
+<<<<<<< HEAD
         assert fileName != null;
+=======
+>>>>>>> origin/dev
         File convertFile = new File(fileName);
 
         if (convertFile.createNewFile()) {
@@ -198,6 +224,10 @@ public class AwsS3Service {
 
 //        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
         return fileType + "/" + formattedDate + "_" + uploadFile.getName();
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/dev
     }
 
     /**
