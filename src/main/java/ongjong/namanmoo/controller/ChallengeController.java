@@ -274,59 +274,6 @@ public class ChallengeController {
         return new ApiResponse<>("200", "FaceTime Challenge found successfully", challengeDto);
     }
 
-//    // 화상 통화 챌린지 결과 저장
-//    @PostMapping("/face")
-//    public ApiResponse<Map<String, String>> saveFaceTimeAnswer(
-//            @RequestParam("challengeId") Long challengeId,
-//            @RequestPart("answer") MultipartFile answerFile) throws Exception {
-//
-//        // Challenge 검증
-//        ApiResponse<Challenge> challengeResponse = validateChallenge(challengeId, ChallengeType.FACETIME);
-//        if (!challengeResponse.getStatus().equals("200")) {
-//            return new ApiResponse<>(challengeResponse.getStatus(), challengeResponse.getMessage(), null);
-//        }
-//        Challenge challenge = challengeResponse.getData();
-//        ApiResponse<Void> fileResponse = validateFile(answerFile);
-//        if (!fileResponse.getStatus().equals("200")) {
-//            return new ApiResponse<>(fileResponse.getStatus(), fileResponse.getMessage(), null);
-//        }
-//
-//        Member member = memberService.findMemberByLoginId();
-//        Family family = member.getFamily();
-//        if (family == null) {
-//            return new ApiResponse<>("404", "Family not found for the current member", null);
-//        }
-//        Lucky lucky = luckyService.findCurrentLucky(family.getFamilyId());
-//
-//        if (answerFile.getContentType().startsWith("image/")) {
-//            // 이미지 업로드 동기 처리
-//            try {
-//                Map<String, String> response = sharedFileService.uploadImageFile(challenge, answerFile, FileType.IMAGE);
-//                // 병합 작업을 비동기적으로 예약
-//                sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
-//                return new ApiResponse<>("200", response.get("message"), response);
-//            } catch (Exception e) {
-//                log.error("Image upload failed", e);
-//                return new ApiResponse<>("500", "Internal Server Error", null);
-//            }
-//
-//        } else if (answerFile.getContentType().startsWith("video/")) {
-//            // 비디오 업로드 동기 처리
-//            try {
-//                String uploadedUrl = awsS3Service.uploadOriginalFile(answerFile);
-//                answerService.modifyAnswer(challengeId, uploadedUrl);
-//                // 병합 작업을 비동기적으로 예약
-//                sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
-//                return new ApiResponse<>("200", "Video uploaded successfully", Map.of("url", uploadedUrl));
-//            } catch (Exception e) {
-//                log.error("Video upload failed", e);
-//                return new ApiResponse<>("500", "Internal Server Error", null);
-//            }
-//        } else {
-//            return new ApiResponse<>("400", "Invalid file type: " + answerFile.getContentType(), null);
-//        }
-//    }
-
     // 화상 통화 챌린지 결과 저장
     @PostMapping("/face")
     public ApiResponse<Map<String, String>> saveFaceTimeAnswer(
