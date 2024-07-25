@@ -1,20 +1,22 @@
 package ongjong.namanmoo.service;
 
 import java.awt.image.BufferedImage;
-import java.io.*;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
@@ -26,8 +28,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 
-import static org.apache.commons.io.FileUtils.readFileToByteArray;
-
 @Slf4j
 @Service
 public class AwsS3Service {
@@ -35,8 +35,6 @@ public class AwsS3Service {
     private final AmazonS3 amazonS3Client;
     private final String bucket;
     private final String region;
-    private final Map<String, byte[]> imageCache = new HashMap<>();
-
     /**
      * AwsS3Service 생성자.
      *
@@ -56,7 +54,7 @@ public class AwsS3Service {
 
         // AmazonS3 클라이언트 생성
         this.amazonS3Client = AmazonS3ClientBuilder.standard()
-                .withRegion(Regions.fromName(region))
+                .withRegion(region)
                 .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
                 .build();
 
@@ -72,119 +70,16 @@ public class AwsS3Service {
      * @return 업로드된 파일의 URL
      * @throws IOException 파일 변환 또는 업로드 중 발생하는 예외
      */
-    // uploadFile 메소드 수정
-    public String uploadFile(MultipartFile multipartFile) throws IOException, NoSuchAlgorithmException {
+    public String uploadFile(MultipartFile multipartFile) throws IOException {
         log.info("Converting MultipartFile to File...");
         File uploadFile = convertFile(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
 
-        String fileType = determineFileType(multipartFile);
-
-        byte[] optimizedImageData;
-
-        // 이미지 파일의 경우 최적화 및 변환
-        if (fileType.equals("image")) {
+        // 이미지 파일의 경우 최적화
+        if (determineFileType(multipartFile).equals("image")) {
             log.info("Optimizing image file...");
-            if (!isPngFile(uploadFile)) {
-                optimizedImageData = getCachedOrOptimizedImageData(uploadFile, multipartFile);
-            } else {
-                optimizedImageData = convertAndOptimizePngToJpeg(uploadFile);
-            }
-        } else {
-            optimizedImageData = readFileToByteArray(uploadFile);
+            uploadFile = optimizeImageFile(uploadFile);
         }
-
-        String fileName = generateFileName(uploadFile, fileType);
-
-        log.info("Uploading file to S3: {}", fileName);
-        String uploadFileUrl = uploadFileToS3(optimizedImageData, fileName);
-        log.info("File uploaded to S3: {}", uploadFileUrl);
-
-        removeNewFile(uploadFile);
-        return uploadFileUrl;
-    }
-
-    // 파일 내용을 sha-256 해시로 변환하여 고유한 캐시 키를 생성 (중복된 파일이름이 없으므로 캐시 키로 해당 파일을 찾음)
-    private String generateCacheKey(MultipartFile file) throws IOException, NoSuchAlgorithmException {
-        // 파일 내용을 해시하여 캐시 키 생성
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hash = digest.digest(file.getBytes());
-        StringBuilder hexString = new StringBuilder();
-        for (byte b : hash) {
-            String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) hexString.append('0');
-            hexString.append(hex);
-        }
-        return hexString.toString();
-    }
-
-    /**
-     * 이미지를 최적화하고 캐싱된 데이터를 반환하는 메소드.
-     *
-     * @param originalFile 최적화할 원본 이미지 파일
-     * @return 최적화된 이미지 데이터
-     * @throws IOException 이미지 최적화 중 발생하는 예외
-     */
-    private byte[] getCachedOrOptimizedImageData(File originalFile, MultipartFile multipartFile) throws IOException, NoSuchAlgorithmException {
-        // 파일 내용을 해시하여 캐시 키 생성
-        String cacheKey = generateCacheKey(multipartFile);
-        log.info("Checking cache for: {}", cacheKey); // 캐시 확인 로그 추가
-
-        if (imageCache.containsKey(cacheKey)) {
-            log.info("Using cached image data for: {}", cacheKey); // 캐시 사용 로그
-            return imageCache.get(cacheKey);
-        }
-
-        log.info("Optimizing image data for: {}", cacheKey); // 최적화 로그
-        BufferedImage originalImage = ImageIO.read(originalFile);
-
-        // 원본 이미지의 크기
-        int originalWidth = originalImage.getWidth();
-        int originalHeight = originalImage.getHeight();
-
-        // 원하는 최대 크기
-        int maxWidth = (int) (originalWidth * 0.85);
-        int maxHeight = (int) (originalHeight * 0.85);
-
-        // 비율 유지하면서 리사이징할 크기 계산
-        double aspectRatio = (double) originalWidth / originalHeight;
-        int newWidth = maxWidth;
-        int newHeight = (int) (maxWidth / aspectRatio);
-        if (newHeight > maxHeight) {
-            newHeight = maxHeight;
-            newWidth = (int) (maxHeight * aspectRatio);
-        }
-
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        Thumbnails.of(originalImage)
-                .size(newWidth, newHeight)  // 비율을 유지하면서 리사이즈
-                .outputQuality(0.5)  // 이미지 품질 설정 (0.0 ~ 1.0)
-                .outputFormat("jpg")  // 출력 형식 설정
-                .toOutputStream(os);
-
-        byte[] optimizedImageData = os.toByteArray();
-        imageCache.put(cacheKey, optimizedImageData);
-
-        // 로그 출력
-        log.info("Original Image Dimensions: {}x{}", originalWidth, originalHeight);
-        log.info("Original File Size: {} bytes", originalFile.length());
-        log.info("Optimized Image Dimensions: {}x{}", newWidth, newHeight);
-        log.info("Optimized File Size: {} bytes", optimizedImageData.length);
-
-        return optimizedImageData;
-    }
-
-    /**
-     * MultipartFile을 S3에 업로드하고 업로드된 파일의 URL을 반환하는 메소드.
-     *
-     * @param multipartFile 업로드할 MultipartFile
-     * @return 업로드된 파일의 URL
-     * @throws IOException 파일 변환 또는 업로드 중 발생하는 예외
-     */
-    public String uploadOriginalFile(MultipartFile multipartFile) throws IOException {
-        log.info("Converting MultipartFile to File...");
-        File uploadFile = convertFile(multipartFile)
-                .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
 
         String fileType = determineFileType(multipartFile);
         String fileName = generateFileName(uploadFile, fileType);
@@ -198,15 +93,15 @@ public class AwsS3Service {
     }
 
     /**
-            * PNG 이미지를 JPEG로 변환하고 최적화하는 메소드.
-            *
-            * @param originalFile 변환할 원본 PNG 이미지 파일
-     * @return 최적화된 JPEG 이미지 데이터
-     * @throws IOException 이미지 변환 중 발생하는 예외
+     * 이미지를 최적화하는 메소드.
+     *
+     * @param originalFile 최적화할 원본 이미지 파일
+     * @return 최적화된 이미지 파일
+     * @throws IOException 이미지 최적화 중 발생하는 예외
      */
-    private byte[] convertAndOptimizePngToJpeg(File originalFile) throws IOException {
+    private File optimizeImageFile(File originalFile) throws IOException {
         BufferedImage originalImage = ImageIO.read(originalFile);
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        File optimizedFile = new File("optimized_" + originalFile.getName());
 
         // 원본 이미지의 크기
         int originalWidth = originalImage.getWidth();
@@ -225,70 +120,25 @@ public class AwsS3Service {
             newWidth = (int) (maxHeight * aspectRatio);
         }
 
-        // 이미지 리사이즈 및 압축 (JPEG 포맷)
+        // 이미지 리사이즈 및 압축
         Thumbnails.of(originalImage)
                 .size(newWidth, newHeight)  // 비율을 유지하면서 리사이즈
-                .outputFormat("jpg")  // 이미지 포맷 설정
                 .outputQuality(0.5)  // 이미지 품질 설정 (0.0 ~ 1.0)
-                .toOutputStream(os);
+                .toFile(optimizedFile);
 
-        byte[] optimizedImageData = os.toByteArray();
+
+        // 원본 이미지 파일의 크기
+        long originalFileSize = originalFile.length();
+        // 최적화된 이미지 파일의 크기
+        long optimizedFileSize = optimizedFile.length();
 
         // 로그 출력
         log.info("Original Image Dimensions: {}x{}", originalWidth, originalHeight);
-        log.info("Original File Size: {} bytes", originalFile.length());
+        log.info("Original File Size: {} bytes", originalFileSize);
         log.info("Optimized Image Dimensions: {}x{}", newWidth, newHeight);
-        log.info("Optimized File Size: {} bytes", optimizedImageData.length);
+        log.info("Optimized File Size: {} bytes", optimizedFileSize);
 
-        return optimizedImageData;
-    }
-
-    private boolean isPngFile(File file) {
-        return file.getName().toLowerCase().endsWith(".png");
-    }
-
-    private String determineContentType(File file) {
-        String fileName = file.getName().toLowerCase();
-        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
-            return "image/jpeg";
-        } else if (fileName.endsWith(".png")) {
-            return "image/png";
-        } else if (fileName.endsWith(".gif")) {
-            return "image/gif";
-        } else if (fileName.endsWith(".pdf")) {
-            return "application/pdf";
-        }
-        // 필요한 다른 파일 형식에 대한 Content-Type을 추가할 수 있습니다.
-        return "application/octet-stream"; // 기본 Content-Type
-    }
-
-    private String uploadFileToS3(byte[] fileData, String fileName) throws IOException {
-        InputStream is = new ByteArrayInputStream(fileData);
-        ObjectMetadata meta = new ObjectMetadata();
-        meta.setContentLength(fileData.length);
-
-        // 파일 타입을 결정하고 Content-Type을 설정
-        File tempFile = new File(System.getProperty("java.io.tmpdir") + "/" + fileName);
-        String contentType = determineContentType(tempFile);
-        meta.setContentType(contentType);
-
-        try {
-            log.info("파일 업로드 시작: {}", fileName);
-            amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, is, meta)
-                    .withCannedAcl(CannedAccessControlList.PublicRead));
-            log.info("파일 업로드 완료: {}", fileName);
-
-            return amazonS3Client.getUrl(bucket, fileName).toString();
-        } catch (AmazonServiceException e) {
-            log.error("Amazon 서비스 예외 발생: {}", e.getMessage(), e);
-            throw e;
-        } catch (SdkClientException e) {
-            log.error("SDK 클라이언트 예외 발생: {}", e.getMessage(), e);
-            throw e;
-        } catch (Exception e) {
-            log.error("알 수 없는 예외 발생: {}", e.getMessage(), e);
-            throw e;
-        }
+        return optimizedFile;
     }
 
     /**
@@ -318,33 +168,19 @@ public class AwsS3Service {
      * @return Optional<File> 변환된 File 객체를 포함하는 Optional
      * @throws IOException 파일 변환 중 발생하는 예외
      */
-//    private Optional<File> convertFile(MultipartFile file) throws IOException {
-//        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-////        String fileName = file.getOriginalFilename();
-//        File convertFile = new File(fileName);
-//
-//        if (convertFile.createNewFile()) {
-//            try (FileOutputStream fos = new FileOutputStream(convertFile)) {
-//                fos.write(file.getBytes());
-//            }
-//            return Optional.of(convertFile);
-//        }
-//
-//        return Optional.empty();
-//    }
     private Optional<File> convertFile(MultipartFile file) throws IOException {
-        // 고유한 파일명을 생성하기 위해 UUID와 원래 파일명을 결합
-        String uniqueFileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+//        String fileName = file.getOriginalFilename();
+        File convertFile = new File(fileName);
 
-        // 임시 디렉토리에 고유한 파일명을 사용하여 파일을 저장
-        File convertFile = new File(System.getProperty("java.io.tmpdir") + "/" + uniqueFileName);
-
-        // 파일을 생성하고, 파일에 바이트를 씁니다.
-        try (FileOutputStream fos = new FileOutputStream(convertFile)) {
-            fos.write(file.getBytes());
+        if (convertFile.createNewFile()) {
+            try (FileOutputStream fos = new FileOutputStream(convertFile)) {
+                fos.write(file.getBytes());
+            }
+            return Optional.of(convertFile);
         }
 
-        return Optional.of(convertFile);
+        return Optional.empty();
     }
 
     /**
@@ -361,6 +197,7 @@ public class AwsS3Service {
 
 //        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
         return fileType + "/" + formattedDate + "_" + uploadFile.getName();
+
     }
 
     /**
