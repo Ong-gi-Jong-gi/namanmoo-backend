@@ -125,8 +125,7 @@ public class AwsS3Service {
                 .size(newWidth, newHeight)  // 비율을 유지하면서 리사이즈
                 .outputQuality(0.5)  // 이미지 품질 설정 (0.0 ~ 1.0)
                 .toFile(optimizedFile);
-
-
+        
         // 원본 이미지 파일의 크기
         long originalFileSize = originalFile.length();
         // 최적화된 이미지 파일의 크기
@@ -170,8 +169,8 @@ public class AwsS3Service {
      * @throws IOException 파일 변환 중 발생하는 예외
      */
     private Optional<File> convertFile(MultipartFile file) throws IOException {
-//        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        String fileName = file.getOriginalFilename();
+        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+//        String fileName = file.getOriginalFilename();
         assert fileName != null;
         File convertFile = new File(fileName);
 
@@ -197,7 +196,8 @@ public class AwsS3Service {
                 .withZone(ZoneId.systemDefault());
         String formattedDate = formatter.format(Instant.now());
 
-        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
+//        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
+        return fileType + "/" + formattedDate + "_" + uploadFile.getName();
     }
 
     /**
