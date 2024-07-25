@@ -96,6 +96,7 @@ public class AwsS3Service {
         removeNewFile(uploadFile);
         return uploadFileUrl;
     }
+
     // FFmpeg 명령어를 실행하여 동영상을 리사이즈하는 메소드
     public File resizeVideo(MultipartFile videoFile) throws IOException, InterruptedException {
         // 고유한 파일명을 생성하기 위해 UUID와 원래 파일명을 결합
