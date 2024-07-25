@@ -19,7 +19,7 @@ spring:
   jpa:
     hibernate:
       # 애플리케이션 실행 시점에 테이블을 drop하고, 다시 생성
-      ddl-auto: update
+      ddl-auto: create
       # 계속 유지
       # ddl-auto : none
     properties:
