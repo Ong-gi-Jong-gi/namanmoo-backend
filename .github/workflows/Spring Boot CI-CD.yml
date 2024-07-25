@@ -114,10 +114,6 @@ jobs:
               sudo docker rm $EXISTING_CONTAINER
             fi
             sudo docker run -d --name ${{ env.PROJECT_NAME }} -p 8080:8080 \
-              --log-driver=awslogs \
-              --log-opt awslogs-region=${{ secrets.AWS_REGION }} \
-              --log-opt awslogs-group=${{ secrets.LOG_GROUP_NAME }} \
-              --log-opt awslogs-stream=${{ secrets.LOG_STREAM_NAME }} \
               -e SPRING_DATASOURCE_URL="${{ secrets.DB_URL }}" \
               -e SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}" \
               -e SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}" \
