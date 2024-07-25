@@ -303,7 +303,7 @@ public class ChallengeController {
             fileType = FileType.VIDEO;
 
             // S3에 파일 업로드 및 URL 저장
-            String uploadedUrl = awsS3Service.uploadFile(answerFile);
+            String uploadedUrl = awsS3Service.uploadOriginalFile(answerFile);
 
             // Answer 업데이트
             answerService.modifyAnswer(challengeId, uploadedUrl);
