@@ -194,10 +194,6 @@ public class AwsS3Service {
     private Optional<File> convertFile(MultipartFile file) throws IOException {
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 //        String fileName = file.getOriginalFilename();
-<<<<<<< HEAD
-        assert fileName != null;
-=======
->>>>>>> origin/dev
         File convertFile = new File(fileName);
 
         if (convertFile.createNewFile()) {
@@ -224,10 +220,6 @@ public class AwsS3Service {
 
 //        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
         return fileType + "/" + formattedDate + "_" + uploadFile.getName();
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/dev
     }
 
     /**
