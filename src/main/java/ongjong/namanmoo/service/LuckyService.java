@@ -25,8 +25,12 @@ public interface LuckyService {
     // 행운이 상태 계산
     Integer calculateLuckyStatus(Lucky lucky);
 
+    // 시연용 행운이 상태 계산
+    Integer calculateLuckyStatus(Lucky lucky, String createDate, String answerContent);
+
     // luckyId로 lucky 찾기
     Lucky getLucky(Long luckyId);
+
 
     // 행운이 리스트 조회 ( RECAP list )
     List<LuckyListDto> getLuckyListStatus();

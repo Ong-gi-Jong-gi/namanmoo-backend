@@ -1,6 +1,7 @@
 package ongjong.namanmoo.service;
 
 import ongjong.namanmoo.domain.Family;
+import ongjong.namanmoo.domain.Lucky;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.domain.answer.Answer;
 import ongjong.namanmoo.domain.challenge.Challenge;
@@ -25,6 +26,9 @@ public interface AnswerService {
     // 가족 구성원들의 답변 유무 검사
     boolean isAnyAnswerComplete(Challenge challenge, Family family);
 
+    // 가족 구성원들의 답변 수정 유무 검사 (FaceChallenge 조회에서 사용)
+    boolean isAnyAnswerModified(Challenge challenge, Family family);
+
     // 답변 수정
     Answer modifyAnswer(Long challengeId, String answerContent) throws Exception;
 
@@ -41,6 +45,10 @@ public interface AnswerService {
     List<Answer> findAnswersByChallenges(Challenge challenge, Member member);
 
     List<MemberDto> getAnswersByMember(Long luckyId, int challengeNum1, int challengeNum2, Class<? extends MemberDto> dtoClass) throws Exception;
+
+    Challenge findFastestAnsweredChallenge(Lucky lucky) throws Exception;
+
+    long calculateLatestResponseTime(List<Answer> answers);
 
     List<MemberYouthAnswerDto> getYouthByMember(Long luckyId, int challengeNum1, int challengeNum2) throws Exception;
 

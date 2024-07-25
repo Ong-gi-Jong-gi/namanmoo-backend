@@ -86,7 +86,8 @@ public class LuckyServiceImpl implements LuckyService {
                 .orElseThrow(() -> new RuntimeException("해당 멤버가 작성한 답변을 찾을 수 없습니다."));
 
         boolean isBubble = answer.isBubbleVisible();
-        Integer luckyStatus = calculateLuckyStatus(lucky);
+        Integer luckyStatus = calculateLuckyStatus(lucky,createDate, answer.getAnswerContent());
+//        Integer luckyStatus = calculateLuckyStatus(lucky);
         String luckyId = lucky.getLuckyId().toString();
 
         return new LuckyStatusDto(luckyStatus, isBubble, luckyId);
@@ -106,13 +107,32 @@ public class LuckyServiceImpl implements LuckyService {
         // 비율 계산
         double percentage = (double) familyContribution / denominator * 100;
 
-        // 행운이 상태 결정
-        if (percentage >= 75) { // 75% (30일 주기일 때 90개)
-            return 3; // 행목
-        } else if (percentage >= 25) { // 25% (30일 주기일 때 30개)
-            return 2; // 행운
+//        // 행운이 상태 결정
+//        if (percentage >= 75) { // 75% (30일 주기일 때 90개)
+//            return 3; // 행목
+//        } else if (percentage >= 25) { // 25% (30일 주기일 때 30개)
+//            return 2; // 행운
+//        } else {
+//            return 1; // 새싹
+//        }
+        return 3;
+    }
+
+    // 시연용 행운이
+    @Override
+    public Integer calculateLuckyStatus(Lucky lucky, String answerCreateDate, String answerContent) {
+        String luckyStartDate = lucky.getChallengeStartDate();
+        Long betweenLuckyAnswer = DateUtil.getInstance().getDateDifference(luckyStartDate, answerCreateDate);
+        if (betweenLuckyAnswer == 1) {
+            return 1; // 1일 and (미참여 or 참여) : 새싹
+//        } else if (betweenLuckyAnswer == 15 && answerContent == null) {
+//            return 1; // 15일 and 미참여 : 새싹
+        } else if (betweenLuckyAnswer == 15) {
+            return 2; // 15일 and 참여 : 행운이
+//        } else if (betweenLuckyAnswer == 30 && answerContent == null) {
+//            return 2; // 30일 and 미참여 : 행운이
         } else {
-            return 1; // 새싹
+            return 3; // 나머지 엑스텀프
         }
     }
 
