@@ -70,7 +70,7 @@ public class AwsS3Service {
      * @return 업로드된 파일의 URL
      * @throws IOException 파일 변환 또는 업로드 중 발생하는 예외
      */
-    public String uploadFile(MultipartFile multipartFile) throws IOException {
+    public String uploadFile(MultipartFile multipartFile) throws IOException, InterruptedException {
         log.info("Converting MultipartFile to File...");
         File uploadFile = convertFile(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
@@ -80,6 +80,11 @@ public class AwsS3Service {
             log.info("Optimizing image file...");
             uploadFile = optimizeImageFile(uploadFile);
         }
+        else if (determineFileType(multipartFile).equals("video")) {
+            log.info("Optimizing video file...");
+            uploadFile = resizeVideo(multipartFile);
+        }
+
 
         String fileType = determineFileType(multipartFile);
         String fileName = generateFileName(uploadFile, fileType);
@@ -90,6 +95,36 @@ public class AwsS3Service {
 
         removeNewFile(uploadFile);
         return uploadFileUrl;
+    }
+    // FFmpeg 명령어를 실행하여 동영상을 리사이즈하는 메소드
+    public File resizeVideo(MultipartFile videoFile) throws IOException, InterruptedException {
+        // 고유한 파일명을 생성하기 위해 UUID와 원래 파일명을 결합
+        String uniqueFileName = UUID.randomUUID() + "_" + videoFile.getOriginalFilename();
+        String outputFileName = System.getProperty("java.io.tmpdir") + "/" + uniqueFileName;
+
+        File inputFile = new File(System.getProperty("java.io.tmpdir") + "/" + videoFile.getOriginalFilename());
+        videoFile.transferTo(inputFile);
+
+        // FFmpeg 명령어를 통해 동영상 리사이즈
+        String[] command = {
+                "ffmpeg",
+                "-i", inputFile.getAbsolutePath(),
+                "-vf", "scale=1280:720",  // 원하는 해상도로 조정
+                "-preset", "fast",
+                outputFileName
+        };
+
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        processBuilder.redirectErrorStream(true);
+
+        Process process = processBuilder.start();
+        int exitCode = process.waitFor();
+
+        if (exitCode != 0) {
+            throw new RuntimeException("FFmpeg command failed");
+        }
+
+        return new File(outputFileName);
     }
 
     /**
