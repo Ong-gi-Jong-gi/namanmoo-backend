@@ -464,8 +464,14 @@ public class AnswerServiceImpl implements AnswerService {
 
         // 가족 사진을 위한 랜덤한 답변 선택
         Random random = new Random();
-        Answer familyPhotoAnswer = memberAnswerList.get(random.nextInt(memberAnswerList.size()));
-        String familyPhoto = familyPhotoAnswer.getAnswerContent();
+        Answer familyPhotoAnswer;
+        String familyPhoto = null;
+        if(!memberAnswerList.isEmpty()){
+            familyPhotoAnswer = memberAnswerList.get(random.nextInt(memberAnswerList.size()));
+            familyPhoto = familyPhotoAnswer.getAnswerContent();
+        } else {
+            familyPhotoAnswer = null;
+        }
 
         // 가족 사진에 대한 답변을 제외한 다른 사진 답변의 URL을 수집하고 null 값 제거
         List<String> allOtherPhotos = answersWithinDateRange.stream()
@@ -479,9 +485,11 @@ public class AnswerServiceImpl implements AnswerService {
         int numPhotosToAdd = Math.min(9, allOtherPhotos.size());
         Set<Integer> chosenIndices = new HashSet<>();
         while (chosenIndices.size() < numPhotosToAdd) {
-            int randomIndex = random.nextInt(allOtherPhotos.size());
-            if (chosenIndices.add(randomIndex)) {
-                otherPhotos.add(allOtherPhotos.get(randomIndex));
+            if (!allOtherPhotos.isEmpty()) {
+                int randomIndex = random.nextInt(allOtherPhotos.size());
+                if (chosenIndices.add(randomIndex)) {
+                    otherPhotos.add(allOtherPhotos.get(randomIndex));
+                }
             }
         }
 

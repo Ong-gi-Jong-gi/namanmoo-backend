@@ -148,8 +148,7 @@ public class AwsS3Service {
                 .size(newWidth, newHeight)  // 비율을 유지하면서 리사이즈
                 .outputQuality(0.5)  // 이미지 품질 설정 (0.0 ~ 1.0)
                 .toFile(optimizedFile);
-
-
+        
         // 원본 이미지 파일의 크기
         long originalFileSize = originalFile.length();
         // 최적화된 이미지 파일의 크기
@@ -221,7 +220,6 @@ public class AwsS3Service {
 
 //        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
         return fileType + "/" + formattedDate + "_" + uploadFile.getName();
-
     }
 
     /**
