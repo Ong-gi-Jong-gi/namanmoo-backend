@@ -99,6 +99,7 @@ public class SharedFileService {
 
         try {
             // S3에 파일 업로드 및 URL 저장
+//            String uploadedUrl = awsS3Service.uploadFile(photo);
             String uploadedUrl = awsS3Service.uploadOriginalFile(photo);
 //            String uploadedUrl = awsS3Service.uploadFileWithRetry(photo, 3);
 
@@ -348,7 +349,7 @@ public class SharedFileService {
     }
 
     // 병합이 필요한 경우 이미지를 병합하는 메서드
-    public void mergeImagesIfNeeded(int challengeNum, Lucky lucky) throws IOException {
+    private void mergeImagesIfNeeded(int challengeNum, Lucky lucky) throws IOException {
         Map<String, List<SharedFile>> groupedFiles = new HashMap<>();
         Pattern pattern = Pattern.compile("screenshot_(\\d+)");
 

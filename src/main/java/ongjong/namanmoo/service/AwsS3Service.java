@@ -197,7 +197,6 @@ public class AwsS3Service {
         return uploadFileUrl;
     }
 
-
     /**
             * PNG 이미지를 JPEG로 변환하고 최적화하는 메소드.
             *
@@ -362,7 +361,6 @@ public class AwsS3Service {
 
 //        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
         return fileType + "/" + formattedDate + "_" + uploadFile.getName();
-
     }
 
     /**
