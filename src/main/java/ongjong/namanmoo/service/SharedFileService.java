@@ -99,7 +99,7 @@ public class SharedFileService {
 
         try {
             // S3에 파일 업로드 및 URL 저장
-            String uploadedUrl = awsS3Service.uploadFile(photo);
+            String uploadedUrl = awsS3Service.uploadOriginalFile(photo);
 //            String uploadedUrl = awsS3Service.uploadFileWithRetry(photo, 3);
 
             Optional<Lucky> optionalLucky = luckyRepository.findByFamilyFamilyIdAndRunningTrue(family.getFamilyId());
