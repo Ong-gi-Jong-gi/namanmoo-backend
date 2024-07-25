@@ -193,9 +193,8 @@ public class AwsS3Service {
      * @throws IOException 파일 변환 중 발생하는 예외
      */
     private Optional<File> convertFile(MultipartFile file) throws IOException {
-//        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        String fileName = file.getOriginalFilename();
-        assert fileName != null;
+        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+//        String fileName = file.getOriginalFilename();
         File convertFile = new File(fileName);
 
         if (convertFile.createNewFile()) {
@@ -220,7 +219,9 @@ public class AwsS3Service {
                 .withZone(ZoneId.systemDefault());
         String formattedDate = formatter.format(Instant.now());
 
-        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
+//        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
+        return fileType + "/" + formattedDate + "_" + uploadFile.getName();
+
     }
 
     /**
