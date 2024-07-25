@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -72,11 +75,11 @@ public class AwsS3Service {
         File uploadFile = convertFile(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
 
-//        // 이미지 파일의 경우 최적화
-//        if (determineFileType(multipartFile).equals("image")) {
-//            log.info("Optimizing image file...");
-//            uploadFile = optimizeImageFile(uploadFile);
-//        }
+        // 이미지 파일의 경우 최적화
+        if (determineFileType(multipartFile).equals("image")) {
+            log.info("Optimizing image file...");
+            uploadFile = optimizeImageFile(uploadFile);
+        }
 
         String fileType = determineFileType(multipartFile);
         String fileName = generateFileName(uploadFile, fileType);
@@ -89,55 +92,55 @@ public class AwsS3Service {
         return uploadFileUrl;
     }
 
-//    /**
-//     * 이미지를 최적화하는 메소드.
-//     *
-//     * @param originalFile 최적화할 원본 이미지 파일
-//     * @return 최적화된 이미지 파일
-//     * @throws IOException 이미지 최적화 중 발생하는 예외
-//     */
-//    private File optimizeImageFile(File originalFile) throws IOException {
-//        BufferedImage originalImage = ImageIO.read(originalFile);
-//        File optimizedFile = new File("optimized_" + originalFile.getName());
-//
-//        // 원본 이미지의 크기
-//        int originalWidth = originalImage.getWidth();
-//        int originalHeight = originalImage.getHeight();
-//
-//        // 원하는 최대 크기
-//        int maxWidth = (int) (originalWidth * 0.85);
-//        int maxHeight = (int) (originalHeight * 0.85);
-//
-//        // 비율 유지하면서 리사이징할 크기 계산
-//        double aspectRatio = (double) originalWidth / originalHeight;
-//        int newWidth = maxWidth;
-//        int newHeight = (int) (maxWidth / aspectRatio);
-//        if (newHeight > maxHeight) {
-//            newHeight = maxHeight;
-//            newWidth = (int) (maxHeight * aspectRatio);
-//        }
-//
-//        // 이미지 리사이즈 및 압축
-//        Thumbnails.of(originalImage)
-//                .size(newWidth, newHeight)  // 비율을 유지하면서 리사이즈
-//                .outputQuality(0.5)  // 이미지 품질 설정 (0.0 ~ 1.0)
-//                .toFile(optimizedFile);
-//
-//
-//        // 원본 이미지 파일의 크기
-//        long originalFileSize = originalFile.length();
-//        // 최적화된 이미지 파일의 크기
-//        long optimizedFileSize = optimizedFile.length();
-//
-//        // 로그 출력
-//        log.info("Original Image Dimensions: {}x{}", originalWidth, originalHeight);
-//        log.info("Original File Size: {} bytes", originalFileSize);
-//        log.info("Optimized Image Dimensions: {}x{}", newWidth, newHeight);
-//        log.info("Optimized File Size: {} bytes", optimizedFileSize);
-//
-//
-//        return optimizedFile;
-//    }
+    /**
+     * 이미지를 최적화하는 메소드.
+     *
+     * @param originalFile 최적화할 원본 이미지 파일
+     * @return 최적화된 이미지 파일
+     * @throws IOException 이미지 최적화 중 발생하는 예외
+     */
+    private File optimizeImageFile(File originalFile) throws IOException {
+        BufferedImage originalImage = ImageIO.read(originalFile);
+        File optimizedFile = new File("optimized_" + originalFile.getName());
+
+        // 원본 이미지의 크기
+        int originalWidth = originalImage.getWidth();
+        int originalHeight = originalImage.getHeight();
+
+        // 원하는 최대 크기
+        int maxWidth = (int) (originalWidth * 0.85);
+        int maxHeight = (int) (originalHeight * 0.85);
+
+        // 비율 유지하면서 리사이징할 크기 계산
+        double aspectRatio = (double) originalWidth / originalHeight;
+        int newWidth = maxWidth;
+        int newHeight = (int) (maxWidth / aspectRatio);
+        if (newHeight > maxHeight) {
+            newHeight = maxHeight;
+            newWidth = (int) (maxHeight * aspectRatio);
+        }
+
+        // 이미지 리사이즈 및 압축
+        Thumbnails.of(originalImage)
+                .size(newWidth, newHeight)  // 비율을 유지하면서 리사이즈
+                .outputQuality(0.5)  // 이미지 품질 설정 (0.0 ~ 1.0)
+                .toFile(optimizedFile);
+
+
+        // 원본 이미지 파일의 크기
+        long originalFileSize = originalFile.length();
+        // 최적화된 이미지 파일의 크기
+        long optimizedFileSize = optimizedFile.length();
+
+        // 로그 출력
+        log.info("Original Image Dimensions: {}x{}", originalWidth, originalHeight);
+        log.info("Original File Size: {} bytes", originalFileSize);
+        log.info("Optimized Image Dimensions: {}x{}", newWidth, newHeight);
+        log.info("Optimized File Size: {} bytes", optimizedFileSize);
+
+
+        return optimizedFile;
+    }
 
     /**
      * 파일 타입을 결정하는 메소드.
@@ -190,7 +193,11 @@ public class AwsS3Service {
      * @return String 고유한 파일 이름
      */
     private String generateFileName(File uploadFile, String fileType) {
-        return fileType + "/" + UUID.randomUUID() + "_" + uploadFile.getName();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS")
+                .withZone(ZoneId.systemDefault());
+        String formattedDate = formatter.format(Instant.now());
+
+        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
     }
 
     /**
@@ -259,6 +266,32 @@ public class AwsS3Service {
     public void delete(String fileName) {
         log.info("File Delete : " + fileName);
         amazonS3Client.deleteObject(bucket, fileName);
+    }
+
+    // 업로드 실패 시 재시도 로직 추가
+    public String uploadFileWithRetry(MultipartFile multipartFile, int retries) throws IOException, InterruptedException {
+        File uploadFile = convertFile(multipartFile)
+                .orElseThrow(() -> new IllegalArgumentException("Incorrect conversion from MultipartFile to File"));
+
+        String fileType = determineFileType(multipartFile);
+        String fileName = generateFileName(uploadFile, fileType);
+
+        for (int i = 0; i < retries; i++) {
+            try {
+                amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, uploadFile)
+                        .withCannedAcl(CannedAccessControlList.PublicRead));
+
+                String uploadedUrl = getS3FileURL(fileName);
+                log.info("Successfully uploaded file to S3 on retry " + i + ": {}", uploadedUrl);
+
+                removeNewFile(uploadFile); // Remember to clean up local file after upload
+                return uploadedUrl;
+            } catch (Exception ex) {
+                log.warn("업로드에 실패하였습니다. 재시도하는중... (시도: {}/{})", i + 1, retries);
+                Thread.sleep(3000);  // waiting for 3 seconds before the next retry
+            }
+        }
+        throw new RuntimeException("Failed to upload file after " + retries + " retries.");
     }
 
     // 오디오 파일 고정 경로 생성
