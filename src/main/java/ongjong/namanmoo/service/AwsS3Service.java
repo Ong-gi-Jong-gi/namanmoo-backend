@@ -110,7 +110,8 @@ public class AwsS3Service {
                 "ffmpeg",
                 "-i", inputFile.getAbsolutePath(),
                 "-vf", "scale=1280:720",  // 원하는 해상도로 조정
-                "-preset", "fast",
+                "-b:v", "1000k",  // 비트레이트 설정
+                "-preset", "ultrafast",
                 outputFileName
         };
 
