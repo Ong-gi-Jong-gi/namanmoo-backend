@@ -109,7 +109,7 @@ public class AwsS3Service {
         String[] command = {
                 "ffmpeg",
                 "-i", inputFile.getAbsolutePath(),
-                "-vf", "scale=1280:720",  // 원하는 해상도로 조정
+                "-vf", "scale=854:480",  // 원하는 해상도로 조정
                 "-b:v", "1000k",  // 비트레이트 설정
                 "-preset", "ultrafast",
                 outputFileName
