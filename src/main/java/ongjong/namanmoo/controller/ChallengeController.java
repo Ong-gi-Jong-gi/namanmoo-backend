@@ -345,7 +345,7 @@ public class ChallengeController {
 
         // 챌린지 조회 시 조회수 증가
         Lucky matchedLucky = luckyService.findMatchingLucky(challengeId, member);
-        if (matchedLucky != null && matchedLucky.isRunning()){
+        if (matchedLucky != null && matchedLucky.isRunning()) {
             luckyService.increaseChallengeViews(matchedLucky.getLuckyId(), challenge.getChallengeNum());
         }
         assert matchedLucky != null;
