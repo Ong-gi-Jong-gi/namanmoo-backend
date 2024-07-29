@@ -388,7 +388,7 @@ public class SharedFileService {
         List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
         List<SharedFile> groupFiles = sharedFiles.stream()
                 .filter(file -> file.getFileName().contains("screenshot_" + group))
-                .collect(Collectors.toList());
+                .toList();
 
         return groupFiles.size() >= 4;
     }
@@ -396,7 +396,7 @@ public class SharedFileService {
     // 병합 작업을 비동기적으로 예약하는 메서드 (특정 그룹)
     @Async
     public CompletableFuture<Void> scheduleMergeImagesForGroup(int challengeNum, Lucky lucky, String group) {
-        String key = challengeNum + "_" + lucky.getLuckyId() + "_group_" + group;
+        String key = challengeNum + "_" + lucky.getLuckyId() + "_cut_" + group;
 
         // 병합 작업이 이미 진행 중인 경우 종료
         if (mergeTasks.putIfAbsent(key, true) != null) {
@@ -418,38 +418,58 @@ public class SharedFileService {
         return CompletableFuture.completedFuture(null);
     }
 
-    // 특정 그룹의 이미지를 병합하는 메서드
+    // 병합이 필요한 경우 특정 그룹의 이미지를 병합하는 메서드
     private void mergeImagesIfNeededForGroup(int challengeNum, Lucky lucky, String group) throws IOException {
-        List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
+        List<SharedFile> sharedFiles;
+
+        // 병합 작업 중에는 다른 작업이 접근하지 못하도록 lock 사용
+        lock.lock();
+        try {
+            sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
+        } finally {
+            lock.unlock();
+        }
+
         List<SharedFile> groupFiles = sharedFiles.stream()
                 .filter(file -> file.getFileName().contains("screenshot_" + group))
-                .collect(Collectors.toList());
+                .toList();
 
-        if (groupFiles.size() < 4) {
+        // 고유 이미지 URL 목록 생성
+        Set<String> uniqueImageUrls = groupFiles.stream()
+                .map(SharedFile::getFileName)
+                .collect(Collectors.toSet());
+
+        // 고유 이미지가 4개 미만이면 병합 작업을 진행하지 않음
+        if (uniqueImageUrls.size() < 4) {
             return;
         }
 
-        List<BufferedImage> selectedImages = groupFiles.stream()
+        // 고유 이미지 URL에서 이미지 읽어오기
+        List<BufferedImage> selectedImages = uniqueImageUrls.stream()
                 .limit(4)
-                .map(file -> {
+                .map(url -> {
                     try {
-                        return ImageIO.read(new URL(file.getFileName()));
+                        return ImageIO.read(new URL(url));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 })
                 .collect(Collectors.toList());
 
+        // 필요한 경우, 부족한 이미지 수만큼 빈 이미지 추가
         while (selectedImages.size() < 4) {
             BufferedImage emptyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
             selectedImages.add(emptyImage);
         }
 
+        // 병합 이미지 파일명 생성
         String baseName = "merged-images/life4cut_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_" + group + ".png";
         BufferedImage mergedImage = ImageMerger.mergeImages(selectedImages);
 
+        // 병합된 이미지를 S3에 업로드
         String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, baseName);
 
+        // 병합된 이미지 정보 저장
         SharedFile mergedFile = new SharedFile();
         mergedFile.setChallengeNum(challengeNum);
         mergedFile.setCreateDate(System.currentTimeMillis());
