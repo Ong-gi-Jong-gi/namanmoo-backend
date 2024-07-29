@@ -302,8 +302,13 @@ public class ChallengeController {
             // 이미지 업로드 동기 처리
             try {
                 Map<String, String> response = sharedFileService.uploadImageFile(challenge, answerFile, FileType.IMAGE);
-                // 병합 작업을 비동기적으로 예약
-                sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
+
+                // 병합 작업 필요 여부 확인 및 비동기 예약
+                boolean mergeNeeded = sharedFileService.checkIfMergeNeeded(challenge.getChallengeNum(), lucky);
+                if (mergeNeeded) {
+                    sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
+                }
+
                 return new ApiResponse<>("200", response.get("message"), response);
             } catch (Exception e) {
                 log.error("Image upload failed", e);
@@ -315,8 +320,13 @@ public class ChallengeController {
             try {
                 String uploadedUrl = awsS3Service.uploadOriginalFile(answerFile);
                 answerService.modifyAnswer(challengeId, uploadedUrl);
-                // 병합 작업을 비동기적으로 예약
-                sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
+
+                // 병합 작업 필요 여부 확인 및 비동기 예약
+                boolean mergeNeeded = sharedFileService.checkIfMergeNeeded(challenge.getChallengeNum(), lucky);
+                if (mergeNeeded) {
+                    sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
+                }
+
                 return new ApiResponse<>("200", "Video uploaded successfully", Map.of("url", uploadedUrl));
             } catch (Exception e) {
                 log.error("Video upload failed", e);

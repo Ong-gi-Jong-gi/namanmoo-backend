@@ -10,7 +10,6 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.extern.slf4j.Slf4j;
-import net.coobird.thumbnailator.Thumbnails;
 import ongjong.namanmoo.domain.*;
 import ongjong.namanmoo.domain.challenge.Challenge;
 import ongjong.namanmoo.dto.openAI.WhisperTranscriptionResponse;
@@ -36,7 +35,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -162,8 +160,6 @@ public class SharedFileService {
 
         CompletableFuture.runAsync(() -> {
             try {
-                // 이미지 업로드가 완료될 때까지 대기
-                waitForImageUploadCompletion(challengeNum, lucky);
                 // 모든 이미지가 업로드된 후 병합 수행
                 mergeImagesIfNeeded(challengeNum, lucky);
             } catch (IOException e) {
@@ -193,32 +189,10 @@ public class SharedFileService {
                 lock.unlock();
             }
 
-            // 모든 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
-            boolean allGroupsHaveEnoughImages = sharedFiles.stream()
-                    .map(SharedFile::getFileName)
-                    .filter(fileName -> fileName.startsWith("screenshot_"))
-                    .collect(Collectors.groupingBy(fileName -> {
-                        Matcher matcher = Pattern.compile("screenshot_(\\d+)").matcher(fileName);
-                        return matcher.find() ? matcher.group(1) : "";
-                    }))
-                    .values().stream()
-                    .allMatch(list -> list.size() >= 4);
-            if (allGroupsHaveEnoughImages) {
-                break; // 모든 그룹에 4개 이상의 이미지가 있는 경우 대기 종료
+            // // 병합 작업 필요 여부를 확인
+            if (checkIfMergeNeeded(challengeNum, lucky)) {
+                break; // 병합 작업 필요한 경우 대기 종료
             }
-//            // 어떤 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
-//            boolean anyGroupHasEnoughImages = sharedFiles.stream()
-//                    .map(SharedFile::getFileName)
-//                    .filter(fileName -> fileName.startsWith("screenshot_"))
-//                    .collect(Collectors.groupingBy(fileName -> {
-//                        Matcher matcher = Pattern.compile("screenshot_(\\d+)").matcher(fileName);
-//                        return matcher.find() ? matcher.group(1) : "";
-//                    }))
-//                    .values().stream()
-//                    .anyMatch(list -> list.size() >= 4);
-//            if (anyGroupHasEnoughImages) {
-//                break; // 어떠한 그룹에 4개 이상의 이미지가 있거나, 최대 대기 시간이 지나면 대기를 종료합니다.
-//            }
 
             if (System.currentTimeMillis() - startTime > MAX_WAIT_TIME) {
                 throw new IOException("이미지 업로드 대기 시간이 초과되었습니다.");
@@ -230,6 +204,35 @@ public class SharedFileService {
                 throw new IOException("병합 대기 중 인터럽트 발생", e);
             }
         }
+    }
+
+    // 병합 작업 필요 여부를 확인하는 메서드
+    public boolean checkIfMergeNeeded(int challengeNum, Lucky lucky) {
+        List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
+
+        // 모든 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
+        boolean allGroupsHaveEnoughImages = sharedFiles.stream()
+                .map(SharedFile::getFileName)
+                .filter(fileName -> fileName.startsWith("screenshot_"))
+                .collect(Collectors.groupingBy(fileName -> {
+                    Matcher matcher = Pattern.compile("screenshot_(\\d+)").matcher(fileName);
+                    return matcher.find() ? matcher.group(1) : "";
+                }))
+                .values().stream()
+                .allMatch(list -> list.size() >= 4);
+
+        return allGroupsHaveEnoughImages;
+//            // 어떤 그룹에 대해 4개 이상의 이미지를 가진 그룹이 있는지 확인
+//            boolean anyGroupHasEnoughImages = sharedFiles.stream()
+//                    .map(SharedFile::getFileName)
+//                    .filter(fileName -> fileName.startsWith("screenshot_"))
+//                    .collect(Collectors.groupingBy(fileName -> {
+//                        Matcher matcher = Pattern.compile("screenshot_(\\d+)").matcher(fileName);
+//                        return matcher.find() ? matcher.group(1) : "";
+//                    }))
+//                    .values().stream()
+//                    .anyMatch(list -> list.size() >= 4);
+//        return anyGroupHasEnoughImages;
     }
 
     // 병합이 필요한 경우 이미지를 병합하는 메서드
