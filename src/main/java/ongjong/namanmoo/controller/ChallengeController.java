@@ -318,7 +318,7 @@ public class ChallengeController {
         } else if (answerFile.getContentType().startsWith("video/")) {
             // 비디오 업로드 동기 처리
             try {
-                String uploadedUrl = awsS3Service.uploadOriginalFile(answerFile);
+                String uploadedUrl = awsS3Service.uploadOriginalFile(answerFile, member.getMemberId());
                 answerService.modifyAnswer(challengeId, uploadedUrl);
 
                 // 병합 작업 필요 여부 확인 및 비동기 예약
