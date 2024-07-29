@@ -305,9 +305,9 @@ public class ChallengeController {
             try {
                 Map<String, String> response = sharedFileService.uploadImageFile(challenge, answerFile, FileType.IMAGE);
 
-                // 업로드된 파일이 어느 그룹인지 확인
-                String uploadedFileName = response.get("fileName");
-                Matcher matcher = Pattern.compile("screenshot_(\\d+)").matcher(uploadedFileName);
+                // 업로드된 파일의 URL에서 그룹 정보를 추출
+                String uploadedUrl = response.get("url");
+                Matcher matcher = Pattern.compile("screenshot_(\\d+)").matcher(uploadedUrl);
                 if (matcher.find()) {
                     String group = matcher.group(1);
 

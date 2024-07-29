@@ -386,11 +386,14 @@ public class SharedFileService {
     // 병합 작업 필요 여부를 확인하는 메서드
     public boolean checkIfMergeNeededForGroup(int challengeNum, Lucky lucky, String group) {
         List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
-        List<SharedFile> groupFiles = sharedFiles.stream()
-                .filter(file -> file.getFileName().contains("screenshot_" + group))
-                .toList();
+        long groupFileCount = sharedFiles.stream()
+                .filter(file -> {
+                    Matcher matcher = Pattern.compile("screenshot_(\\d+)").matcher(file.getFileName());
+                    return matcher.find() && matcher.group(1).equals(group);
+                })
+                .count();
 
-        return groupFiles.size() >= 4;
+        return groupFileCount >= 4;
     }
 
     // 병합 작업을 비동기적으로 예약하는 메서드 (특정 그룹)
