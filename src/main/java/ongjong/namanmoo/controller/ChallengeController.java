@@ -365,15 +365,22 @@ public class ChallengeController {
 
         Map<Integer, List<String>> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), matchedLucky.getLuckyId());
 
-        // 필요한 모든 그룹 (cut_1, cut_2, cut_3, cut_4)에 대해 병합된 이미지가 있는지 확인
-        List<String> requiredCuts = Arrays.asList("1", "2", "3", "4");
-        List<String> missingCuts = requiredCuts.stream()
-                .filter(cut -> !results.containsKey(Integer.parseInt(cut)) || results.get(Integer.parseInt(cut)).isEmpty())
-                .collect(Collectors.toList());
+        // 병합된 이미지가 4개 미만인지 확인
+        long mergedImagesCount = results.values().stream()
+                .flatMap(List::stream)
+                .count();
 
-        // 병합되지 않은 그룹에 대해 병합 작업을 예약
-        for (String missingCut : missingCuts) {
-            sharedFileService.scheduleMergeImagesForGroup(challenge.getChallengeNum(), matchedLucky, missingCut);
+        if (mergedImagesCount < 4) {
+            // 필요한 모든 그룹 (cut_1, cut_2, cut_3, cut_4)에 대해 병합된 이미지가 있는지 확인
+            List<String> requiredCuts = Arrays.asList("1", "2", "3", "4");
+            List<String> missingCuts = requiredCuts.stream()
+                    .filter(cut -> !results.containsKey(Integer.parseInt(cut)) || results.get(Integer.parseInt(cut)).isEmpty())
+                    .toList();
+
+            // 병합되지 않은 그룹에 대해 병합 작업을 예약
+            for (String missingCut : missingCuts) {
+                sharedFileService.scheduleMergeImagesForGroup(challenge.getChallengeNum(), matchedLucky, missingCut);
+            }
         }
 
         return new ApiResponse<>("200", "FaceTime Challenge results found successfully", results);
