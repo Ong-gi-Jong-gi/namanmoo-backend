@@ -26,6 +26,8 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -303,10 +305,17 @@ public class ChallengeController {
             try {
                 Map<String, String> response = sharedFileService.uploadImageFile(challenge, answerFile, FileType.IMAGE);
 
-                // 병합 작업 필요 여부 확인 및 비동기 예약
-                boolean mergeNeeded = sharedFileService.checkIfMergeNeeded(challenge.getChallengeNum(), lucky);
-                if (mergeNeeded) {
-                    sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
+                // 업로드된 파일이 어느 그룹인지 확인
+                String uploadedFileName = response.get("fileName");
+                Matcher matcher = Pattern.compile("screenshot_(\\d+)").matcher(uploadedFileName);
+                if (matcher.find()) {
+                    String group = matcher.group(1);
+
+                    // 해당 그룹이 4장 다 모였는지 확인하고, 모였으면 병합 수행
+                    boolean mergeNeeded = sharedFileService.checkIfMergeNeededForGroup(challenge.getChallengeNum(), lucky, group);
+                    if (mergeNeeded) {
+                        sharedFileService.scheduleMergeImagesForGroup(challenge.getChallengeNum(), lucky, group);
+                    }
                 }
 
                 return new ApiResponse<>("200", response.get("message"), response);
@@ -320,12 +329,6 @@ public class ChallengeController {
             try {
                 String uploadedUrl = awsS3Service.uploadOriginalFile(answerFile, member.getMemberId());
                 answerService.modifyAnswer(challengeId, uploadedUrl);
-
-                // 병합 작업 필요 여부 확인 및 비동기 예약
-                boolean mergeNeeded = sharedFileService.checkIfMergeNeeded(challenge.getChallengeNum(), lucky);
-                if (mergeNeeded) {
-                    sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
-                }
 
                 return new ApiResponse<>("200", "Video uploaded successfully", Map.of("url", uploadedUrl));
             } catch (Exception e) {

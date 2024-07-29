@@ -96,6 +96,7 @@ public class AwsS3Service {
      * MultipartFile을 S3에 업로드하고 업로드된 파일의 URL을 반환하는 메소드.
      *
      * @param multipartFile 업로드할 MultipartFile
+     * @param memberId 업로드한 member Id
      * @return 업로드된 파일의 URL
      * @throws IOException 파일 변환 또는 업로드 중 발생하는 예외
      */

@@ -383,6 +383,83 @@ public class SharedFileService {
 //        return optimizedImage;
 //    }
 
+    // 병합 작업 필요 여부를 확인하는 메서드
+    public boolean checkIfMergeNeededForGroup(int challengeNum, Lucky lucky, String group) {
+        List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
+        List<SharedFile> groupFiles = sharedFiles.stream()
+                .filter(file -> file.getFileName().contains("screenshot_" + group))
+                .collect(Collectors.toList());
+
+        return groupFiles.size() >= 4;
+    }
+
+    // 병합 작업을 비동기적으로 예약하는 메서드 (특정 그룹)
+    @Async
+    public CompletableFuture<Void> scheduleMergeImagesForGroup(int challengeNum, Lucky lucky, String group) {
+        String key = challengeNum + "_" + lucky.getLuckyId() + "_group_" + group;
+
+        // 병합 작업이 이미 진행 중인 경우 종료
+        if (mergeTasks.putIfAbsent(key, true) != null) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                // 특정 그룹의 모든 이미지가 업로드된 후 병합 수행
+                mergeImagesIfNeededForGroup(challengeNum, lucky, group);
+            } catch (IOException e) {
+                log.error("이미지 병합 작업 실패", e);
+            } finally {
+                // 병합 작업이 완료되면 플래그를 제거
+                mergeTasks.remove(key);
+            }
+        });
+
+        return CompletableFuture.completedFuture(null);
+    }
+
+    // 특정 그룹의 이미지를 병합하는 메서드
+    private void mergeImagesIfNeededForGroup(int challengeNum, Lucky lucky, String group) throws IOException {
+        List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, lucky);
+        List<SharedFile> groupFiles = sharedFiles.stream()
+                .filter(file -> file.getFileName().contains("screenshot_" + group))
+                .collect(Collectors.toList());
+
+        if (groupFiles.size() < 4) {
+            return;
+        }
+
+        List<BufferedImage> selectedImages = groupFiles.stream()
+                .limit(4)
+                .map(file -> {
+                    try {
+                        return ImageIO.read(new URL(file.getFileName()));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toList());
+
+        while (selectedImages.size() < 4) {
+            BufferedImage emptyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
+            selectedImages.add(emptyImage);
+        }
+
+        String baseName = "merged-images/life4cut_" + challengeNum + "_" + lucky.getLuckyId() + "_cut_" + group + ".png";
+        BufferedImage mergedImage = ImageMerger.mergeImages(selectedImages);
+
+        String mergedImageUrl = uploadMergedImageToS3(mergedImage, bucket, baseName);
+
+        SharedFile mergedFile = new SharedFile();
+        mergedFile.setChallengeNum(challengeNum);
+        mergedFile.setCreateDate(System.currentTimeMillis());
+        mergedFile.setFileName(mergedImageUrl);
+        mergedFile.setFileType(FileType.IMAGE);
+        mergedFile.setLucky(lucky);
+
+        sharedFileRepository.save(mergedFile);
+    }
+
     // 특정 챌린지와 럭키 번호에 대한 이미지 결과를 가져오는 메서드
     public Map<Integer, List<String>> getFaceChallengeResults(int challengeNum, Long luckyId) {
         List<SharedFile> sharedFiles = sharedFileRepository.findByChallengeNumAndLucky(challengeNum, luckyRepository.getLuckyByLuckyId(luckyId).get());
