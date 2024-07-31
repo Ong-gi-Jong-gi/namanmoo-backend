@@ -47,8 +47,9 @@ public class ChallengeController {
 
     @PostMapping // 챌린지 생성 -> 캐릭터 생성 및 답변 생성
     @Transactional
-    public ApiResponse<Void> saveChallenge(@RequestBody SaveChallengeRequest request) {
-        Long challengeDate = request.getChallengeDate();
+    public ApiResponse<Void> saveChallenge() {
+//        Long challengeDate = request.getChallengeDate();
+        Long challengeDate = System.currentTimeMillis();
         Long familyId = familyService.findFamilyId();
 
         try {
@@ -88,7 +89,8 @@ public class ChallengeController {
 
     // 오늘의 챌린지 조회
     @GetMapping("/today")
-    public ApiResponse<CurrentChallengeDto> getChallenge(@RequestParam("challengeDate") Long challengeDate) throws Exception {
+    public ApiResponse<CurrentChallengeDto> getChallenge() throws Exception {
+        Long challengeDate = System.currentTimeMillis();
         if(String.valueOf(challengeDate).length() != 13){
             return new ApiResponse<>("404", "Challenge date must be a 13-number", null);
         }
@@ -103,10 +105,8 @@ public class ChallengeController {
 
     // 챌린지 리스트 조회
     @GetMapping("/list")        // 챌린지 리스트는 lucky가 여러개 일때를 고려하여 죽은 럭키 개수 * 30 +1 부터 챌린지가 보여져야한다.
-    public ApiResponse<List<ChallengeListDto>> getChallengeList(@RequestParam("challengeDate") Long challengeDate) throws Exception {
-        if(String.valueOf(challengeDate).length() != 13){
-            return new ApiResponse<>("404", "Challenge date must be a 13-number", null);
-        }
+    public ApiResponse<List<ChallengeListDto>> getChallengeList() throws Exception {
+        Long challengeDate = System.currentTimeMillis();
 
         List<Challenge> challenges = challengeService.findChallenges(challengeDate);
 
