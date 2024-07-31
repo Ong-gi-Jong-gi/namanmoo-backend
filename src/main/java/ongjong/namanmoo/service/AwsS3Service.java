@@ -83,13 +83,38 @@ public class AwsS3Service {
             log.info("Optimizing image file...");
             uploadFile = optimizeImageFile(uploadFile);
         }
-//        else if (determineFileType(multipartFile).equals("video")) {
+
+        //        else if (determineFileType(multipartFile).equals("video")) {
 //            log.info("Optimizing video file...");
 //            uploadFile = resizeVideo(multipartFile);
 //        }
 
         String fileType = determineFileType(multipartFile);
         String fileName = generateFileName(uploadFile, fileType);
+
+        log.info("Uploading file to S3: {}", fileName);
+        String uploadFileUrl = uploadFileToS3(uploadFile, fileName);
+        log.info("File uploaded to S3: {}", uploadFileUrl);
+
+        removeNewFile(uploadFile);
+        return uploadFileUrl;
+    }
+
+    /**
+     * MultipartFile을 S3에 업로드하고 업로드된 파일의 URL을 반환하는 메소드.
+     *
+     * @param multipartFile 업로드할 MultipartFile
+     * @param memberId 업로드한 member Id
+     * @return 업로드된 파일의 URL
+     * @throws IOException 파일 변환 또는 업로드 중 발생하는 예외
+     */
+    public String uploadOriginalFile(MultipartFile multipartFile, Long memberId) throws IOException {
+        log.info("Converting MultipartFile to File...");
+        File uploadFile = convertFile(multipartFile)
+                .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
+
+        String fileType = determineFileType(multipartFile);
+        String fileName = generateFileName(uploadFile, fileType, memberId);  // 멤버 ID 포함하여 파일 이름 생성
 
         log.info("Uploading file to S3: {}", fileName);
         String uploadFileUrl = uploadFileToS3(uploadFile, fileName);
@@ -264,6 +289,15 @@ public class AwsS3Service {
 //        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
         return fileType + "/" + formattedDate + "_" + uploadFile.getName();
 
+    }
+
+    // generateFileName 메소드에 멤버 ID 추가
+    private String generateFileName(File uploadFile, String fileType, Long memberId) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS")
+                .withZone(ZoneId.systemDefault());
+        String formattedDate = formatter.format(Instant.now());
+        // 멤버 ID를 파일 이름에 포함시킵니다.
+        return fileType + "/" + memberId + "_" + formattedDate + "_" + uploadFile.getName();
     }
 
     /**
