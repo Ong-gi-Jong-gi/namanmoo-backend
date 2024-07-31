@@ -26,6 +26,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,6 +58,9 @@ public class RecapController {
     @GetMapping("/ranking")
     public ApiResponse<MemberRankingListDto> getRanking(@RequestParam("luckyId") Long luckyId){
         Lucky lucky = luckyService.getLucky(luckyId);
+        if (!canAccessRecap(lucky)) {
+            return new ApiResponse<>("403", "Access not allowed. The challenge period has not yet ended.", null);
+        }
         Integer totalCount = lucky.getStatus(); // todo answer content값이 null인 걸 찾는걸로 수정해야할듯
         Integer luckyStatus = luckyService.calculateLuckyStatus(lucky);
         List<MemberAndCountDto> memberAndCountList = memberService.getMemberAndCount(lucky);
@@ -66,6 +71,10 @@ public class RecapController {
     // recap 화상통화
     @GetMapping("/face")
     public ApiResponse<MemberFacetimeDto> getFacetime(@RequestParam("luckyId") Long luckyId) throws Exception {
+        Lucky lucky = luckyService.getLucky(luckyId);
+        if (!canAccessRecap(lucky)) {
+            return new ApiResponse<>("403", "Access not allowed. The challenge period has not yet ended.", null);
+        }
         MemberFacetimeDto answerList = answerService.getFacetimeAnswerList(luckyId);
         return new ApiResponse<>("200", "facetime retrieved successfully", answerList);
     }
@@ -74,6 +83,9 @@ public class RecapController {
     @GetMapping("/statistics")
     public ApiResponse<List<Map<String, Object>>> getStatistics(@RequestParam("luckyId") Long luckyId) throws Exception {
         Lucky lucky = luckyService.getLucky(luckyId);
+        if (!canAccessRecap(lucky)) {
+            return new ApiResponse<>("403", "Access not allowed. The challenge period has not yet ended.", null);
+        }
 
         // 가장 조회수가 많은 챌린지
         Challenge mostViewedChallenge = challengeService.findMostViewedChallenge(lucky);
@@ -104,6 +116,10 @@ public class RecapController {
 
     @GetMapping("/youth")
     public ApiResponse<List<MemberYouthAnswerDto>> getYouth(@RequestParam("luckyId") Long luckyId) throws Exception{
+        Lucky lucky = luckyService.getLucky(luckyId);
+        if (!canAccessRecap(lucky)) {
+            return new ApiResponse<>("403", "Access not allowed. The challenge period has not yet ended.", null);
+        }
         List<MemberYouthAnswerDto> memberAnswerDtoList = answerService.getYouthByMember(luckyId, 13, 1);
         return new ApiResponse<>("200", "Youth photos retrieved successfully", memberAnswerDtoList);
     }
@@ -111,6 +127,10 @@ public class RecapController {
     // recap 미안한점 고마운점
     @GetMapping("/appreciations")
     public ApiResponse<List<MemberAppreciationDto>> getAppreciations(@RequestParam("luckyId") Long luckyId) throws Exception {
+        Lucky lucky = luckyService.getLucky(luckyId);
+        if (!canAccessRecap(lucky)) {
+            return new ApiResponse<>("403", "Access not allowed. The challenge period has not yet ended.", null);
+        }
         List<MemberAppreciationDto> appreciationList = answerService.getAppreciationByMember(luckyId, 27, 29);
         return new ApiResponse<>("200", "Success", appreciationList);
     }
@@ -119,6 +139,10 @@ public class RecapController {
     // recap 가족사진
     @GetMapping("/photos")
     public ApiResponse<MemberPhotosAnswerDto> getPhotos(@RequestParam("luckyId") Long luckyId) throws Exception {
+        Lucky lucky = luckyService.getLucky(luckyId);
+        if (!canAccessRecap(lucky)) {
+            return new ApiResponse<>("403", "Access not allowed. The challenge period has not yet ended.", null);
+        }
         MemberPhotosAnswerDto photosAnswerDto = answerService.getPhotos(luckyId);
         return new ApiResponse<>("200", "Success", photosAnswerDto);
     }
@@ -126,12 +150,15 @@ public class RecapController {
     // recap 음성
     @GetMapping("/voice")
     public ApiResponse<Map<String, String>> mergeVoiceClips(@RequestParam("luckyId") Long luckyId) {
+        Lucky lucky = luckyService.getLucky(luckyId);
+        if (!canAccessRecap(lucky)) {
+            return new ApiResponse<>("403", "Access not allowed. The challenge period has not yet ended.", null);
+        }
+
         List<File> localFiles = null;
         File outputFile = null;
 
         try {
-            Lucky lucky = luckyService.getLucky(luckyId);
-
             // 이미 병합된 음성 파일이 있는지 확인
             SharedFile mergeVoice = sharedFileService.getMergeVoice(lucky, FileType.AUDIO);
             if (mergeVoice != null) {
@@ -216,4 +243,14 @@ public class RecapController {
 //        data.put("challengeTitle", challenge != null ? challenge.getChallengeTitle() : "");
 //        return data;
 //    }
+
+    private boolean canAccessRecap(Lucky lucky) {
+        String startDateString = lucky.getChallengeStartDate();
+        LocalDate startDate = LocalDate.parse(startDateString);
+        LocalDate currentDate = LocalDate.now();
+
+        Duration duration = Duration.between(startDate.atStartOfDay(), currentDate.atStartOfDay());
+
+        return duration.toDays() > lucky.getLifetime().getDays();
+    }
 }
