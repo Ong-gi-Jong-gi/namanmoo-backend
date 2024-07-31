@@ -26,6 +26,8 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -302,8 +304,20 @@ public class ChallengeController {
             // 이미지 업로드 동기 처리
             try {
                 Map<String, String> response = sharedFileService.uploadImageFile(challenge, answerFile, FileType.IMAGE);
-                // 병합 작업을 비동기적으로 예약
-                sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
+
+                // 업로드된 파일의 URL에서 그룹 정보를 추출
+                String uploadedUrl = response.get("url");
+                Matcher matcher = Pattern.compile("screenshot_(\\d+)").matcher(uploadedUrl);
+                if (matcher.find()) {
+                    String group = matcher.group(1);
+
+                    // 해당 그룹이 4장 다 모였는지 확인하고, 모였으면 병합 수행
+                    boolean mergeNeeded = sharedFileService.checkIfMergeNeededForGroup(challenge.getChallengeNum(), lucky, group);
+                    if (mergeNeeded) {
+                        sharedFileService.scheduleMergeImagesForGroup(challenge.getChallengeNum(), lucky, group);
+                    }
+                }
+
                 return new ApiResponse<>("200", response.get("message"), response);
             } catch (Exception e) {
                 log.error("Image upload failed", e);
@@ -313,10 +327,9 @@ public class ChallengeController {
         } else if (answerFile.getContentType().startsWith("video/")) {
             // 비디오 업로드 동기 처리
             try {
-                String uploadedUrl = awsS3Service.uploadOriginalFile(answerFile);
+                String uploadedUrl = awsS3Service.uploadOriginalFile(answerFile, member.getMemberId());
                 answerService.modifyAnswer(challengeId, uploadedUrl);
-                // 병합 작업을 비동기적으로 예약
-                sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), lucky);
+
                 return new ApiResponse<>("200", "Video uploaded successfully", Map.of("url", uploadedUrl));
             } catch (Exception e) {
                 log.error("Video upload failed", e);
@@ -352,12 +365,25 @@ public class ChallengeController {
 
         Map<Integer, List<String>> results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), matchedLucky.getLuckyId());
 
-        // 병합 이미지가 하나도 없는지 확인
-        boolean areMergedImagesPresent = results.values().stream().anyMatch(list -> !list.isEmpty());
+        // 병합된 이미지가 4개 미만인지 확인
+        long mergedImagesCount = results.values().stream()
+                .flatMap(List::stream)
+                .count();
 
-        if (!areMergedImagesPresent) {
-            // 병합된 이미지가 하나도 없다면, 다시 병합 작업을 예약
-            sharedFileService.scheduleMergeImages(challenge.getChallengeNum(), matchedLucky);
+        if (mergedImagesCount < 4) {
+            // 필요한 모든 그룹 (cut_1, cut_2, cut_3, cut_4)에 대해 병합된 이미지가 있는지 확인
+            List<String> requiredCuts = Arrays.asList("1", "2", "3", "4");
+            Map<Integer, List<String>> finalResults = results;
+            List<CompletableFuture<Void>> mergeFutures = requiredCuts.stream()
+                    .filter(cut -> !finalResults.containsKey(Integer.parseInt(cut)) || finalResults.get(Integer.parseInt(cut)).isEmpty())
+                    .map(missingCut -> sharedFileService.scheduleMergeImagesForGroup(challenge.getChallengeNum(), matchedLucky, missingCut))
+                    .toList();
+
+            // 모든 병합 작업이 완료될 때까지 대기
+            CompletableFuture.allOf(mergeFutures.toArray(new CompletableFuture[0])).join();
+
+            // 병합 작업이 완료된 후 결과를 다시 조회
+            results = sharedFileService.getFaceChallengeResults(challenge.getChallengeNum(), matchedLucky.getLuckyId());
         }
 
         return new ApiResponse<>("200", "FaceTime Challenge results found successfully", results);
