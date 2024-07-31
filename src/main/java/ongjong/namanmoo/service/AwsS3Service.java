@@ -196,7 +196,7 @@ public class AwsS3Service {
                 originalImage = Thumbnails.of(originalImage).rotate(270).scale(1).asBufferedImage();
                 break;
             default:
-                originalImage = Thumbnails.of(originalImage).scale(1).scale(1).asBufferedImage();
+                originalImage = Thumbnails.of(originalImage).scale(1).asBufferedImage();
                 break;
         }
 
