@@ -207,11 +207,15 @@ public class AwsS3Service {
         // 이미지 리사이즈 및 압축
         Thumbnails.Builder<BufferedImage> thumbnailBuilder = Thumbnails.of(originalImage);
         if (originalWidth > 800 || originalHeight > 600) {
-            thumbnailBuilder.size(800, 600);  // 비율을 유지하면서 리사이즈
+            // 비율을 유지하면서 리사이즈
+            thumbnailBuilder.size(800, 600)
+                    .outputQuality(0.85)
+                    .toFile(optimizedFile);
         } else {
-            thumbnailBuilder.scale(1);  // 비율을 유지하면서 리사이즈
+            // 원본 크기로 유지하고 압축
+            thumbnailBuilder.outputQuality(0.85)
+                    .toFile(optimizedFile);
         }
-        thumbnailBuilder.outputQuality(0.85).toFile(optimizedFile);
 
         // 원본 이미지 파일의 크기
         long originalFileSize = originalFile.length();
