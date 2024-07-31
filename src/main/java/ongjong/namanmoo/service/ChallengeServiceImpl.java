@@ -138,7 +138,7 @@ public class ChallengeServiceImpl implements ChallengeService {
             return new CurrentChallengeDto(isDone, null); // luckies 리스트가 비어있을 경우 null 반환
         }
 
-        luckyService.luckyDeadOrAlive(String.valueOf(challengeDate));
+        luckyService.luckyDeadOrAlive(challengeDate);
         boolean validLuckyExists = luckies.stream()
                 .anyMatch(Lucky::isRunning);
         if (!validLuckyExists) {

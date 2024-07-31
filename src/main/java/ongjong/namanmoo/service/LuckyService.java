@@ -17,7 +17,7 @@ public interface LuckyService {
     */
 
     // 사용자의 챌린지 참여여부 확인하여 행운이 상태 반환
-    LuckyStatusDto getLuckyStatus(String createDate);
+    LuckyStatusDto getLuckyStatus(Long createDate);
 
     // 캐릭터 생성
     boolean createLucky(Long familyId, Long challengeDate) throws Exception;
@@ -47,7 +47,7 @@ public interface LuckyService {
     // 해당 Lucky에 해당하는 챌린지 조회수 늘리기
     void increaseChallengeViews(Long luckyId, Integer challengeNum);
 
-    void luckyDeadOrAlive(String challengeDate) throws Exception;
+    void luckyDeadOrAlive(Long challengeDate) throws Exception;
 
     // 해당 challengeId에 맞는 lucky를 찾기
     Lucky findMatchingLucky(Long challengeId, Member member) throws Exception;

@@ -67,7 +67,7 @@ public class LuckyServiceImpl implements LuckyService {
     // 사용자의 챌린지 참여여부 확인하여 행운이 상태 반환
     @Override
     @Transactional(readOnly = true)
-    public LuckyStatusDto getLuckyStatus(String challengeDate) throws IllegalArgumentException {
+    public LuckyStatusDto getLuckyStatus(Long challengeDate) throws IllegalArgumentException {
         String loginId = SecurityUtil.getLoginLoginId();
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("No member found for login id: " + loginId));
@@ -77,8 +77,7 @@ public class LuckyServiceImpl implements LuckyService {
                 .orElseThrow(() -> new IllegalArgumentException("No active lucky for family id: " + family.getFamilyId()));
 
         // 타임스탬프를 yyyy.MM.dd 형식의 문자열로 변환
-        long timestamp = Long.parseLong(challengeDate);
-        Instant instant = Instant.ofEpochMilli(timestamp);
+        Instant instant = Instant.ofEpochMilli(challengeDate);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd").withZone(ZoneId.systemDefault());
         String createDate = formatter.format(instant);
 
@@ -243,7 +242,7 @@ public class LuckyServiceImpl implements LuckyService {
 
     // 챌린지가 종료되었을 경우 running -> false로 저장
     @Override
-    public void luckyDeadOrAlive(String challengeDate) throws Exception {
+    public void luckyDeadOrAlive(Long challengeDate) throws Exception {
         Member member = memberRepository.findByLoginId(SecurityUtil.getLoginLoginId()).orElseThrow(() -> new Exception("회원이 없습니다"));
         Long familyId = member.getFamily().getFamilyId();
         int luckyLifetime = findCurrentLuckyLifetime(familyId);
@@ -253,7 +252,7 @@ public class LuckyServiceImpl implements LuckyService {
             if (lucky.isRunning()) {
                 DateUtil dateUtil = DateUtil.getInstance();
                 // 현재 진행되어야할 challengenum를 반환
-                int currentChallengeNumber = Math.toIntExact(dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.timestampToString(Long.valueOf(challengeDate))));
+                int currentChallengeNumber = Math.toIntExact(dateUtil.getDateDifference(lucky.getChallengeStartDate(), dateUtil.timestampToString(challengeDate)));
                 if (luckyLifetime < currentChallengeNumber) {
                     lucky.setRunning(false);
                     luckyRepository.save(lucky);
