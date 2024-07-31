@@ -185,18 +185,18 @@ public class AwsS3Service {
         switch (orientation) {
             // EXIF Orientation의 값 = 6 : 90도 시계방향
             case 6:
-                originalImage = Thumbnails.of(originalImage).rotate(90).scale(1).asBufferedImage();
+                originalImage = Thumbnails.of(originalImage).rotate(90).asBufferedImage();
                 break;
             // EXIF Orientation의 값 = 3 : 180도 시계방향
             case 3:
-                originalImage = Thumbnails.of(originalImage).rotate(180).scale(1).asBufferedImage();
+                originalImage = Thumbnails.of(originalImage).rotate(180).asBufferedImage();
                 break;
             // EXIF Orientation의 값 = 8 : 270도 시계방향
             case 8:
-                originalImage = Thumbnails.of(originalImage).rotate(270).scale(1).asBufferedImage();
+                originalImage = Thumbnails.of(originalImage).rotate(270).asBufferedImage();
                 break;
             default:
-                originalImage = Thumbnails.of(originalImage).scale(1).asBufferedImage();
+                originalImage = Thumbnails.of(originalImage).asBufferedImage();
                 break;
         }
 
@@ -204,18 +204,14 @@ public class AwsS3Service {
         int originalWidth = originalImage.getWidth();
         int originalHeight = originalImage.getHeight();
 
-        if(originalWidth > 800 || originalHeight > 600){
-            // 이미지 리사이즈 및 압축
-            Thumbnails.of(originalImage)
-                    .size(800, 600)  // 비율을 유지하면서 리사이즈
-                    .outputQuality(0.85)  // 이미지 품질 설정 (0.0 ~ 1.0)
-                    .toFile(optimizedFile);
+        // 이미지 리사이즈 및 압축
+        Thumbnails.Builder<BufferedImage> thumbnailBuilder = Thumbnails.of(originalImage);
+        if (originalWidth > 800 || originalHeight > 600) {
+            thumbnailBuilder.size(800, 600);  // 비율을 유지하면서 리사이즈
         } else {
-            Thumbnails.of(originalImage)
-                    .scale(1)  // 비율을 유지하면서 리사이즈
-                    .outputQuality(0.85)  // 이미지 품질 설정 (0.0 ~ 1.0)
-                    .toFile(optimizedFile);
+            thumbnailBuilder.scale(1);  // 비율을 유지하면서 리사이즈
         }
+        thumbnailBuilder.outputQuality(0.85).toFile(optimizedFile);
 
         // 원본 이미지 파일의 크기
         long originalFileSize = originalFile.length();
