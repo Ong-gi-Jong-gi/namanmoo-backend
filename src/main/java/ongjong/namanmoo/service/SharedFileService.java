@@ -422,7 +422,8 @@ public class SharedFileService {
     }
 
     // 병합이 필요한 경우 특정 그룹의 이미지를 병합하는 메서드
-    private void mergeImagesIfNeededForGroup(int challengeNum, Lucky lucky, String group) throws IOException {
+    @Transactional
+    public void mergeImagesIfNeededForGroup(int challengeNum, Lucky lucky, String group) throws IOException {
         List<SharedFile> sharedFiles;
 
         // 병합 작업 중에는 다른 작업이 접근하지 못하도록 lock 사용
