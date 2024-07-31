@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -246,7 +247,8 @@ public class RecapController {
 
     private boolean canAccessRecap(Lucky lucky) {
         String startDateString = lucky.getChallengeStartDate();
-        LocalDate startDate = LocalDate.parse(startDateString);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        LocalDate startDate = LocalDate.parse(startDateString, formatter);
         LocalDate currentDate = LocalDate.now();
 
         Duration duration = Duration.between(startDate.atStartOfDay(), currentDate.atStartOfDay());
