@@ -20,6 +20,9 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifIFD0Directory;
 import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Value;
@@ -139,29 +142,53 @@ public class AwsS3Service {
         BufferedImage originalImage = ImageIO.read(originalFile);
         File optimizedFile = new File("optimized_" + originalFile.getName());
 
+        // EXIF 데이터를 읽어 Orientation 정보를 가져옴
+        // EXIF Orientation의 기본값 = 1
+        int orientation = 1;
+        try {
+            Metadata metadata = ImageMetadataReader.readMetadata(originalFile);
+            ExifIFD0Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+            if (directory != null && directory.containsTag(ExifIFD0Directory.TAG_ORIENTATION)) {
+                orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
+            }
+        } catch (Exception e) {
+            log.warn("Could not read EXIF metadata: {}", e.getMessage());
+        }
+
+        // 이미지 회전 처리
+        switch (orientation) {
+            // EXIF Orientation의 값 = 6 : 90도 시계방향
+            case 6:
+                originalImage = Thumbnails.of(originalImage).rotate(90).asBufferedImage();
+                break;
+            // EXIF Orientation의 값 = 3 : 180도 시계방향
+            case 3:
+                originalImage = Thumbnails.of(originalImage).rotate(180).asBufferedImage();
+                break;
+            // EXIF Orientation의 값 = 8 : 270도 시계방향
+            case 8:
+                originalImage = Thumbnails.of(originalImage).rotate(270).asBufferedImage();
+                break;
+            default:
+                break;
+        }
+
         // 원본 이미지의 크기
         int originalWidth = originalImage.getWidth();
         int originalHeight = originalImage.getHeight();
 
-        // 원하는 최대 크기
-        int maxWidth = (int) (originalWidth * 0.85);
-        int maxHeight = (int) (originalHeight * 0.85);
-
-        // 비율 유지하면서 리사이징할 크기 계산
-        double aspectRatio = (double) originalWidth / originalHeight;
-        int newWidth = maxWidth;
-        int newHeight = (int) (maxWidth / aspectRatio);
-        if (newHeight > maxHeight) {
-            newHeight = maxHeight;
-            newWidth = (int) (maxHeight * aspectRatio);
+        if(originalWidth > 800 || originalHeight > 600){
+            // 이미지 리사이즈 및 압축
+            Thumbnails.of(originalImage)
+                    .size(800, 600)  // 비율을 유지하면서 리사이즈
+                    .outputQuality(0.85)  // 이미지 품질 설정 (0.0 ~ 1.0)
+                    .toFile(optimizedFile);
+        } else {
+            Thumbnails.of(originalImage)
+                    .scale(1)  // 비율을 유지하면서 리사이즈
+                    .outputQuality(0.85)  // 이미지 품질 설정 (0.0 ~ 1.0)
+                    .toFile(optimizedFile);
         }
-
-        // 이미지 리사이즈 및 압축
-        Thumbnails.of(originalImage)
-                .size(newWidth, newHeight)  // 비율을 유지하면서 리사이즈
-                .outputQuality(0.5)  // 이미지 품질 설정 (0.0 ~ 1.0)
-                .toFile(optimizedFile);
-
 
         // 원본 이미지 파일의 크기
         long originalFileSize = originalFile.length();
@@ -171,11 +198,12 @@ public class AwsS3Service {
         // 로그 출력
         log.info("Original Image Dimensions: {}x{}", originalWidth, originalHeight);
         log.info("Original File Size: {} bytes", originalFileSize);
-        log.info("Optimized Image Dimensions: {}x{}", newWidth, newHeight);
+        log.info("Optimized Image Dimensions: {}x{}", 800, 600);
         log.info("Optimized File Size: {} bytes", optimizedFileSize);
 
         return optimizedFile;
     }
+
 
     /**
      * 파일 타입을 결정하는 메소드.
@@ -198,7 +226,7 @@ public class AwsS3Service {
     }
 
     /**
-     * MultipartFile을 File 객체로 변환하는 메소드.
+     * MultipartFile을 File 객체로 변환하는 메소드.x
      *
      * @param file 변환할 MultipartFile
      * @return Optional<File> 변환된 File 객체를 포함하는 Optional
