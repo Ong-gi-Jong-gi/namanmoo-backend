@@ -148,6 +148,7 @@ public class AwsS3Service {
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(originalFile);
             ExifIFD0Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+            // EXIF 정보가 없거나 기본값이 1인 경우 orientation = 1
             if (directory != null && directory.containsTag(ExifIFD0Directory.TAG_ORIENTATION)) {
                 orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
             }
@@ -159,17 +160,18 @@ public class AwsS3Service {
         switch (orientation) {
             // EXIF Orientation의 값 = 6 : 90도 시계방향
             case 6:
-                originalImage = Thumbnails.of(originalImage).rotate(90).asBufferedImage();
+                originalImage = Thumbnails.of(originalImage).rotate(90).scale(1).asBufferedImage();
                 break;
             // EXIF Orientation의 값 = 3 : 180도 시계방향
             case 3:
-                originalImage = Thumbnails.of(originalImage).rotate(180).asBufferedImage();
+                originalImage = Thumbnails.of(originalImage).rotate(180).scale(1).asBufferedImage();
                 break;
             // EXIF Orientation의 값 = 8 : 270도 시계방향
             case 8:
-                originalImage = Thumbnails.of(originalImage).rotate(270).asBufferedImage();
+                originalImage = Thumbnails.of(originalImage).rotate(270).scale(1).asBufferedImage();
                 break;
             default:
+                originalImage = Thumbnails.of(originalImage).scale(1).scale(1).asBufferedImage();
                 break;
         }
 
