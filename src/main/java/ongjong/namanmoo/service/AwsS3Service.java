@@ -182,30 +182,31 @@ public class AwsS3Service {
         }
 
         // 이미지 회전 처리
+        BufferedImage rotatedImage;
         switch (orientation) {
             // EXIF Orientation의 값 = 6 : 90도 시계방향
             case 6:
-                originalImage = Thumbnails.of(originalImage).rotate(90).asBufferedImage();
+                rotatedImage = Thumbnails.of(originalImage).rotate(90).asBufferedImage();
                 break;
             // EXIF Orientation의 값 = 3 : 180도 시계방향
             case 3:
-                originalImage = Thumbnails.of(originalImage).rotate(180).asBufferedImage();
+                rotatedImage = Thumbnails.of(originalImage).rotate(180).asBufferedImage();
                 break;
             // EXIF Orientation의 값 = 8 : 270도 시계방향
             case 8:
-                originalImage = Thumbnails.of(originalImage).rotate(270).asBufferedImage();
+                rotatedImage = Thumbnails.of(originalImage).rotate(270).asBufferedImage();
                 break;
             default:
-                originalImage = Thumbnails.of(originalImage).asBufferedImage();
+                rotatedImage = originalImage;
                 break;
         }
 
         // 원본 이미지의 크기
-        int originalWidth = originalImage.getWidth();
-        int originalHeight = originalImage.getHeight();
+        int originalWidth = rotatedImage.getWidth();
+        int originalHeight = rotatedImage.getHeight();
 
         // 이미지 리사이즈 및 압축
-        Thumbnails.Builder<BufferedImage> thumbnailBuilder = Thumbnails.of(originalImage);
+        Thumbnails.Builder<BufferedImage> thumbnailBuilder = Thumbnails.of(rotatedImage);
         if (originalWidth > 800 || originalHeight > 600) {
             // 비율을 유지하면서 리사이즈
             thumbnailBuilder.size(800, 600)
@@ -213,7 +214,8 @@ public class AwsS3Service {
                     .toFile(optimizedFile);
         } else {
             // 원본 크기로 유지하고 압축
-            thumbnailBuilder.outputQuality(0.85)
+            thumbnailBuilder.scale(1)
+                    .outputQuality(0.85)
                     .toFile(optimizedFile);
         }
 
