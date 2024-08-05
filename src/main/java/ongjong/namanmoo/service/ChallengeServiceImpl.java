@@ -56,8 +56,10 @@ public class ChallengeServiceImpl implements ChallengeService {
         if (number == null) {
             return null;
         }
-        // TODO: 챌린지 리스트 다 보여주기 위해 일단은 최대 값인 lucky의 주기로 설정 -> 추후에 현재 날짜에 해당하는 챌린지 번호인 number로 변경 필요 // startDate 확인 필요함
-        List<Challenge> challengeList = challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum(family.getFamilyId())+1, luckyService.findStartChallengeNum(family.getFamilyId())+lucky.get().getLifetime().getDays());
+
+        List<Challenge> challengeList =
+                challengeRepository.findByChallengeNumBetween(luckyService.findStartChallengeNum(family.getFamilyId())+1,
+                        luckyService.findStartChallengeNum(family.getFamilyId()) + findCurrentNum(challengeDate));
 
         // 멤버 역할에 맞지 않는 challenge는 리스트에서 제외
         return groupChallengeExceptionRemove(challengeList,member);
@@ -138,7 +140,7 @@ public class ChallengeServiceImpl implements ChallengeService {
             return new CurrentChallengeDto(isDone, null); // luckies 리스트가 비어있을 경우 null 반환
         }
 
-        luckyService.luckyDeadOrAlive(String.valueOf(challengeDate));
+        luckyService.luckyDeadOrAlive(challengeDate);
         boolean validLuckyExists = luckies.stream()
                 .anyMatch(Lucky::isRunning);
         if (!validLuckyExists) {
