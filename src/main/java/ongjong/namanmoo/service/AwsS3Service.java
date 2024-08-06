@@ -186,15 +186,17 @@ public class AwsS3Service {
         switch (orientation) {
             // EXIF Orientation의 값 = 6 : 90도 시계방향
             case 6:
-                rotatedImage = Thumbnails.of(originalImage).rotate(90).asBufferedImage();
+                log.info("11111");
+                rotatedImage = Thumbnails.of(originalImage).rotate(90).scale(1).asBufferedImage();
+                log.info("22222");
                 break;
             // EXIF Orientation의 값 = 3 : 180도 시계방향
             case 3:
-                rotatedImage = Thumbnails.of(originalImage).rotate(180).asBufferedImage();
+                rotatedImage = Thumbnails.of(originalImage).rotate(180).scale(1).asBufferedImage();
                 break;
             // EXIF Orientation의 값 = 8 : 270도 시계방향
             case 8:
-                rotatedImage = Thumbnails.of(originalImage).rotate(270).asBufferedImage();
+                rotatedImage = Thumbnails.of(originalImage).rotate(270).scale(1).asBufferedImage();
                 break;
             default:
                 rotatedImage = originalImage;
