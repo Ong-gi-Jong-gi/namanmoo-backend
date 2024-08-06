@@ -3,6 +3,7 @@
 ## ERD (Entity-Relationship Diagram)
 
 다음은 애플리케이션의 주요 엔티티와 그 관계를 나타낸 ERD입니다.
+
 ![mooluck-erd](https://github.com/Ong-gi-Jong-gi/.github/blob/main/profile/mooluck-erd.png)
 
 <!--
