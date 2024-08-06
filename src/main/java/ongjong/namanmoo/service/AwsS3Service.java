@@ -20,6 +20,9 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifIFD0Directory;
 import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Value;
@@ -70,7 +73,7 @@ public class AwsS3Service {
      * @return 업로드된 파일의 URL
      * @throws IOException 파일 변환 또는 업로드 중 발생하는 예외
      */
-    public String uploadFile(MultipartFile multipartFile) throws IOException {
+    public String uploadFile(MultipartFile multipartFile) throws IOException, InterruptedException {
         log.info("Converting MultipartFile to File...");
         File uploadFile = convertFile(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File convert fail"));
@@ -80,6 +83,11 @@ public class AwsS3Service {
             log.info("Optimizing image file...");
             uploadFile = optimizeImageFile(uploadFile);
         }
+
+        //        else if (determineFileType(multipartFile).equals("video")) {
+//            log.info("Optimizing video file...");
+//            uploadFile = resizeVideo(multipartFile);
+//        }
 
         String fileType = determineFileType(multipartFile);
         String fileName = generateFileName(uploadFile, fileType);
@@ -116,6 +124,38 @@ public class AwsS3Service {
         return uploadFileUrl;
     }
 
+//    // FFmpeg 명령어를 실행하여 동영상을 리사이즈하는 메소드
+//    public File resizeVideo(MultipartFile videoFile) throws IOException, InterruptedException {
+//        // 고유한 파일명을 생성하기 위해 UUID와 원래 파일명을 결합
+//        String uniqueFileName = UUID.randomUUID() + "_" + videoFile.getOriginalFilename();
+//        String outputFileName = System.getProperty("java.io.tmpdir") + "/" + uniqueFileName;
+//
+//        File inputFile = new File(System.getProperty("java.io.tmpdir") + "/" + videoFile.getOriginalFilename());
+//        videoFile.transferTo(inputFile);
+//
+//        // FFmpeg 명령어를 통해 동영상 리사이즈
+//        String[] command = {
+//                "ffmpeg",
+//                "-i", inputFile.getAbsolutePath(),
+//                "-vf", "scale=854:480",  // 원하는 해상도로 조정
+//                "-b:v", "1000k",  // 비트레이트 설정
+//                "-preset", "ultrafast",
+//                outputFileName
+//        };
+//
+//        ProcessBuilder processBuilder = new ProcessBuilder(command);
+//        processBuilder.redirectErrorStream(true);
+//
+//        Process process = processBuilder.start();
+//        int exitCode = process.waitFor();
+//
+//        if (exitCode != 0) {
+//            throw new RuntimeException("FFmpeg command failed");
+//        }
+//
+//        return new File(outputFileName);
+//    }
+
     /**
      * 이미지를 최적화하는 메소드.
      *
@@ -127,29 +167,71 @@ public class AwsS3Service {
         BufferedImage originalImage = ImageIO.read(originalFile);
         File optimizedFile = new File("optimized_" + originalFile.getName());
 
-        // 원본 이미지의 크기
-        int originalWidth = originalImage.getWidth();
-        int originalHeight = originalImage.getHeight();
-
-        // 원하는 최대 크기
-        int maxWidth = (int) (originalWidth * 0.85);
-        int maxHeight = (int) (originalHeight * 0.85);
-
-        // 비율 유지하면서 리사이징할 크기 계산
-        double aspectRatio = (double) originalWidth / originalHeight;
-        int newWidth = maxWidth;
-        int newHeight = (int) (maxWidth / aspectRatio);
-        if (newHeight > maxHeight) {
-            newHeight = maxHeight;
-            newWidth = (int) (maxHeight * aspectRatio);
+        // EXIF 데이터를 읽어 Orientation 정보를 가져옴
+        // EXIF Orientation의 기본값 = 1
+        int orientation = 1;
+        try {
+            Metadata metadata = ImageMetadataReader.readMetadata(originalFile);
+            ExifIFD0Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+            // EXIF 정보가 없거나 기본값이 1인 경우 orientation = 1
+            if (directory != null && directory.containsTag(ExifIFD0Directory.TAG_ORIENTATION)) {
+                orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
+            }
+        } catch (Exception e) {
+            log.warn("Could not read EXIF metadata: {}", e.getMessage());
         }
 
+        // 이미지 회전 처리
+        BufferedImage rotatedImage;
+        switch (orientation) {
+            // EXIF Orientation의 값 = 6 : 90도 시계방향
+            case 6:
+                log.info("11111");
+                rotatedImage = Thumbnails.of(originalImage).rotate(90).scale(1).asBufferedImage();
+                log.info("22222");
+                break;
+            // EXIF Orientation의 값 = 3 : 180도 시계방향
+            case 3:
+                rotatedImage = Thumbnails.of(originalImage).rotate(180).scale(1).asBufferedImage();
+                break;
+            // EXIF Orientation의 값 = 8 : 270도 시계방향
+            case 8:
+                rotatedImage = Thumbnails.of(originalImage).rotate(270).scale(1).asBufferedImage();
+                break;
+            default:
+                rotatedImage = originalImage;
+                break;
+        }
+
+        // 원본 이미지의 크기
+        int originalWidth = rotatedImage.getWidth();
+        int originalHeight = rotatedImage.getHeight();
+
         // 이미지 리사이즈 및 압축
-        Thumbnails.of(originalImage)
-                .size(newWidth, newHeight)  // 비율을 유지하면서 리사이즈
-                .outputQuality(0.5)  // 이미지 품질 설정 (0.0 ~ 1.0)
-                .toFile(optimizedFile);
-        
+        Thumbnails.Builder<BufferedImage> thumbnailBuilder = Thumbnails.of(rotatedImage);
+        if (originalWidth > 512 || originalHeight > 512) {
+
+            double aspectRatio = (double) originalWidth / originalHeight;
+
+            int newWidth = 512;
+            int newHeight = (int) (512 / aspectRatio);
+
+            if (newHeight > 512) {
+                newHeight = 512;
+                newWidth = (int) (512 * aspectRatio);
+            }
+            // 비율을 유지하면서 리사이즈
+            thumbnailBuilder.size(newWidth, newHeight)
+                    .outputQuality(0.85)
+                    .toFile(optimizedFile);
+            log.info("Optimized Image Dimensions: {}x{}",newWidth, newHeight);
+        } else {
+            // 원본 크기로 유지하고 압축
+            thumbnailBuilder.scale(1)
+                    .outputQuality(0.85)
+                    .toFile(optimizedFile);
+        }
+
         // 원본 이미지 파일의 크기
         long originalFileSize = originalFile.length();
         // 최적화된 이미지 파일의 크기
@@ -158,12 +240,11 @@ public class AwsS3Service {
         // 로그 출력
         log.info("Original Image Dimensions: {}x{}", originalWidth, originalHeight);
         log.info("Original File Size: {} bytes", originalFileSize);
-        log.info("Optimized Image Dimensions: {}x{}", newWidth, newHeight);
         log.info("Optimized File Size: {} bytes", optimizedFileSize);
-
 
         return optimizedFile;
     }
+
 
     /**
      * 파일 타입을 결정하는 메소드.
@@ -186,7 +267,7 @@ public class AwsS3Service {
     }
 
     /**
-     * MultipartFile을 File 객체로 변환하는 메소드.
+     * MultipartFile을 File 객체로 변환하는 메소드.x
      *
      * @param file 변환할 MultipartFile
      * @return Optional<File> 변환된 File 객체를 포함하는 Optional
@@ -221,6 +302,7 @@ public class AwsS3Service {
 
 //        return fileType + "/" + UUID.randomUUID() + "_" + formattedDate + "_" + uploadFile.getName();
         return fileType + "/" + formattedDate + "_" + uploadFile.getName();
+
     }
 
     // generateFileName 메소드에 멤버 ID 추가
