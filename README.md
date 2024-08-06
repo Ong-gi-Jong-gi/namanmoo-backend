@@ -18,6 +18,7 @@
 ```sh
 git clone https://github.com/Ong-gi-Jong-gi/namanmoo-backend.git
 cd namanmoo-backend
+```
 
 ### 2. Java 설치 및 설정
 - Java JDK 17을 설치합니다.
@@ -99,7 +100,7 @@ cd namanmoo-backend
 - `build`: 프로젝트를 빌드하고 Docker 이미지를 생성
 - `deploy`: 빌드한 Docker 이미지를 AWS EC2 인스턴스에 배포
 
-### 환경 변수 및 비밀 정보 설정
+### 환경 변수 및 GitHub Secrets 정보 설정
 
 GitHub Secrets에 다음 정보를 설정해야 합니다:
 - DOCKERHUB_USERNAME: DockerHub 계정 이름
@@ -107,7 +108,7 @@ GitHub Secrets에 다음 정보를 설정해야 합니다:
 - PROJECT_NAME: 프로젝트 이름
 - EC2_HOST: EC2 호스트 주소
 - EC2_USER: EC2 사용자명
-- EC2_SSH_KEY: EC2 SSH 키
+- EC2_SSH_KEY: EC2 SSH 프라이빗 키
 - DB_URL: 데이터베이스 접속 URL
 - DB_USERNAME: 데이터베이스 사용자명
 - DB_PASSWORD: 데이터베이스 비밀번호
