@@ -124,7 +124,7 @@ GitHub Secrets에 다음 정보를 설정해야 합니다:
 - LOG_GROUP_NAME: AWS Cloudwatch 로그 그룹 이름
 - LOG_STREAM_NAME: AWS Cloudwatch 로그 스트림 이름
 
-자세한 정보는 `.github/workflows/ci-cd.yml` 파일을 참고해주시길 바랍니다.
+자세한 정보는 `.github/workflows/Spring Boot CI-CD.yml` 파일을 참고해주시길 바랍니다.
 
 <!--
 ## 기여
