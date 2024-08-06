@@ -207,11 +207,22 @@ public class AwsS3Service {
 
         // 이미지 리사이즈 및 압축
         Thumbnails.Builder<BufferedImage> thumbnailBuilder = Thumbnails.of(rotatedImage);
-        if (originalWidth > 800 || originalHeight > 600) {
+        if (originalWidth > 512 || originalHeight > 512) {
+
+            double aspectRatio = (double) originalWidth / originalHeight;
+
+            int newWidth = 512;
+            int newHeight = (int) (512 / aspectRatio);
+
+            if (newHeight > 512) {
+                newHeight = 512;
+                newWidth = (int) (512 * aspectRatio);
+            }
             // 비율을 유지하면서 리사이즈
-            thumbnailBuilder.size(800, 600)
+            thumbnailBuilder.size(newWidth, newHeight)
                     .outputQuality(0.85)
                     .toFile(optimizedFile);
+            log.info("Optimized Image Dimensions: {}x{}",newWidth, newHeight);
         } else {
             // 원본 크기로 유지하고 압축
             thumbnailBuilder.scale(1)
@@ -227,7 +238,6 @@ public class AwsS3Service {
         // 로그 출력
         log.info("Original Image Dimensions: {}x{}", originalWidth, originalHeight);
         log.info("Original File Size: {} bytes", originalFileSize);
-        log.info("Optimized Image Dimensions: {}x{}", 800, 600);
         log.info("Optimized File Size: {} bytes", optimizedFileSize);
 
         return optimizedFile;
