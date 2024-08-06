@@ -1,5 +1,75 @@
 # Mooluck - Backend
 
+## ERD (Entity-Relationship Diagram)
+
+다음은 애플리케이션의 주요 엔티티와 그 관계를 나타낸 ERD입니다.
+![mooluck-erd](https://github.com/Ong-gi-Jong-gi/.github/blob/main/profile/mooluck-erd.png)
+
+<!--
+```plantuml
+@startuml
+entity Family {
+    Long familyId
+    String familyName
+    int maxFamilySize
+    String inviteCode
+    Long familyOwnerId
+}
+
+entity Member {
+    Long memberId
+    String loginId
+    String password
+    String name
+    String role
+    String nickname
+    String memberImage
+    LogInRole logInRole
+    String refreshToken
+}
+
+entity Lucky {
+    Long luckyId
+    Integer status
+    String challengeStartDate
+    boolean running
+    ChallengeLength lifetime
+}
+
+entity Challenge {
+    Long challengeId
+    ChallengeType challengeType
+    String challengeTitle
+    Integer challengeNum
+}
+
+entity Answer {
+    Long answerId
+    AnswerType answerType
+    boolean bubbleVisible
+    String createDate
+    String modifiedDate
+    String answerContent
+}
+
+entity SharedFile {
+    Long sharedFileId
+    String fileName
+    FileType fileType
+    int challengeNum
+    long createDate
+}
+
+Family ||--o{ Member : "has"
+Family ||--o{ Lucky : "has"
+Member ||--o{ Answer : "submits"
+Challenge ||--o{ Answer : "generates"
+Lucky ||--o{ SharedFile : "contains"
+
+@enduml
+```
+-->
+
 ## 요구사항 및 의존성
 
 - Java 17
