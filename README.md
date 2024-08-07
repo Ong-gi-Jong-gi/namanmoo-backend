@@ -35,6 +35,7 @@ entity Lucky {
     String challengeStartDate
     boolean running
     ChallengeLength lifetime
+    Map<Integer, Integer> challengeViews // This includes @ElementCollection, @CollectionTable, @MapKeyColumn, and @Column annotations in the JPA entity.
 }
 
 entity Challenge {
@@ -290,6 +291,15 @@ GitHub Secrets에 다음 정보를 설정해야 합니다:
 - **LOG_STREAM_NAME**: AWS CloudWatch 로그 스트림 이름
 
 자세한 정보는 `.github/workflows/Spring Boot CI-CD.yml` 파일을 참고해 주세요.
+
+
+## 팀원
+
+| 박다흰 | 고동엽 | 김민준 |
+| :---: | :---: | :---: |
+| [pdh90345](https://github.com/pdh90345) | [dongyeoppp](https://github.com/dongyeoppp) | [minjoon-98](https://github.com/minjoon-98) |
+| <img src="https://avatars.githubusercontent.com/u/160474322?v=4" width="200" height="200" /> | <img src="https://avatars.githubusercontent.com/u/103740881?v=4" width="200" height="200" /> | <img src="https://avatars.githubusercontent.com/u/155042110?v=4" width="200" height="200" /> |
+
 
 <!--
 ## 기여
