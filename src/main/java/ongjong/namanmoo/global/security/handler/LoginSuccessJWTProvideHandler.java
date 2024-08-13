@@ -11,6 +11,7 @@ import ongjong.namanmoo.repository.MemberRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -23,6 +24,7 @@ public class LoginSuccessJWTProvideHandler extends SimpleUrlAuthenticationSucces
     private final MemberRepository memberRepository;
 
     @Override
+    @Transactional
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
         String loginId = extractLoginId(authentication);
@@ -31,18 +33,16 @@ public class LoginSuccessJWTProvideHandler extends SimpleUrlAuthenticationSucces
 
         jwtService.sendAccessAndRefreshToken(response, accessToken, refreshToken);
 
-        // 한 번만 조회하여 재사용
-        Optional<Member> memberOptional = memberRepository.findByLoginId(loginId);
-        memberOptional.ifPresent(member -> {
-            member.setRefreshToken(refreshToken);
-            memberRepository.save(member);
-        });
+        // JWT Service를 통해 Refresh Token 업데이트
+        jwtService.updateRefreshToken(loginId, refreshToken);
+
 
         log.info("로그인에 성공합니다. loginId: {}", loginId);
         log.info("AccessToken 을 발급합니다. AccessToken: {}", accessToken);
         log.info("RefreshToken 을 발급합니다. RefreshToken: {}", refreshToken);
 
         // 사용자 정보를 포함한 JSON 응답 작성
+        Optional<Member> memberOptional = memberRepository.findByLoginId(loginId);
         memberOptional.ifPresent(member -> {
             try {
                 response.setContentType("application/json");
