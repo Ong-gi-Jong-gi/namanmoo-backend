@@ -16,7 +16,8 @@ public class LuckyController {
     private final AnswerService answerService;
 
     @GetMapping
-    public ApiResponse<LuckyStatusDto> getLuckyStatus(@RequestParam("challengeDate") String challengeDate) throws Exception {
+    public ApiResponse<LuckyStatusDto> getLuckyStatus() throws Exception {
+        Long challengeDate = System.currentTimeMillis();
         luckyService.luckyDeadOrAlive(challengeDate);
         LuckyStatusDto luckyStatusDto = luckyService.getLuckyStatus(challengeDate);
         return new ApiResponse<>("200", "Success", luckyStatusDto);
