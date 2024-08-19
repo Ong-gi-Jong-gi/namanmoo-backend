@@ -34,7 +34,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
 
     private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();//5
 
-    private final String NO_CHECK_URL = "/login";//1
+//    private final String NO_CHECK_URL = "/login";//1
 
     /**
      * Access가 유효하지 않은 경우 -> api/refresh-token으로 가서 refresh 토큰이 유효하면 Access 재발급
@@ -42,15 +42,12 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         log.info("Request URI: {}", request.getRequestURI()); // 로그 추가
-        if(request.getRequestURI().equals(NO_CHECK_URL)) { // 인증 안하는 url 확인
-            log.info("No check URL, proceeding without authentication.");
-            filterChain.doFilter(request, response);
-            return;//안해주면 아래로 내려가서 계속 필터를 진행하게됨
-        }
+        String requestURI = request.getRequestURI();
+        // 인증이 필요 없는 경로 리스트
+        List<String> excludeUrls = Arrays.asList("/signup", "/signup/duplicate", "/login", "/logout", "/api/refresh-token", "/");
 
-        // Refresh Token 엔드포인트는 필터에서 인증 처리 안 함
-        if (request.getRequestURI().equals("/api/refresh-token")) {
-            log.info("Bypassing filter for refresh token endpoint.");
+        // excludeUrls에 있는 URI는 필터링을 건너뜀
+        if (excludeUrls.contains(requestURI)) {
             filterChain.doFilter(request, response);
             return;
         }

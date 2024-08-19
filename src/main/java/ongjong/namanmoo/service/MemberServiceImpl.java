@@ -44,7 +44,7 @@ public class MemberServiceImpl implements MemberService {
 
         // 아이디 중복 체크
         if (memberRepository.findByLoginId(memberSignUpDto.loginId()).isPresent()) {
-            throw new Exception("이미 존재하는 아이디 입니다.");
+            throw new IllegalArgumentException("이미 존재하는 아이디 입니다.");
         }
 
         memberRepository.save(member);
