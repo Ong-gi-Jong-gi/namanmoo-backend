@@ -45,7 +45,6 @@ public class RecapController {
     private final AwsS3Service awsS3Service;
     private final FFmpegService ffmpegService;
     private final SharedFileService sharedFileService;
-    private final AnswerServiceImpl answerServiceImpl;
 
     // 행운이 리스트
     @GetMapping("/list")

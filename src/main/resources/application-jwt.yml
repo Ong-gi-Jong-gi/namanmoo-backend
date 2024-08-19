@@ -6,5 +6,5 @@ jwt:
     header: Authorization
 
   refresh:
-    expiration: 90
-    header: Authorization-refresh
+    expiration: 604800 # 유효시간 7일 (7일(604800초))
+#    header: Authorization-refresh

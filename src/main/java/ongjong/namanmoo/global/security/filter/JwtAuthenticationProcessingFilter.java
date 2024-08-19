@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ongjong.namanmoo.domain.Member;
 import ongjong.namanmoo.global.security.jwt.service.JwtService;
 import ongjong.namanmoo.repository.MemberRepository;
@@ -23,7 +24,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
@@ -31,60 +34,71 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
 
     private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();//5
 
-    private final String NO_CHECK_URL = "/login";//1
-
-    /*
-    * 회원 가입 체크를 위한 로거 포함 인증 열외 경로 함수
-    * */
-//    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationProcessingFilter.class);
-//    private final List<String> NO_CHECK_URLS = Arrays.asList("/login", "/signup", "/");
-//    @Override
-//    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-//        boolean shouldNotFilter = NO_CHECK_URLS.stream().anyMatch(url -> url.equalsIgnoreCase(request.getRequestURI()));
-//        logger.info("Request URI: {}, Should not filter: {}", request.getRequestURI(), shouldNotFilter);
-//        return shouldNotFilter;
-//    }
-
+//    private final String NO_CHECK_URL = "/login";//1
 
     /**
-     * 1. 리프레시 토큰이 오는 경우 -> 유효하면 AccessToken 재발급후, 필터 진행 X, 바로 튕기기
-     *
-     * 2. 리프레시 토큰은 없고 AccessToken만 있는 경우 -> 유저정보 저장후 필터 계속 진행
+     * Access가 유효하지 않은 경우 -> api/refresh-token으로 가서 refresh 토큰이 유효하면 Access 재발급
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if(request.getRequestURI().equals(NO_CHECK_URL)) {
+        log.info("Request URI: {}", request.getRequestURI()); // 로그 추가
+        String requestURI = request.getRequestURI();
+        // 인증이 필요 없는 경로 리스트
+        List<String> excludeUrls = Arrays.asList("/signup", "/signup/duplicate", "/login", "/logout", "/api/refresh-token", "/");
+
+        // excludeUrls에 있는 URI는 필터링을 건너뜀
+        if (excludeUrls.contains(requestURI)) {
             filterChain.doFilter(request, response);
-            return;//안해주면 아래로 내려가서 계속 필터를 진행하게됨
-        }
-
-        String refreshToken = jwtService
-                .extractRefreshToken(request)
-                .filter(jwtService::isTokenValid)
-                .orElse(null); //2
-
-
-        if(refreshToken != null){
-            checkRefreshTokenAndReIssueAccessToken(response, refreshToken);//3
             return;
         }
 
-        checkAccessTokenAndAuthentication(request, response, filterChain);//4
+        // Access Token 검증
+        String accessToken = jwtService.extractAccessToken(request)
+                .filter(jwtService::isTokenValid)
+                .orElse(null);
+
+        if (accessToken != null) {
+            log.info("Access token is valid, proceeding with authentication.");
+            checkAccessTokenAndAuthentication(request, response, filterChain);
+            return;
+        }
+
+        // Access Token이 유효하지 않다면 401 Unauthorized 응답
+        log.info("Access token is invalid or missing.");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        String jsonResponse = "{\"status\": \"401\", \"message\": \"Unauthorized: Access token is invalid or missing.\"}";
+        response.getWriter().write(jsonResponse);
     }
 
     private void checkAccessTokenAndAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        jwtService.extractAccessToken(request).filter(jwtService::isTokenValid).ifPresent(
+//        jwtService.extractAccessToken(request).filter(jwtService::isTokenValid).ifPresent(
+//            accessToken -> jwtService.extractLoginId(accessToken).ifPresent(
+//                loginId -> memberRepository.findByLoginId(loginId).ifPresent(
+//
+//                        member -> saveAuthentication(member)
+//                )
+//            )
+//        );
+//        filterChain.doFilter(request,response);
+        Optional<String> accessToken = jwtService.extractAccessToken(request)
+                .filter(jwtService::isTokenValid);
 
-                accessToken -> jwtService.extractLoginId(accessToken).ifPresent(
-
-                        loginId -> memberRepository.findByLoginId(loginId).ifPresent(
-
-                                member -> saveAuthentication(member)
-                        )
-                )
-        );
-
-        filterChain.doFilter(request,response);
+        if (accessToken.isPresent()) {
+            jwtService.extractLoginId(accessToken.get()).ifPresent(
+                    loginId -> memberRepository.findByLoginId(loginId).ifPresent(
+                            member -> saveAuthentication(member)
+                    )
+            );
+            filterChain.doFilter(request, response); // 유효한 경우에만 다음 필터로 이동
+        } else {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            String jsonResponse = "{\"status\": \"401\", \"message\": \"Access Token is invalid.\"}";
+            response.getWriter().write(jsonResponse);
+        }
     }
 
     private void saveAuthentication(Member member) {
@@ -95,21 +109,24 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
                 .build();
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(user, null,authoritiesMapper.mapAuthorities(user.getAuthorities()));
-
-
         SecurityContext context = SecurityContextHolder.createEmptyContext();//5
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
     }
 
-    private void checkRefreshTokenAndReIssueAccessToken(HttpServletResponse response, String refreshToken) {
-
-
-        memberRepository.findByRefreshToken(refreshToken).ifPresent(
-                member -> jwtService.sendAccessToken(response, jwtService.createAccessToken(member.getLoginId()))
-        );
-
-
-    }
-
+//    private void checkRefreshTokenAndReIssueAccessToken(HttpServletResponse response, String refreshToken) throws IOException {
+//        Optional<Member> member = memberRepository.findByRefreshToken(refreshToken);
+//
+//        if (member.isPresent()) {
+//            String newAccessToken = jwtService.createAccessToken(member.get().getLoginId());
+//            jwtService.sendAccessToken(response, newAccessToken);
+//            log.info("New Access Token issued: {}", newAccessToken);
+//        } else {
+//            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//            response.setContentType("application/json");
+//            response.setCharacterEncoding("UTF-8");
+//            String jsonResponse = "{\"status\": \"401\", \"message\": \"Refresh Token is invalid.\"}";
+//            response.getWriter().write(jsonResponse);
+//        }
+//    }
 }

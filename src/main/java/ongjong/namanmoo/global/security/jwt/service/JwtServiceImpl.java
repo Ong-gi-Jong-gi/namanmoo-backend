@@ -3,7 +3,8 @@ package ongjong.namanmoo.global.security.jwt.service;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -15,10 +16,7 @@ import ongjong.namanmoo.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Transactional
 @Service
@@ -38,8 +36,8 @@ public class JwtServiceImpl implements JwtService{
     private long refreshTokenValidityInSeconds;
     @Value("${jwt.access.header}")
     private String accessHeader;
-    @Value("${jwt.refresh.header}")
-    private String refreshHeader;
+//    @Value("${jwt.refresh.header}") // 쿠키 방식을 변경
+//    private String refreshHeader;
 
     //== 1 ==//
     private static final String ACCESS_TOKEN_SUBJECT = "AccessToken";
@@ -48,7 +46,6 @@ public class JwtServiceImpl implements JwtService{
     private static final String BEARER = "Bearer ";
 
     private final MemberRepository memberRepository;
-    private final ObjectMapper objectMapper;
 
     //== 메서드 ==//
     @Override
@@ -74,6 +71,7 @@ public class JwtServiceImpl implements JwtService{
     public String createRefreshToken() {
         return JWT.create()
                 .withSubject(REFRESH_TOKEN_SUBJECT)
+                .withIssuedAt(new Date(System.currentTimeMillis())) // 발행 시간 설정
                 .withExpiresAt(new Date(System.currentTimeMillis() + refreshTokenValidityInSeconds * 1000))
                 .sign(Algorithm.HMAC512(secret));
     }
@@ -82,7 +80,10 @@ public class JwtServiceImpl implements JwtService{
     public void updateRefreshToken(String loginId, String refreshToken) {
         memberRepository.findByLoginId(loginId)
                 .ifPresentOrElse(
-                        member -> member.setRefreshToken(refreshToken),
+                        member -> {
+                            member.setRefreshToken(refreshToken);
+                            memberRepository.save(member); // 저장 로직 추가
+                        },
                         () -> new Exception("회원 조회 실패")
                 );
     }
@@ -91,8 +92,13 @@ public class JwtServiceImpl implements JwtService{
     public void destroyRefreshToken(String loginId) {
         memberRepository.findByLoginId(loginId)
                 .ifPresentOrElse(
-                        member -> member.destroyRefreshToken(),
-                        () -> new Exception("회원 조회 실패")
+                        member -> {
+                            member.setRefreshToken(null); // 리프레시 토큰 무효화
+                            memberRepository.save(member); // 변경 사항 저장
+                        },
+                        () -> {
+                            throw new IllegalStateException("회원 조회 실패"); // 예외 발생
+                        }
                 );
     }
 
@@ -101,11 +107,16 @@ public class JwtServiceImpl implements JwtService{
         response.setStatus(HttpServletResponse.SC_OK);
 
         setAccessTokenHeader(response, accessToken);
-        setRefreshTokenHeader(response, refreshToken);
 
-        Map<String, String> tokenMap = new HashMap<>();
-        tokenMap.put(ACCESS_TOKEN_SUBJECT, accessToken);
-        tokenMap.put(REFRESH_TOKEN_SUBJECT, refreshToken);
+        // Refresh Token을 HttpOnly 쿠키로 설정
+        Cookie refreshTokenCookie = new Cookie("Authorization-refresh", refreshToken);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(true); // HTTPS에서만 전송
+        refreshTokenCookie.setPath("/");
+//        refreshTokenCookie.setDomain("localhost");
+//        refreshTokenCookie.setMaxAge(300); // 5분 동안 유효
+        refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 일주일 동안 유효
+        response.addCookie(refreshTokenCookie);
     }
 
     @Override
@@ -113,11 +124,9 @@ public class JwtServiceImpl implements JwtService{
         response.setStatus(HttpServletResponse.SC_OK);
 
         setAccessTokenHeader(response, accessToken);
-
-        Map<String, String> tokenMap = new HashMap<>();
-        tokenMap.put(ACCESS_TOKEN_SUBJECT, accessToken);
     }
 
+    // HTTP 요청 헤더에서 AccessToken 추출
     @Override
     public Optional<String> extractAccessToken(HttpServletRequest request) {
         return Optional.ofNullable(request.getHeader(accessHeader)).filter(
@@ -125,11 +134,17 @@ public class JwtServiceImpl implements JwtService{
         ).map(accessToken -> accessToken.replace(BEARER, ""));
     }
 
+    // 쿠키에서 RefreshToken 추출
     @Override
     public Optional<String> extractRefreshToken(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader(refreshHeader)).filter(
-                refreshToken -> refreshToken.startsWith(BEARER)
-        ).map(refreshToken -> refreshToken.replace(BEARER, ""));
+//        return Optional.ofNullable(request.getHeader(refreshHeader)).filter(
+//                refreshToken -> refreshToken.startsWith(BEARER)
+//        ).map(refreshToken -> refreshToken.replace(BEARER, ""));
+        return Optional.ofNullable(request.getCookies())
+                .flatMap(cookies -> Arrays.stream(cookies)
+                        .filter(cookie -> "Authorization-refresh".equals(cookie.getName()))
+                        .map(Cookie::getValue)
+                        .findFirst());
     }
 
     // 토큰에서 유저정보 추출
@@ -156,15 +171,18 @@ public class JwtServiceImpl implements JwtService{
         response.setHeader(accessHeader, accessToken);
     }
 
-    @Override
-    public void setRefreshTokenHeader(HttpServletResponse response, String refreshToken) {
-        response.setHeader(refreshHeader, refreshToken);
-    }
+//    @Override
+//    public void setRefreshTokenHeader(HttpServletResponse response, String refreshToken) {
+//        response.setHeader(refreshHeader, refreshToken);
+//    }
 
     @Override
     public boolean isTokenValid(String token) {
         try {
             JWT.require(Algorithm.HMAC512(secret)).build().verify(token);
+
+            DecodedJWT decodedJWT = JWT.decode(token);
+            log.info("Token is valid: {}", decodedJWT.getSubject());
             return true;
         } catch (Exception e) {
             log.error("유효하지 않은 Token입니다", e.getMessage());
@@ -172,6 +190,13 @@ public class JwtServiceImpl implements JwtService{
         }
     }
 
+    @Override
+    public boolean isTokenNearExpiry(String token, double threshold) {
+        Date expirationDate = JWT.decode(token).getExpiresAt();
+        Date now = new Date();
+        long validDuration = expirationDate.getTime() - now.getTime();
+        long totalDuration = expirationDate.getTime() - JWT.decode(token).getIssuedAt().getTime();
 
-
+        return validDuration <= (totalDuration * threshold);
+    }
 }
