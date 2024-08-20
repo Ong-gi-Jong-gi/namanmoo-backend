@@ -123,6 +123,7 @@ public class JwtServiceImpl implements JwtService{
                 "Authorization-refresh=%s; Path=/; HttpOnly; Secure; Max-Age=%d; SameSite=None",
                 refreshToken, 7 * 24 * 60 * 60  // 일주일 유효
         );
+        response.setHeader("Set-Cookie", cookieValue);
     }
 
     @Override
