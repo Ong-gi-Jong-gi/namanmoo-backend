@@ -109,14 +109,20 @@ public class JwtServiceImpl implements JwtService{
         setAccessTokenHeader(response, accessToken);
 
         // Refresh Token을 HttpOnly 쿠키로 설정
-        Cookie refreshTokenCookie = new Cookie("Authorization-refresh", refreshToken);
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(true); // HTTPS에서만 전송
-        refreshTokenCookie.setPath("/");
-//        refreshTokenCookie.setDomain("localhost");
-//        refreshTokenCookie.setMaxAge(300); // 5분 동안 유효
-        refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 일주일 동안 유효
-        response.addCookie(refreshTokenCookie);
+//        Cookie refreshTokenCookie = new Cookie("Authorization-refresh", refreshToken);
+//        refreshTokenCookie.setHttpOnly(true);
+//        refreshTokenCookie.setSecure(true); // HTTPS에서만 전송
+//        refreshTokenCookie.setPath("/");
+////        refreshTokenCookie.setDomain("localhost");
+////        refreshTokenCookie.setMaxAge(300); // 5분 동안 유효
+//        refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 일주일 동안 유효
+//        response.addCookie(refreshTokenCookie);
+
+        // Refresh Token을 HttpOnly 쿠키로 설정하고, SameSite=None을 적용
+        String cookieValue = String.format(
+                "Authorization-refresh=%s; Path=/; HttpOnly; Secure; Max-Age=%d; SameSite=None",
+                refreshToken, 7 * 24 * 60 * 60  // 일주일 유효
+        );
     }
 
     @Override
