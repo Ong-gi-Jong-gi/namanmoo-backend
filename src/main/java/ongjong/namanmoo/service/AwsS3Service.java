@@ -81,7 +81,7 @@ public class AwsS3Service {
         // 이미지 파일의 경우 최적화
         if (determineFileType(multipartFile).equals("image")) {
             log.info("Optimizing image file...");
-//            uploadFile = optimizeImageFile(uploadFile);
+            uploadFile = optimizeImageFile(uploadFile);
         }
 
         //        else if (determineFileType(multipartFile).equals("video")) {
@@ -163,10 +163,10 @@ public class AwsS3Service {
      * @return 최적화된 이미지 파일
      * @throws IOException 이미지 최적화 중 발생하는 예외
      */
-//    private File optimizeImageFile(File originalFile) throws IOException {
-//        BufferedImage originalImage = ImageIO.read(originalFile);
-//        File optimizedFile = new File("optimized_" + originalFile.getName());
-//
+    private File optimizeImageFile(File originalFile) throws IOException {
+        BufferedImage originalImage = ImageIO.read(originalFile);
+        File optimizedFile = new File("optimized_" + originalFile.getName());
+
 //        // EXIF 데이터를 읽어 Orientation 정보를 가져옴
 //        // EXIF Orientation의 기본값 = 1
 //        int orientation = 1;
@@ -202,48 +202,48 @@ public class AwsS3Service {
 //                rotatedImage = originalImage;
 //                break;
 //        }
-//
-//        // 원본 이미지의 크기
-//        int originalWidth = rotatedImage.getWidth();
-//        int originalHeight = rotatedImage.getHeight();
-//
-//        // 이미지 리사이즈 및 압축
-//        Thumbnails.Builder<BufferedImage> thumbnailBuilder = Thumbnails.of(rotatedImage);
-//        if (originalWidth > 512 || originalHeight > 512) {
-//
-//            double aspectRatio = (double) originalWidth / originalHeight;
-//
-//            int newWidth = 512;
-//            int newHeight = (int) (512 / aspectRatio);
-//
-//            if (newHeight > 512) {
-//                newHeight = 512;
-//                newWidth = (int) (512 * aspectRatio);
-//            }
-//            // 비율을 유지하면서 리사이즈
-//            thumbnailBuilder.size(newWidth, newHeight)
-//                    .outputQuality(0.85)
-//                    .toFile(optimizedFile);
-//            log.info("Optimized Image Dimensions: {}x{}",newWidth, newHeight);
-//        } else {
-//            // 원본 크기로 유지하고 압축
-//            thumbnailBuilder.scale(1)
-//                    .outputQuality(0.85)
-//                    .toFile(optimizedFile);
-//        }
-//
-//        // 원본 이미지 파일의 크기
-//        long originalFileSize = originalFile.length();
-//        // 최적화된 이미지 파일의 크기
-//        long optimizedFileSize = optimizedFile.length();
-//
-//        // 로그 출력
-//        log.info("Original Image Dimensions: {}x{}", originalWidth, originalHeight);
-//        log.info("Original File Size: {} bytes", originalFileSize);
-//        log.info("Optimized File Size: {} bytes", optimizedFileSize);
-//
-//        return optimizedFile;
-//    }
+
+        // 원본 이미지의 크기
+        int originalWidth = originalImage.getWidth();
+        int originalHeight = originalImage.getHeight();
+
+        // 이미지 리사이즈 및 압축
+        Thumbnails.Builder<BufferedImage> thumbnailBuilder = Thumbnails.of(originalImage);
+        if (originalWidth > 512 || originalHeight > 512) {
+
+            double aspectRatio = (double) originalWidth / originalHeight;
+
+            int newWidth = 512;
+            int newHeight = (int) (512 / aspectRatio);
+
+            if (newHeight > 512) {
+                newHeight = 512;
+                newWidth = (int) (512 * aspectRatio);
+            }
+            // 비율을 유지하면서 리사이즈
+            thumbnailBuilder.size(newWidth, newHeight)
+                    .outputQuality(0.85)
+                    .toFile(optimizedFile);
+            log.info("Optimized Image Dimensions: {}x{}",newWidth, newHeight);
+        } else {
+            // 원본 크기로 유지하고 압축
+            thumbnailBuilder.scale(1)
+                    .outputQuality(0.85)
+                    .toFile(optimizedFile);
+        }
+
+        // 원본 이미지 파일의 크기
+        long originalFileSize = originalFile.length();
+        // 최적화된 이미지 파일의 크기
+        long optimizedFileSize = optimizedFile.length();
+
+        // 로그 출력
+        log.info("Original Image Dimensions: {}x{}", originalWidth, originalHeight);
+        log.info("Original File Size: {} bytes", originalFileSize);
+        log.info("Optimized File Size: {} bytes", optimizedFileSize);
+
+        return optimizedFile;
+    }
 
 
     /**
