@@ -167,48 +167,48 @@ public class AwsS3Service {
         BufferedImage originalImage = ImageIO.read(originalFile);
         File optimizedFile = new File("optimized_" + originalFile.getName());
 
-//        // EXIF 데이터를 읽어 Orientation 정보를 가져옴
-//        // EXIF Orientation의 기본값 = 1
-//        int orientation = 1;
-//        try {
-//            Metadata metadata = ImageMetadataReader.readMetadata(originalFile);
-//            ExifIFD0Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
-//            // EXIF 정보가 없거나 기본값이 1인 경우 orientation = 1
-//            if (directory != null && directory.containsTag(ExifIFD0Directory.TAG_ORIENTATION)) {
-//                orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
-//            }
-//        } catch (Exception e) {
-//            log.warn("Could not read EXIF metadata: {}", e.getMessage());
-//        }
-//
-//        // 이미지 회전 처리
-//        BufferedImage rotatedImage;
-//        switch (orientation) {
-//            // EXIF Orientation의 값 = 6 : 90도 시계방향
-//            case 6:
-//                log.info("11111");
-//                rotatedImage = Thumbnails.of(originalImage).rotate(90).scale(1).asBufferedImage();
-//                log.info("22222");
-//                break;
-//            // EXIF Orientation의 값 = 3 : 180도 시계방향
-//            case 3:
-//                rotatedImage = Thumbnails.of(originalImage).rotate(180).scale(1).asBufferedImage();
-//                break;
-//            // EXIF Orientation의 값 = 8 : 270도 시계방향
-//            case 8:
-//                rotatedImage = Thumbnails.of(originalImage).rotate(270).scale(1).asBufferedImage();
-//                break;
-//            default:
-//                rotatedImage = originalImage;
-//                break;
-//        }
+        // EXIF 데이터를 읽어 Orientation 정보를 가져옴
+        // EXIF Orientation의 기본값 = 1
+        int orientation = 1;
+        try {
+            Metadata metadata = ImageMetadataReader.readMetadata(originalFile);
+            ExifIFD0Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+            // EXIF 정보가 없거나 기본값이 1인 경우 orientation = 1
+            if (directory != null && directory.containsTag(ExifIFD0Directory.TAG_ORIENTATION)) {
+                orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
+            }
+        } catch (Exception e) {
+            log.warn("Could not read EXIF metadata: {}", e.getMessage());
+        }
+
+        // 이미지 회전 처리
+        BufferedImage rotatedImage;
+        switch (orientation) {
+            // EXIF Orientation의 값 = 6 : 90도 시계방향
+            case 6:
+                log.info("11111");
+                rotatedImage = Thumbnails.of(originalImage).rotate(90).scale(1).asBufferedImage();
+                log.info("22222");
+                break;
+            // EXIF Orientation의 값 = 3 : 180도 시계방향
+            case 3:
+                rotatedImage = Thumbnails.of(originalImage).rotate(180).scale(1).asBufferedImage();
+                break;
+            // EXIF Orientation의 값 = 8 : 270도 시계방향
+            case 8:
+                rotatedImage = Thumbnails.of(originalImage).rotate(270).scale(1).asBufferedImage();
+                break;
+            default:
+                rotatedImage = originalImage;
+                break;
+        }
 
         // 원본 이미지의 크기
-        int originalWidth = originalImage.getWidth();
-        int originalHeight = originalImage.getHeight();
+        int originalWidth = rotatedImage.getWidth();
+        int originalHeight = rotatedImage.getHeight();
 
         // 이미지 리사이즈 및 압축
-        Thumbnails.Builder<BufferedImage> thumbnailBuilder = Thumbnails.of(originalImage);
+        Thumbnails.Builder<BufferedImage> thumbnailBuilder = Thumbnails.of(rotatedImage);
         if (originalWidth > 512 || originalHeight > 512) {
 
             double aspectRatio = (double) originalWidth / originalHeight;
