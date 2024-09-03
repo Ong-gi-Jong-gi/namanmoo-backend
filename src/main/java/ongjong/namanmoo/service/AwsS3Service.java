@@ -81,7 +81,7 @@ public class AwsS3Service {
         // 이미지 파일의 경우 최적화
         if (determineFileType(multipartFile).equals("image")) {
             log.info("Optimizing image file...");
-            uploadFile = optimizeImageFile(uploadFile);
+//            uploadFile = optimizeImageFile(uploadFile);
         }
 
         //        else if (determineFileType(multipartFile).equals("video")) {
@@ -163,87 +163,87 @@ public class AwsS3Service {
      * @return 최적화된 이미지 파일
      * @throws IOException 이미지 최적화 중 발생하는 예외
      */
-    private File optimizeImageFile(File originalFile) throws IOException {
-        BufferedImage originalImage = ImageIO.read(originalFile);
-        File optimizedFile = new File("optimized_" + originalFile.getName());
-
-        // EXIF 데이터를 읽어 Orientation 정보를 가져옴
-        // EXIF Orientation의 기본값 = 1
-        int orientation = 1;
-        try {
-            Metadata metadata = ImageMetadataReader.readMetadata(originalFile);
-            ExifIFD0Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
-            // EXIF 정보가 없거나 기본값이 1인 경우 orientation = 1
-            if (directory != null && directory.containsTag(ExifIFD0Directory.TAG_ORIENTATION)) {
-                orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
-            }
-        } catch (Exception e) {
-            log.warn("Could not read EXIF metadata: {}", e.getMessage());
-        }
-
-        // 이미지 회전 처리
-        BufferedImage rotatedImage;
-        switch (orientation) {
-            // EXIF Orientation의 값 = 6 : 90도 시계방향
-            case 6:
-                log.info("11111");
-                rotatedImage = Thumbnails.of(originalImage).rotate(90).scale(1).asBufferedImage();
-                log.info("22222");
-                break;
-            // EXIF Orientation의 값 = 3 : 180도 시계방향
-            case 3:
-                rotatedImage = Thumbnails.of(originalImage).rotate(180).scale(1).asBufferedImage();
-                break;
-            // EXIF Orientation의 값 = 8 : 270도 시계방향
-            case 8:
-                rotatedImage = Thumbnails.of(originalImage).rotate(270).scale(1).asBufferedImage();
-                break;
-            default:
-                rotatedImage = originalImage;
-                break;
-        }
-
-        // 원본 이미지의 크기
-        int originalWidth = rotatedImage.getWidth();
-        int originalHeight = rotatedImage.getHeight();
-
-        // 이미지 리사이즈 및 압축
-        Thumbnails.Builder<BufferedImage> thumbnailBuilder = Thumbnails.of(rotatedImage);
-        if (originalWidth > 512 || originalHeight > 512) {
-
-            double aspectRatio = (double) originalWidth / originalHeight;
-
-            int newWidth = 512;
-            int newHeight = (int) (512 / aspectRatio);
-
-            if (newHeight > 512) {
-                newHeight = 512;
-                newWidth = (int) (512 * aspectRatio);
-            }
-            // 비율을 유지하면서 리사이즈
-            thumbnailBuilder.size(newWidth, newHeight)
-                    .outputQuality(0.85)
-                    .toFile(optimizedFile);
-            log.info("Optimized Image Dimensions: {}x{}",newWidth, newHeight);
-        } else {
-            // 원본 크기로 유지하고 압축
-            thumbnailBuilder.scale(1)
-                    .outputQuality(0.85)
-                    .toFile(optimizedFile);
-        }
-
-        // 원본 이미지 파일의 크기
-        long originalFileSize = originalFile.length();
-        // 최적화된 이미지 파일의 크기
-        long optimizedFileSize = optimizedFile.length();
-
-        // 로그 출력
-        log.info("Original Image Dimensions: {}x{}", originalWidth, originalHeight);
-        log.info("Original File Size: {} bytes", originalFileSize);
-        log.info("Optimized File Size: {} bytes", optimizedFileSize);
-
-        return optimizedFile;
-    }
+//    private File optimizeImageFile(File originalFile) throws IOException {
+//        BufferedImage originalImage = ImageIO.read(originalFile);
+//        File optimizedFile = new File("optimized_" + originalFile.getName());
+//
+//        // EXIF 데이터를 읽어 Orientation 정보를 가져옴
+//        // EXIF Orientation의 기본값 = 1
+//        int orientation = 1;
+//        try {
+//            Metadata metadata = ImageMetadataReader.readMetadata(originalFile);
+//            ExifIFD0Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+//            // EXIF 정보가 없거나 기본값이 1인 경우 orientation = 1
+//            if (directory != null && directory.containsTag(ExifIFD0Directory.TAG_ORIENTATION)) {
+//                orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
+//            }
+//        } catch (Exception e) {
+//            log.warn("Could not read EXIF metadata: {}", e.getMessage());
+//        }
+//
+//        // 이미지 회전 처리
+//        BufferedImage rotatedImage;
+//        switch (orientation) {
+//            // EXIF Orientation의 값 = 6 : 90도 시계방향
+//            case 6:
+//                log.info("11111");
+//                rotatedImage = Thumbnails.of(originalImage).rotate(90).scale(1).asBufferedImage();
+//                log.info("22222");
+//                break;
+//            // EXIF Orientation의 값 = 3 : 180도 시계방향
+//            case 3:
+//                rotatedImage = Thumbnails.of(originalImage).rotate(180).scale(1).asBufferedImage();
+//                break;
+//            // EXIF Orientation의 값 = 8 : 270도 시계방향
+//            case 8:
+//                rotatedImage = Thumbnails.of(originalImage).rotate(270).scale(1).asBufferedImage();
+//                break;
+//            default:
+//                rotatedImage = originalImage;
+//                break;
+//        }
+//
+//        // 원본 이미지의 크기
+//        int originalWidth = rotatedImage.getWidth();
+//        int originalHeight = rotatedImage.getHeight();
+//
+//        // 이미지 리사이즈 및 압축
+//        Thumbnails.Builder<BufferedImage> thumbnailBuilder = Thumbnails.of(rotatedImage);
+//        if (originalWidth > 512 || originalHeight > 512) {
+//
+//            double aspectRatio = (double) originalWidth / originalHeight;
+//
+//            int newWidth = 512;
+//            int newHeight = (int) (512 / aspectRatio);
+//
+//            if (newHeight > 512) {
+//                newHeight = 512;
+//                newWidth = (int) (512 * aspectRatio);
+//            }
+//            // 비율을 유지하면서 리사이즈
+//            thumbnailBuilder.size(newWidth, newHeight)
+//                    .outputQuality(0.85)
+//                    .toFile(optimizedFile);
+//            log.info("Optimized Image Dimensions: {}x{}",newWidth, newHeight);
+//        } else {
+//            // 원본 크기로 유지하고 압축
+//            thumbnailBuilder.scale(1)
+//                    .outputQuality(0.85)
+//                    .toFile(optimizedFile);
+//        }
+//
+//        // 원본 이미지 파일의 크기
+//        long originalFileSize = originalFile.length();
+//        // 최적화된 이미지 파일의 크기
+//        long optimizedFileSize = optimizedFile.length();
+//
+//        // 로그 출력
+//        log.info("Original Image Dimensions: {}x{}", originalWidth, originalHeight);
+//        log.info("Original File Size: {} bytes", originalFileSize);
+//        log.info("Optimized File Size: {} bytes", optimizedFileSize);
+//
+//        return optimizedFile;
+//    }
 
 
     /**
